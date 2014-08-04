@@ -1,0 +1,14 @@
+/FssExample/bin/
+/FssExample/obj/
+/FssLoginExample/bin/
+/FssLoginExample/obj/
+/FssTest/bin/
+/FssTest/obj/
+/fss/bin/
+/fss/obj/
+/Playground/bin
+/Playground/obj/
+/.gitignore~
+/packages/Npgsql*
+/fss.suo
+/fss/*.swp
