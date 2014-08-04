@@ -1,0 +1,57 @@
+F# Records for SQL
+=============================
+
+Currently supports only Postgres
+
+Reading from SQL to an F# record
+
+open FSharp.Data.Sql
+
+use db = new DynamicSqlConnection(connString)
+let teamClues = db.Query<TeamClue>  "
+                SELECT  t.name as team,a.teamid as teamid, clue,d.created as 
+                            created,i.id as imageId,d.id as docId,false as dup
+                FROM
+                            image i     JOIN doc d on i.docid = d.id
+                                        JOIN address a on a.id = d.emailid
+                                        JOIN team t on t.id = a.teamid
+                WHERE
+                        clue <> -2 AND d.created <= '2014-02-08 20:32'
+                        AND d.created > '2014-01-01'
+                ORDER BY
+                        a.teamid asc,d.created asc
+                " |> Array.ofSeq
+
+
+
+Inserting F# records into SQL
+
+Single record:
+
+Assumes SQL record
+
+create table run 
+(
+    id integer primary key not null,
+    name varchar(128) not null,
+    address varchar(128) not null
+)
+
+
+// Note record names should be lowercase for postgres
+let foo = { id = 6 ; name = "darren" ; address = "123 smith way" }
+
+let insertedIds = conn.InsertOne<Run,int> run
+
+// Assumes primary key is returned as an integer.
+// If primary key is a serial type, insert a record that does not contain
+// the field that will be generated and the returned stream of types will be
+// the primary key.  
+// If the primary key is composite, the return type should be unit and will
+// not contain the primary key
+
+
+
+runRecords |> conn.InsertMany<Run,int> run |> ignore
+
+

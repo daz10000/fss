@@ -1,0 +1,102 @@
+1.0
+=================
+Added external transaction support to FreQL InsertMany
+Added error message for table not found on FreqInsert
+Added typed URL dispatch functions to catch errors at edit time
+   Instead of box myFunc   , use  D0 myFunc  (or D1 myFunc if it takes 1 param etc, D2.. D7 are defined)
+
+0.9
+=================
+Added FreQL - F# Record / SQL support under Fss.Data.Postgres
+
+0.8
+=================
+Fixed bug with returning unicode text strings that was causing a discrepancy in content length and actual # of bytes.
+Added /index.html page to ease access to example cases.
+
+0.71
+=================
+Added mutex around thread tracking to prevent concurrent thread addition during iteration for shutdown
+
+0.70
+=================
+Cleaned up some critical network/streamwriter buffer flushing bugs that could 
+under some circumstances create issues
+
+0.64
+=================
+Added Stop() method to shut down server
+
+0.61,62,63
+=================
+Recursive application of variable expansion for included header files
+Fixes to form argument parsing
+
+
+0.6
+=================
+Added simple pooling system to help apps manage connection pools etc
+
+0.58
+=================
+replaces error message with "none" for null values in template fields
+
+0.57
+=================
+fix for post streams lingering on auth failure
+int64 ICONST64 template implementation
+
+0.56
+=================
+{% else %} implemented
+
+0.55
+=================
+not operator implemented
+template extensions working - see /template1 example in FssExample
+
+
+0.54
+=================
+Bug fix for dot notation references in local variables
+
+0.52/0.53
+=================
+Better logging for error reporting
+Fixes for single { and } characters in templates
+
+0.5
+=================
+Major clean up of template library, bug fixes and addition of many tests
+
+0.45
+=================
+Added GET member and parsing of ? arguments after GET calls.
+
+
+0.4
+=================
+Hook added to allow security/session implementations on top of Fss.UD
+Prototype JSON library included, allows deserialization,  
+objects not implemented yet
+AddDispatcher method added to UD to allow later addition to the dispatch URLS
+Template system moved into Template module from Playground, basically working
+
+0.3
+=================
+    - removed non tail recursive code in main dispatch loop
+    - extended experimental templating system to parse and handle for loops.  Not complete yet.
+
+0.11
+=================
+	- added support for user addition of custom headers and a    	  JPEGResponse type.  Added example imgDownload() method
+
+0.1 
+=================
+    - added ReadPostAsBytes() ReadPostAsString() methods to 	 	 assist pulling
+      back post data.  
+    - added assertion example
+
+0.0 
+=================
+    - basic web server framework released
