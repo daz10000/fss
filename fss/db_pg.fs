@@ -108,7 +108,7 @@ module Postgres =
           member x.Log(msg:string) =
             match opts.logfile with
                 | None -> ()
-                | Some(f) -> lock opts.logfile ( fun _ -> f.Write(System.DateTime.Now.ToLongTimeString()); f.Write("\t") ; f.WriteLine(msg))
+                | Some(f) -> lock opts.logfile ( fun _ -> f.Write(System.DateTime.Now.ToString("yyyyddMM HH:mm:ss.FFF")); f.Write("\t") ; f.WriteLine(msg) ; f.Flush())
           
           member x.LogConnUse with get() = opts.logConnUse and set(v) = opts.logConnUse <- v  
           member x.LogQueries with get() = opts.logQueries and set(v) = opts.logQueries <- v  
