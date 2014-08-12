@@ -14,6 +14,9 @@ module Postgres =
     open Fss.Pool // used for database handle pooling
     open Npgsql
 
+    type ConnOpts = {  mutable logfile : StreamWriter option ; mutable logfileName : string option ; mutable logQueries : bool;
+                            mutable logLongerThan : float ; mutable logConnUse : bool }
+
     /// SqlDataReader wrapper that provides access to columns 
     /// of the result-set using dynamic access operator
     /// See http://tomasp.net/blog/dynamic-sql.aspx for original idea.
@@ -32,7 +35,9 @@ module Postgres =
 
     /// SqlCommand wrapper that allows setting properties of a
     /// stored procedure using dynamic setter operator
-    type DynamicSqlCommand(cmd:NpgsqlCommand,release:unit->unit) = 
+    type DynamicSqlCommand(cmd:NpgsqlCommand,release:unit->unit,opts:ConnOpts,log:string->unit) = 
+      let logQuery s =if opts.logQueries then log s
+        
       member private x.Command = cmd
 
       // Adds parameter with the specified name and value
@@ -40,10 +45,9 @@ module Postgres =
         let p = NpgsqlParameter("@" + name, box value)
         cmd.Command.Parameters.Add(p) |> ignore
       // Execute command and wrap returned SqlDataReader
-      member x.ExecuteReader() =  new DynamicSqlDataReader(cmd.ExecuteReader())
-
-      member x.ExecuteNonQuery() = cmd.ExecuteNonQuery()
-      member x.ExecuteScalar() = cmd.ExecuteScalar()
+      member x.ExecuteReader() =  logQuery(x.Command.CommandText); new DynamicSqlDataReader(cmd.ExecuteReader())
+      member x.ExecuteNonQuery() = logQuery(x.Command.CommandText); cmd.ExecuteNonQuery()
+      member x.ExecuteScalar() = logQuery(x.Command.CommandText); cmd.ExecuteScalar()
       member x.Parameters = cmd.Parameters
       member x.Close() = cmd.Connection.Close()
       interface IDisposable with
@@ -56,7 +60,7 @@ module Postgres =
     /// Sql Transaction wrapper that encapsulates an active database
     /// connection and hands of DynamicSqlCommand objects with the
     /// connection and transcation set correctly
-    type DynamicSqlTransaction(conn:NpgsqlConnection,dispose:unit->unit) =
+    type DynamicSqlTransaction(conn:NpgsqlConnection,dispose:unit->unit,opts:ConnOpts,log:string->unit) =
         let trans = conn.BeginTransaction()
         do
             ()
@@ -64,7 +68,7 @@ module Postgres =
             use comm = conn.CreateCommand()
             comm.CommandText <- commandText
             comm.Transaction<-trans
-            new DynamicSqlCommand(comm,fun () -> ())
+            new DynamicSqlCommand(comm,(fun () -> ()),opts,log)
 
         member x.Rollback() = trans.Rollback()
         member x.Commit() = trans.Commit()
@@ -91,26 +95,24 @@ module Postgres =
                                                 c
        
                                           )
-          let mutable logfile = None
-          let mutable logfileName = None
-          let mutable logQueries = false
-          let mutable logLongerThan = 999999.0
-          let mutable logConnUse = false
-
-          /// Set a filename for logging output
-          member x.Logfile with  get() = logfileName.Value and 
-                                set(fileName:string) = 
-                                    logfileName <- Some(fileName)
-                                    logfile<- Some(new StreamWriter(fileName))
-
-          member x.Log(msg:string) =
-            match logfile with
-                | None -> ()
-                | Some(f) -> lock logfile ( fun _ -> f.Write(System.DateTime.Now.ToLongTimeString()); f.Write("\t") ; f.WriteLine(msg))
+          let opts : ConnOpts =  {logfile = None ; logfileName = None ; logQueries = false;  logLongerThan = 999999.0 ; 
+                                    logConnUse = false }
           
-          member x.LogConnUse with get() = logConnUse and set(v) = logConnUse <- v  
-          member x.LogQueries with get() = logQueries and set(v) = logQueries <- v  
-          member x.LogLongerThan with get() = logLongerThan  and set(v) = logLongerThan <- v  
+          /// Set a filename for logging output
+          member x.Logfile with  get() = opts.logfileName.Value and 
+                                set(fileName:string) = 
+                                    opts.logfileName <- Some(fileName)
+                                    opts.logfile<- Some(new StreamWriter(fileName))
+
+          member x.Opts with get() = opts
+          member x.Log(msg:string) =
+            match opts.logfile with
+                | None -> ()
+                | Some(f) -> lock opts.logfile ( fun _ -> f.Write(System.DateTime.Now.ToLongTimeString()); f.Write("\t") ; f.WriteLine(msg))
+          
+          member x.LogConnUse with get() = opts.logConnUse and set(v) = opts.logConnUse <- v  
+          member x.LogQueries with get() = opts.logQueries and set(v) = opts.logQueries <- v  
+          member x.LogLongerThan with get() = opts.logLongerThan  and set(v) = opts.logLongerThan <- v  
                                                     
           member x.InsertMany<'T,'R> (items : 'T seq,?table:string,?transProvided:DynamicSqlTransaction) =
             // Determine table name from item to be inserted
@@ -254,7 +256,7 @@ module Postgres =
             use command =  connection.CreateCommand() 
             command.CommandText <- name 
             command.CommandType <- CommandType.StoredProcedure
-            new DynamicSqlCommand(command,fun () -> conn.Pool.Release(connection))
+            new DynamicSqlCommand(command,(fun () -> conn.Pool.Release(connection)),conn.Opts,conn.Log)
 
           member x.cc comm = x.Command comm
           member x.Command(commandText:string) =
@@ -262,11 +264,11 @@ module Postgres =
             use comm = conn.CreateCommand()
             comm.CommandText <- commandText
             //match trans with | None -> () | Some(t) -> comm.Transaction <- t
-            new DynamicSqlCommand(comm,fun () -> pool.Release(conn))
+            new DynamicSqlCommand(comm,(fun () -> pool.Release(conn)),x.Opts,x.Log)
 
           member x.StartTrans() = 
             let conn = pool.Take() // reserve a connection that will be shared across the transaction
-            new DynamicSqlTransaction(conn,fun () -> pool.Release(conn))
+            new DynamicSqlTransaction(conn,(fun () -> pool.Release(conn)),x.Opts,x.Log)
 
           interface IDisposable with
             member x.Dispose() = 
