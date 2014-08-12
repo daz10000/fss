@@ -1,7 +1,11 @@
 ﻿namespace Fss.Data
 
 /// Postgres database wrapper.  Independent of other Fss pieces,
-/// can be omitted along with System.Data and NPgsql dependencies for a smaller compilation unit.
+/// can be omitted along with System.Data and NPgsql dependencies for a smaller compilation unit
+/// or used standalone from other Fss pieces.
+/// Credit to Thomas Petricek for the original dynamic operator concept 
+open System.IO
+
 module Postgres =
     open System.Data
     open System.Data.Common
@@ -10,9 +14,9 @@ module Postgres =
     open Fss.Pool // used for database handle pooling
     open Npgsql
 
-    // http://tomasp.net/blog/dynamic-sql.aspx
     /// SqlDataReader wrapper that provides access to columns 
     /// of the result-set using dynamic access operator
+    /// See http://tomasp.net/blog/dynamic-sql.aspx for original idea.
     type DynamicSqlDataReader(reader:NpgsqlDataReader) =
       member x.Reader = reader
       member x.Close() = reader.Close()
@@ -36,8 +40,7 @@ module Postgres =
         let p = NpgsqlParameter("@" + name, box value)
         cmd.Command.Parameters.Add(p) |> ignore
       // Execute command and wrap returned SqlDataReader
-      member x.ExecuteReader() = 
-        new DynamicSqlDataReader(cmd.ExecuteReader())
+      member x.ExecuteReader() =  new DynamicSqlDataReader(cmd.ExecuteReader())
 
       member x.ExecuteNonQuery() = cmd.ExecuteNonQuery()
       member x.ExecuteScalar() = cmd.ExecuteScalar()
@@ -88,8 +91,27 @@ module Postgres =
                                                 c
        
                                           )
+          let mutable logfile = None
+          let mutable logfileName = None
+          let mutable logQueries = false
+          let mutable logLongerThan = 999999.0
+          let mutable logConnUse = false
 
+          /// Set a filename for logging output
+          member x.Logfile with  get() = logfileName.Value and 
+                                set(fileName:string) = 
+                                    logfileName <- Some(fileName)
+                                    logfile<- Some(new StreamWriter(fileName))
 
+          member x.Log(msg:string) =
+            match logfile with
+                | None -> ()
+                | Some(f) -> lock logfile ( fun _ -> f.Write(System.DateTime.Now.ToLongTimeString()); f.Write("\t") ; f.WriteLine(msg))
+          
+          member x.LogConnUse with get() = logConnUse and set(v) = logConnUse <- v  
+          member x.LogQueries with get() = logQueries and set(v) = logQueries <- v  
+          member x.LogLongerThan with get() = logLongerThan  and set(v) = logLongerThan <- v  
+                                                    
           member x.InsertMany<'T,'R> (items : 'T seq,?table:string,?transProvided:DynamicSqlTransaction) =
             // Determine table name from item to be inserted
             let table = match table with
@@ -196,6 +218,8 @@ module Postgres =
             //use command =  connection.CreateCommand()
             //use command = new DynamicSqlCommand(sql,fun () -> pool.Release(connection))
             //command.CommandText <- sql 
+            if x.LogQueries then x.Log(sql)
+
             use command : DynamicSqlCommand = x.Command sql
             /// Determine details of this record's constructor
             let cons = typeof<'T>.UnderlyingSystemType.GetConstructors() |> Array.filter (fun c -> c.IsConstructor) |> Seq.head
@@ -217,6 +241,7 @@ module Postgres =
             } 
 
           member x.ExecuteScalar(sql:string) =
+            if x.LogQueries then x.Log(sql)
             use comm = x.Command sql
             comm.ExecuteScalar()
 
