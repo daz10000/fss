@@ -36,8 +36,6 @@ module Postgres =
     /// SqlCommand wrapper that allows setting properties of a
     /// stored procedure using dynamic setter operator
     type DynamicSqlCommand(cmd:NpgsqlCommand,release:unit->unit,opts:ConnOpts,log:string->unit) = 
-      let logQuery s =if opts.logQueries then log s
-        
       member private x.Command = cmd
       member x.GetConnHash() = cmd.Connection.GetHashCode()
       // Adds parameter with the specified name and value
