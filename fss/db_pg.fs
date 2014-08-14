@@ -114,12 +114,18 @@ module Postgres =
           member x.LogQueries with get() = opts.logQueries and set(v) = opts.logQueries <- v  
           member x.LogLongerThan with get() = opts.logLongerThan  and set(v) = opts.logLongerThan <- v  
                                                     
-          member x.InsertMany<'T,'R> (items : 'T seq,?table:string,?transProvided:DynamicSqlTransaction) =
+          member x.InsertMany<'T,'R> (items : 'T seq,?table:string,?transProvided:DynamicSqlTransaction,?ignoredColumns:string seq) =
             // Determine table name from item to be inserted
             let table = match table with
                             | Some(x) -> x.ToLower()
                             | None -> typeof<'T>.Name.ToLower()
-        
+            
+            // Determine which columns need to be ignored from the items when inserting into the database.
+            let ignoredColumns = 
+                match ignoredColumns with
+                | Some(cols) -> cols |> Seq.map (fun c -> c.ToLower()) |> Set.ofSeq
+                | None -> Set.empty
+
             // Inspect table definition.
             use command : DynamicSqlCommand = x.Command "select a.attname as attname,t.typname as tname,attnum,attnotnull from 
 	                                                        pg_class c JOIN pg_attribute a ON c.oid = a.attrelid 
@@ -158,9 +164,14 @@ module Postgres =
             /// db column names
             let dbColNames = cols |> Array.map (fun z -> z.cname ) |> Set.ofSeq
             // Determine which columns were mentioned in the item being inserted.  May
-            // be a subset of the available column names, but can't include non columns
-            let fields = typeof<'T>.UnderlyingSystemType.GetProperties()
-            let colNames = fields |> Array.map (fun z -> z.Name)
+            // be a subset of the available column names, but can't include non columns.
+            // Filtering out also the columns we do not want to insert in the database, as 
+            // specified in ignoredColumns
+            let fields = 
+                typeof<'T>.UnderlyingSystemType.GetProperties()
+                |> Array.filter (fun z -> not (ignoredColumns.Contains(z.Name.ToLower())))
+            /// colnames from records
+            let colNames = fields |> Array.map (fun z -> z.Name) 
             match colNames |> Array.tryFind (fun z-> not  (dbColNames.Contains(z.ToLower()))) with
                     | Some(problem) -> 
                         failwithf "ERROR: record field '%s' does not match a table column in %s [%s]" problem table (String.Join(",",dbColNames))
@@ -178,7 +189,7 @@ module Postgres =
                         let sql = sprintf "insert into %s(%s) values(%s) %s"  
                                     table 
                                     (String.Join(",",colNames|> Array.map(fun x -> x.ToLower()))) 
-                                    (String.Join(",",[| for i in 1..fields.Length -> sprintf ":p%d"i |]))
+                                    (String.Join(",",[| for i in 1..fields.Length  -> sprintf ":p%d"i |]))
                                     returningClause
                             
                         /// Transaction to wrap the insertion into    
@@ -208,12 +219,16 @@ module Postgres =
                             (trans :> IDisposable).Dispose()
                         ret
 
-          member x.InsertOne<'T,'R> (item : 'T,?table:string,?transProvided:DynamicSqlTransaction) = 
-            match table,transProvided with
-                | None,None -> x.InsertMany<'T,'R>([item]).[0]
-                | Some(t),None -> x.InsertMany<'T,'R>([item],table=t).[0]
-                | None,Some(t) -> x.InsertMany<'T,'R>([item],transProvided=t).[0]
-                | Some(ta),Some(tr) -> x.InsertMany<'T,'R>([item],table=ta,transProvided=tr).[0]
+          member x.InsertOne<'T,'R> (item : 'T,?table:string,?transProvided:DynamicSqlTransaction,?ignoredColumns:string seq) = 
+            match table,transProvided,ignoredColumns with
+                | None,None,None -> x.InsertMany<'T,'R>([item]).[0]
+                | Some(t),None,None -> x.InsertMany<'T,'R>([item],table=t).[0]
+                | None,Some(t),None -> x.InsertMany<'T,'R>([item],transProvided=t).[0]
+                | Some(ta),Some(tr),None -> x.InsertMany<'T,'R>([item],table=ta,transProvided=tr).[0]
+                | None,None,Some(cols) -> x.InsertMany<'T,'R>([item],ignoredColumns=cols).[0]
+                | Some(t),None,Some(cols) -> x.InsertMany<'T,'R>([item],table=t,ignoredColumns=cols).[0]
+                | None,Some(t),Some(cols) -> x.InsertMany<'T,'R>([item],transProvided=t,ignoredColumns=cols).[0]
+                | Some(ta),Some(tr),Some(cols) -> x.InsertMany<'T,'R>([item],table=ta,transProvided=tr,ignoredColumns=cols).[0]
 
           member x.Query<'T>(sql:string) : seq<'T> =
             //let connection = pool.Take()
