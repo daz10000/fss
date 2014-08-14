@@ -39,15 +39,32 @@ module Postgres =
       let logQuery s =if opts.logQueries then log s
         
       member private x.Command = cmd
-
+      member x.GetConnHash() = cmd.Connection.GetHashCode()
       // Adds parameter with the specified name and value
       static member (?<-) (cmd:DynamicSqlCommand, name:string, value) = 
         let p = NpgsqlParameter("@" + name, box value)
         cmd.Command.Parameters.Add(p) |> ignore
       // Execute command and wrap returned SqlDataReader
-      member x.ExecuteReader() =  logQuery(x.Command.CommandText); new DynamicSqlDataReader(cmd.ExecuteReader())
-      member x.ExecuteNonQuery() = logQuery(x.Command.CommandText); cmd.ExecuteNonQuery()
-      member x.ExecuteScalar() = logQuery(x.Command.CommandText); cmd.ExecuteScalar()
+      member x.ExecuteReader() =  
+                    let start = System.DateTime.Now
+                    let r = cmd.ExecuteReader()
+                    if opts.logQueries || ((System.DateTime.Now - start).TotalMilliseconds > opts.logLongerThan) then
+                        sprintf "%d\t%f\t%s" (x.Command.Connection.GetHashCode()) ((System.DateTime.Now-start).TotalMilliseconds) x.Command.CommandText |> log
+                    new DynamicSqlDataReader(r)
+
+      member x.ExecuteNonQuery() = 
+                    let start = System.DateTime.Now
+                    let r = cmd.ExecuteNonQuery()
+                    if opts.logQueries || ((System.DateTime.Now - start).TotalMilliseconds > opts.logLongerThan) then
+                        sprintf "%d\t%f\t%s" (x.Command.Connection.GetHashCode()) ((System.DateTime.Now-start).TotalMilliseconds) x.Command.CommandText |> log
+                    r
+      
+      member x.ExecuteScalar() = 
+                    let start = System.DateTime.Now
+                    let r = cmd.ExecuteScalar()
+                    if opts.logQueries || ((System.DateTime.Now - start).TotalMilliseconds > opts.logLongerThan) then
+                        sprintf "%d\t%f\t%s" (x.Command.Connection.GetHashCode()) ((System.DateTime.Now-start).TotalMilliseconds) x.Command.CommandText |> log
+                    r
       member x.Parameters = cmd.Parameters
       member x.Close() = cmd.Connection.Close()
       interface IDisposable with
@@ -95,8 +112,25 @@ module Postgres =
                                                 c
        
                                           )
+
           let opts : ConnOpts =  {logfile = None ; logfileName = None ; logQueries = false;  logLongerThan = 999999.0 ; 
                                     logConnUse = false }
+        
+          let log (msg:string) =
+            match opts.logfile with
+                | None -> ()
+                | Some(f) -> lock opts.logfile ( fun _ -> f.Write(System.DateTime.Now.ToString("yyyyddMM HH:mm:ss.FFF")); f.Write("\t") ; f.WriteLine(msg) ; f.Flush())
+          
+          let take() = 
+            let c = pool.Take()
+            let z = System.Threading.Thread.CurrentThread.ManagedThreadId
+            if opts.logConnUse then log(sprintf "take %d %d" z (c.GetHashCode()))
+            c
+            
+          let release x = 
+            let z = System.Threading.Thread.CurrentThread.ManagedThreadId
+            if opts.logConnUse then log(sprintf "release %d %d" z (x.GetHashCode()))
+            sprintf  "release %d" (x.GetHashCode()) |> log; pool.Release x
           
           /// Set a filename for logging output
           member x.Logfile with  get() = opts.logfileName.Value and 
@@ -104,12 +138,10 @@ module Postgres =
                                     opts.logfileName <- Some(fileName)
                                     opts.logfile<- Some(new StreamWriter(fileName))
 
+          member x.Take() = take()
+          member x.Release(z) = release z
           member x.Opts with get() = opts
-          member x.Log(msg:string) =
-            match opts.logfile with
-                | None -> ()
-                | Some(f) -> lock opts.logfile ( fun _ -> f.Write(System.DateTime.Now.ToString("yyyyddMM HH:mm:ss.FFF")); f.Write("\t") ; f.WriteLine(msg) ; f.Flush())
-          
+          member x.Log(msg:string) = log msg
           member x.LogConnUse with get() = opts.logConnUse and set(v) = opts.logConnUse <- v  
           member x.LogQueries with get() = opts.logQueries and set(v) = opts.logQueries <- v  
           member x.LogLongerThan with get() = opts.logLongerThan  and set(v) = opts.logLongerThan <- v  
@@ -235,14 +267,18 @@ module Postgres =
             //use command =  connection.CreateCommand()
             //use command = new DynamicSqlCommand(sql,fun () -> pool.Release(connection))
             //command.CommandText <- sql 
-            if x.LogQueries then x.Log(sql)
+            //if x.LogQueries then x.Log(sql)
 
             use command : DynamicSqlCommand = x.Command sql
             /// Determine details of this record's constructor
             let cons = typeof<'T>.UnderlyingSystemType.GetConstructors() |> Array.filter (fun c -> c.IsConstructor) |> Seq.head
             let argMap = cons.GetParameters() |> Array.mapi (fun i v -> (v.Name.ToLower(),i)) |> Map.ofSeq
             let args = Array.init (cons.GetParameters().Length) (fun _ -> Object())
+
             seq {
+            
+                let start = System.DateTime.Now
+
                 use reader = command.ExecuteReader()
                 let fieldMap = [for i in 0..reader.Reader.FieldCount-1 -> 
                                     match argMap.TryFind (reader.Reader.GetName(i).ToLower()) with
@@ -255,35 +291,44 @@ module Postgres =
                         for i,j in fieldMap do
                             args.[j] <- reader.Reader.GetValue(i) 
                         yield cons.Invoke(args) :?> 'T
+
+                if opts.logQueries || ((System.DateTime.Now - start).TotalMilliseconds > opts.logLongerThan) then
+                    sprintf "%d\t%f\t%s" (command.GetConnHash()) ((System.DateTime.Now-start).TotalMilliseconds) sql |> x.Log
+                    
             } 
 
           member x.ExecuteScalar(sql:string) =
             if x.LogQueries then x.Log(sql)
+            let start = System.DateTime.Now
             use comm = x.Command sql
-            comm.ExecuteScalar()
+            let r = comm.ExecuteScalar()
+
+            if opts.logQueries || ((System.DateTime.Now - start).TotalMilliseconds > opts.logLongerThan) then
+                    sprintf "%d\t%f\t%s" (x.GetHashCode()) ((System.DateTime.Now-start).TotalMilliseconds) sql |> x.Log
+            r
 
 
           new(connStr:string) = new DynamicSqlConnection(connStr,10)
           member private x.Pool = pool
           /// Creates command that calls the specified stored procedure
           static member (?) (conn:DynamicSqlConnection, name) = 
-            let connection = conn.Pool.Take()
+            let connection = conn.Take() // Pool.Take()
             use command =  connection.CreateCommand() 
             command.CommandText <- name 
             command.CommandType <- CommandType.StoredProcedure
-            new DynamicSqlCommand(command,(fun () -> conn.Pool.Release(connection)),conn.Opts,conn.Log)
+            new DynamicSqlCommand(command,(fun () -> conn.Release(connection)),conn.Opts,conn.Log)
 
           member x.cc comm = x.Command comm
           member x.Command(commandText:string) =
-            let conn = pool.Take()
+            let conn = x.Take()
             use comm = conn.CreateCommand()
             comm.CommandText <- commandText
             //match trans with | None -> () | Some(t) -> comm.Transaction <- t
-            new DynamicSqlCommand(comm,(fun () -> pool.Release(conn)),x.Opts,x.Log)
+            new DynamicSqlCommand(comm,(fun () -> x.Release(conn)),x.Opts,x.Log)
 
           member x.StartTrans() = 
-            let conn = pool.Take() // reserve a connection that will be shared across the transaction
-            new DynamicSqlTransaction(conn,(fun () -> pool.Release(conn)),x.Opts,x.Log)
+            let conn = x.Take() // reserve a connection that will be shared across the transaction
+            new DynamicSqlTransaction(conn,(fun () -> x.Release(conn)),x.Opts,x.Log)
 
           interface IDisposable with
             member x.Dispose() = 
