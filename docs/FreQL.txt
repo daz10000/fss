@@ -54,4 +54,5 @@ let insertedIds = conn.InsertOne<Run,int> run
 
 runRecords |> conn.InsertMany<Run,int> run |> ignore
 
-
+InsertMany takes optional argument ignoredColumns   for columns where the db should supply the value not the incoming record
+InsertMany takes optional argument transProvided if the insertion should use an existing transaction rather than creating its own temporary transaction

@@ -127,8 +127,8 @@ module Postgres =
             
           let release x = 
             let z = System.Threading.Thread.CurrentThread.ManagedThreadId
-            if opts.logConnUse then log(sprintf "release %d %d" z (x.GetHashCode()))
-            sprintf  "release %d" (x.GetHashCode()) |> log; pool.Release x
+            if opts.logConnUse then sprintf "release %d %d" z (x.GetHashCode()) |> log
+            pool.Release x
           
           /// Set a filename for logging output
           member x.Logfile with  get() = opts.logfileName.Value and 
@@ -261,13 +261,7 @@ module Postgres =
                 | Some(ta),Some(tr),Some(cols) -> x.InsertMany<'T,'R>([item],table=ta,transProvided=tr,ignoredColumns=cols).[0]
 
           member x.Query<'T>(sql:string) : seq<'T> =
-            //let connection = pool.Take()
-            //use command =  connection.CreateCommand()
-            //use command = new DynamicSqlCommand(sql,fun () -> pool.Release(connection))
-            //command.CommandText <- sql 
-            //if x.LogQueries then x.Log(sql)
-
-            use command : DynamicSqlCommand = x.Command sql
+            let command : DynamicSqlCommand = x.Command sql
             /// Determine details of this record's constructor
             let cons = typeof<'T>.UnderlyingSystemType.GetConstructors() |> Array.filter (fun c -> c.IsConstructor) |> Seq.head
             let argMap = cons.GetParameters() |> Array.mapi (fun i v -> (v.Name.ToLower(),i)) |> Map.ofSeq
@@ -290,19 +284,21 @@ module Postgres =
                             args.[j] <- reader.Reader.GetValue(i) 
                         yield cons.Invoke(args) :?> 'T
 
-                if opts.logQueries || ((System.DateTime.Now - start).TotalMilliseconds > opts.logLongerThan) then
-                    sprintf "%d\t%f\t%s" (command.GetConnHash()) ((System.DateTime.Now-start).TotalMilliseconds) sql |> x.Log
+                //if opts.logQueries || ((System.DateTime.Now - start).TotalMilliseconds > opts.logLongerThan) then
+                //    sprintf "%d\t%f\t%s" (command.GetConnHash()) ((System.DateTime.Now-start).TotalMilliseconds) sql |> x.Log
                     
+                // Don't dispose till the sequence is finally used. (within sequence generator)
+                (command :> IDisposable).Dispose()
             } 
 
           member x.ExecuteScalar(sql:string) =
-            if x.LogQueries then x.Log(sql)
-            let start = System.DateTime.Now
+            //let start = System.DateTime.Now
             use comm = x.Command sql
             let r = comm.ExecuteScalar()
 
-            if opts.logQueries || ((System.DateTime.Now - start).TotalMilliseconds > opts.logLongerThan) then
-                    sprintf "%d\t%f\t%s" (x.GetHashCode()) ((System.DateTime.Now-start).TotalMilliseconds) sql |> x.Log
+            // logged in call above
+            //if opts.logQueries || ((System.DateTime.Now - start).TotalMilliseconds > opts.logLongerThan) then
+            //        sprintf "%d\t%f\t%s" (x.GetHashCode()) ((System.DateTime.Now-start).TotalMilliseconds) sql |> x.Log
             r
 
 
@@ -310,7 +306,7 @@ module Postgres =
           member private x.Pool = pool
           /// Creates command that calls the specified stored procedure
           static member (?) (conn:DynamicSqlConnection, name) = 
-            let connection = conn.Take() // Pool.Take()
+            let connection = conn.Take() 
             use command =  connection.CreateCommand() 
             command.CommandText <- name 
             command.CommandType <- CommandType.StoredProcedure
@@ -319,7 +315,7 @@ module Postgres =
           member x.cc comm = x.Command comm
           member x.Command(commandText:string) =
             let conn = x.Take()
-            use comm = conn.CreateCommand()
+            let comm = conn.CreateCommand()
             comm.CommandText <- commandText
             //match trans with | None -> () | Some(t) -> comm.Transaction <- t
             new DynamicSqlCommand(comm,(fun () -> x.Release(conn)),x.Opts,x.Log)

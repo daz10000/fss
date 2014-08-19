@@ -1,3 +1,10 @@
+1.01
+=================
+Added logging for queries (optionally conditional on runtime)
+Added logging for connection pool usage
+Killed bug due to premature release of db connection
+Added support for ignoredColumns argument to InsertMany for db supplied column values
+
 1.0
 =================
 Added external transaction support to FreQL InsertMany
