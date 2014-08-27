@@ -1,0 +1,75 @@
+Based on a subset of the jina2 language http://jinja.pocoo.org/docs/dev/
+
+In lieu of proper docs,  the subset of jinja that the templating engine understands is 
+
+{{ count }}    // variable substitution
+{{ myRecord.field }} // field extraction from a record/object
+
+
+
+Conditional sections
+==============================
+
+{%if x>6 %}
+Conditional HTML
+{%endif%}
+
+
+Template extension
+====================================
+{% extends  “foo.html” %}  
+
+
+Iteration
+=====================================
+{% for x in y %}
+   {{x}} // reference to loop variable. 
+
+{%endfor%}
+
+
+If/else
+/======================================
+{%if y %}
+Conditional
+{%else%}
+Other branch
+{%endif%}
+
+Expressions
+==========================================
+Boolean expressions include  not, parenthetic subexpressions,  = for comparison, > , <  etc.
+Supports nested constructs (for loops, if statements etc )
+
+For loops can iterate over arrays of records or more complex types.  F# lists are not supported.
+
+
+
+Calling template engine
+=================================
+
+Create a template server pointing at a folder of templates
+let ts = TemplateServer(@"pathToTemplates")
+
+Fetch specific template
+
+let myTemplate = ts.Get("index.html")
+
+Render template substituting specific variables
+
+let renderedPage = myTemplate.Render([|  ("a",box 123) ; ("count",box 6) ; ("user",box "Darren") ; ("data",box [| 1;2;3;4 |]) |])
+
+Record example
+==================
+let people = [|
+                        {name="Prudence" ; telephone = 5551234 ; city = "LA" } ;
+                        {name="Alex" ; telephone = 5556871 ; city = "Seattle" } ;
+                        {name="FiFi" ; telephone = 5559888 ; city = "New York" } ;
+                        |]
+
+
+    let t = ts.Get("template1.html")
+// subsitute variables and pass to HTML return
+    t.Render([| ("peeps",people) |]) |> http200
+
+
