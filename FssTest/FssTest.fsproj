@@ -60,6 +60,7 @@
     <Compile Include="testTemplate.fs" />
     <Compile Include="testPool.fs" />
     <Compile Include="testServer.fs" />
+    <Compile Include="test_db.fs" />
     <None Include="Script.fsx" />
     <None Include="packages.config" />
   </ItemGroup>

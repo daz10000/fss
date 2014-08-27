@@ -17,6 +17,10 @@ module Postgres =
     type ConnOpts = {  mutable logfile : StreamWriter option ; mutable logfileName : string option ; mutable logQueries : bool;
                             mutable logLongerThan : float ; mutable logConnUse : bool }
 
+    /// Used to detect Option fields that could be null
+    let  genericOptionType = typedefof<option<_>>
+
+
     /// SqlDataReader wrapper that provides access to columns 
     /// of the result-set using dynamic access operator
     /// See http://tomasp.net/blog/dynamic-sql.aspx for original idea.
@@ -237,9 +241,34 @@ module Postgres =
 
                         comm2.Parameters.AddRange(vals)
 
+                        /// Are any of the fields option types / and nullable in database
+                        let nullOption = fields |> Array.mapi (fun i f ->
+                                                                let pt = f.PropertyType
+                                                                let isOption = pt.IsGenericType &&  pt.GetGenericTypeDefinition() = genericOptionType
+                                                                let isNotNull = (cols |> Array.find (fun c -> c.cname = f.Name.ToLower())).cNotNull
+                                                                match isOption,isNotNull with
+                                                                    | true,false -> true
+                                                                    | true,true -> failwithf "ERROR: field %s is option but not nullable" f.Name
+                                                                    | false,true -> false
+                                                                    | false,false -> failwithf "ERROR:field %s is not option but is nullable" f.Name
+                                                              )
+                        /// Sequence of return values from serially processing each item in items
                         let ret = seq {
                                         for item in items do
-                                            fields |> Array.iteri (fun i f -> vals.[i].Value <- f.GetValue(item,null))
+                                            //Process the field definitions and poke values into the dbparameter array vals
+                                            fields |> Array.iteri (fun i f -> 
+                                                                        if nullOption.[i] then
+                                                                            // Field can be null and will be defined as an option on the F# record
+                                                                            // side so extract differently
+                                                                            let v1 = f.GetValue(item,null)
+                                                                            vals.[i].Value <- (
+                                                                                    if v1=null then null else
+                                                                                        let t2 = f.PropertyType.GetProperty("Value")
+                                                                                        t2.GetValue(v1,null)
+                                                                                        )
+                                                                        else
+                                                                            vals.[i].Value <- f.GetValue(item,null))
+                                            // Finally execute insert stmt and capture return value
                                             yield (comm2.ExecuteScalar() :?> 'R )
                                     } |> Array.ofSeq
 
@@ -284,9 +313,6 @@ module Postgres =
                             args.[j] <- reader.Reader.GetValue(i) 
                         yield cons.Invoke(args) :?> 'T
 
-                //if opts.logQueries || ((System.DateTime.Now - start).TotalMilliseconds > opts.logLongerThan) then
-                //    sprintf "%d\t%f\t%s" (command.GetConnHash()) ((System.DateTime.Now-start).TotalMilliseconds) sql |> x.Log
-                    
                 // Don't dispose till the sequence is finally used. (within sequence generator)
                 (command :> IDisposable).Dispose()
             } 
