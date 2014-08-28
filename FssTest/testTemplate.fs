@@ -248,20 +248,20 @@ type TestTemplateBasic() = class
 
 
     [<Test>]
-    member x.Test9() =
+    member x.Test009() =
         let template1 = Template(test9)
         let page = template1.Render( [| ("var1",box "happy birthday") ; ("var2", box 2)|])
         sc page test9Result
 
     [<Test>]
-    member x.testVarFetcher() =
+    member x.test000VarFetcher() =
         let vf = VarExtractor([| ("cat" , "prudence") ; ("dog" , "snoopy" ) |])
         sc (sprintf "'%A'" (vf.Get("cat")) ) "'SCONST \"prudence\"'"
         sc ( sprintf "'%A'" (vf.Get("dog")) )  "'SCONST \"snoopy\"'"
         sc ( sprintf "'%A'" (vf.Get("mouse")) ) "'SCONST \"missing value 'mouse'\"'"
 
     [<Test>]
-    member x.Test10() =
+    member x.Test010() =
         let template1 = Template(test10)
         let page = template1.Render( [| ("var1",box [| "cat" ; "dog" ; "mouse" ;"kangaroo"|]) ; ("var2", box 2)|])
         sc page test10Result
@@ -377,38 +377,98 @@ type TestTemplateBasic() = class
         let page = template.Render([| ("x",box null) |])
         sc templateExpected page    
     [<Test>]
-    member x.Test020_Extends_Simple() =
-        let template = Template("{% extends \"layout.html\" %} Mary had a little lamb")
+    member x.Test020_Include_Simple() =
+        let template = Template("{% include \"layout.html\" %} Mary had a little lamb")
         // How to test this?  Will depend on a local folder at some point for the imports
         ()
 
     [<Test>]
-    member x.Test021_Extends_Multiple() =
+    member x.Test021_Include_Multiple() =
         /// Proc (web) filesystem to expose status info
         let grab page = 
             match page with 
                 | "mary.html" -> "mary had a little lamb"
                 | "fleece.html" -> "its fleece was white as snow"
                 | _ -> "file not found"
-        let template = Template("{% extends \"mary.html\" %} {% extends \"fleece.html\" %}",grab)
+        let template = Template("{% include \"mary.html\" %} {% include \"fleece.html\" %}",grab)
         let templateExpected = "mary had a little lamb its fleece was white as snow"
         let page = template.Render([||])
         sc templateExpected page    
 
     [<Test>]
-    member x.Test022_Extends_Recursive() =
+    member x.Test022_Include_Recursive() =
         /// Proc (web) filesystem to expose status info
         let grab page = 
             match page with 
-                | "mary.html" -> "mary had a little {% extends \"lamb.html\"%}"
+                | "mary.html" -> "mary had a little {% include \"lamb.html\"%}"
                 | "fleece.html" -> "its fleece was white as snow"
                 | "lamb.html" -> "lamb"
                 | _ -> "file not found"
-        let template = Template("{% extends \"mary.html\" %} {% extends \"fleece.html\" %}",grab)
+        let template = Template("{% include \"mary.html\" %} {% include \"fleece.html\" %}",grab)
         let templateExpected = "mary had a little lamb its fleece was white as snow"
         let page = template.Render([||])
         sc templateExpected page    
 
         ()
+
+    [<Test>]
+    /// Recognize block statements correctly
+    member x.Test040_Block() =
+        let template = Template("{%block foo%} La de da da {%endblock%}",fun _ -> "")
+        let templateExpected = ""
+        let page = template.Render([||])
+        sc templateExpected page    
+
+    [<Test>]
+    /// Recognize block statements correctly with named block close
+    member x.Test041_NamedEndBlock() =
+        let template = Template("{%block foo%} La de da da {%endblock foo%}",fun _ -> "")
+        let templateExpected = ""
+        let page = template.Render([||])
+        sc templateExpected page   
+         
+    /// Recognize block statements correctly with funny whitespace
+    member x.Test042_BlockWS() =
+        let template = Template("{% block foo %} La de da da {% endblock %}",fun _ -> "")
+        let templateExpected = ""
+        let page = template.Render([||])
+        sc templateExpected page    
+
+    [<Test>]
+    /// Recognize block statements correctly with named block close with funny whitespace
+    member x.Test043_NamedEndBlockWS() =
+        let template = Template("{%  block foo  %} La de da da {% endblock foo  %}",fun _ -> "")
+        let templateExpected = ""
+        let page = template.Render([||])
+        sc templateExpected page    
+
+
+    [<Test>]
+    /// Recognize block statements correctly with named block close
+    member x.Test044_BasicExtends() =
+        let grab page = 
+            match page with 
+                | "base.html" -> "mary had a little {%block animal%} insert animal here {%endblock%} its {%block animalpart %}fleece{%endblock%} was {%block color%}white{%endblock%} as {%block thing%}{%endblock%}"
+                | "lamb.html" -> ""
+                | _ -> "file not found"
+        let template1 = Template("{%extends \"base.html\"%}
+                                        {%block animal%}lamb{%endblock%}
+                                        {%block animalpart%}fleece{%endblock animalpart%}
+                                        {%block color%}white{%endblock color%}
+                                        {%block thing%}snow{%endblock%}
+                                        ",grab)
+        let templateExpected1 = "mary had a little lamb its fleece was white as snow"
+        let page1 = template1.Render([||])
+        sc templateExpected1 page1
+        
+        let template2 = Template("{%extends \"base.html\"%}
+                                        {%block animal%}cow{%endblock%}
+                                        {%block animalpart%}milk{%endblock animalpart%}
+                                        {%block color%}brown{%endblock color%}
+                                        {%block thing%}chocolate{%endblock%}
+                                        ",grab)    
+        let templateExpected2 = "mary had a little cow its milk was brown as chocolate"
+        let page2 = template2.Render([||])
+        sc templateExpected2 page2
           
 end
