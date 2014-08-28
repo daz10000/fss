@@ -41,7 +41,21 @@ type Test3 = { id : int ; age : int ; first : string ; last : string option ; ra
 let t3a = { id = 1 ; age = 30 ; first = "fred" ; last = Some "flintstone" ; rate = 1.2}
 let t3b = { id = -1 ; age = 4 ; first = "dino" ; last = None ; rate = 1.2}
 
- 
+let createT4SQL = """
+create table Test4 (
+	id serial,
+	age   integer,
+	first	varchar(100),
+	last   varchar(100),
+	rate   float,
+    happy  boolean
+)"""
+
+type Test4 = { id : int ; age : int option ; first : string option ; last : string option; rate : float option ; happy : bool option}
+
+let t4a = { id = -1 ; age = Some(40) ; first = Some "wilma" ; last = Some "flintstone" ; rate = Some 1.256 ; happy = Some true}
+let t4b = { id = -1 ; age = None ; first = None ; last = None ; rate = None ; happy = None}
+
 let getConnString() =
     if not (File.Exists("connection.txt")) then
         failwithf "ERROR: expected connection.txt file with connstring"
@@ -56,11 +70,13 @@ let drop table (conn:DynamicSqlConnection)  = table |> sprintf "drop table if ex
 let createT1 (conn:DynamicSqlConnection) = conn.ExecuteScalar(createT1SQL) |> ignore
 let createT2 (conn:DynamicSqlConnection) = conn.ExecuteScalar(createT2SQL) |> ignore
 let createT3 (conn:DynamicSqlConnection) = conn.ExecuteScalar(createT3SQL) |> ignore
+let createT4 (conn:DynamicSqlConnection) = conn.ExecuteScalar(createT4SQL) |> ignore
 
 
 let setupT1 (conn:DynamicSqlConnection) = drop "test1" conn ; createT1 conn
 let setupT2 (conn:DynamicSqlConnection) = drop "test2" conn ; createT2 conn
 let setupT3 (conn:DynamicSqlConnection) = drop "test3" conn ; createT3 conn
+let setupT4 (conn:DynamicSqlConnection) = drop "test4" conn ; createT4 conn
 
 
 [<TestFixture>]
@@ -143,8 +159,22 @@ type TestPGDbBasic() = class
         let results = conn.Query "select * from test3"  |> Array.ofSeq
 
         let (someLast,noneLast) = results |> Array.partition (fun r -> r.last.IsSome)
-        Assert.Equals(someLast.Length,1) |> ignore
-        Assert.Equals(noneLast.Length,1) |> ignore
+        Assert.IsTrue(someLast.Length=1) |> ignore
+        Assert.IsTrue(noneLast.Length=1) |> ignore
 
+    [<Test>]
+    member x.Test034InsertQueryAllNull() =
+        use conn = gc()
+        setupT4 conn
+        conn.InsertMany ([ t4a ; t4b ],ignoredColumns=["id"]) |> ignore
+        let results = conn.Query "select * from test4 order by id asc"  |> Array.ofSeq
+        let wilma = results.[0]
+        let original = {t4a with id = wilma.id}
+        let matches = wilma = original
+        Assert.IsTrue(matches)
+
+        let original2 = {t4b with id = results.[1].id}
+        let matches2 = original2 = results.[1]
+        Assert.IsTrue(matches2)
 end
 

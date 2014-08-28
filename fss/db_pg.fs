@@ -293,7 +293,15 @@ module Postgres =
             let command : DynamicSqlCommand = x.Command sql
             /// Determine details of this record's constructor
             let cons = typeof<'T>.UnderlyingSystemType.GetConstructors() |> Array.filter (fun c -> c.IsConstructor) |> Seq.head
+
+            let isOption = cons.GetParameters() |> Array.map (fun f -> 
+                                                                    let pt = f.ParameterType 
+                                                                    pt.IsGenericType &&  pt.GetGenericTypeDefinition() = genericOptionType
+                                                               )
+            /// Maps argument name onto positon
             let argMap = cons.GetParameters() |> Array.mapi (fun i v -> (v.Name.ToLower(),i)) |> Map.ofSeq
+
+            /// Array into which we temporarily load values while constructing records
             let args = Array.init (cons.GetParameters().Length) (fun _ -> Object())
 
             seq {
@@ -310,7 +318,19 @@ module Postgres =
 
                 while reader.Read() do            
                         for i,j in fieldMap do
-                            args.[j] <- reader.Reader.GetValue(i) 
+                            args.[j] <- (
+                                    if isOption.[j] then
+                                        match reader.Reader.GetValue(i) with
+                                            | :? DBNull ->box None
+                                            | :? string as x -> box (Some(x))
+                                            | :? int64 as x -> box (Some(x))
+                                            | :? float as x -> box (Some(x))
+                                            | :? bool as x -> box (Some(x))
+                                            | :? int32 as x -> box (Some(x))
+                                            | _ as x -> failwithf "ERROR: unsupported nullable dbtype %s" (x.GetType().Name)
+                                    else
+                                        reader.Reader.GetValue(i) 
+                            )
                         yield cons.Invoke(args) :?> 'T
 
                 // Don't dispose till the sequence is finally used. (within sequence generator)
