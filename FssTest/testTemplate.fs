@@ -218,6 +218,11 @@ type TestTemplateBasic() = class
         let t = Template("preamble{{hello}}{% for x in var1 %}{{x}}middle{% for y in var2%}{{y}}{% endfor %} {% endfor %}postamble")
         let page = t.Render( [| ("var1" , box [| 1 ;2 ; 3|]) ; ("var2",box [| 4 ; 5 ; 6 |]) ; ("hello",box "there") |])
         sc "preamblethere1middle456 2middle456 3middle456 postamble" page
+    [<Test>]
+    member x.Test005bEmptyFor() =
+        // No content in for block - make sure we can parse this case
+        let _ = Template("{% for x in var1 %}{% endfor %}")
+        ()
 
     [<Test>]
     member x.Test006aNestedIfs() =
@@ -232,6 +237,17 @@ type TestTemplateBasic() = class
         let t = Template("{%if x=0%} x is zero {{hello}}{%if y=0 %}y is zero {{hello}} too{%endif%}{%endif%}")
         let page = t.Render( [| ("x" , box 0) ; ("y",box 0) ; ("hello",box "there") |])
         sc " x is zero therey is zero there too" page
+
+    [<Test>]
+    member x.Test006cEmptyIfBlock() =
+        let _ = Template("{%if x=0%}{%endif%}")
+        ()
+
+    [<Test>]
+    member x.Test006dEmptyElseBlock() =
+        let _ = Template("{%if x=0%}{%else%}{%endif%}")
+        ()
+
 
     (*
     // Not ready for this - {{expressions}} not implemented
@@ -435,17 +451,36 @@ type TestTemplateBasic() = class
         sc templateExpected page    
 
     [<Test>]
+    member x.Test043_BlocksEmpty() =
+        let template = Template("{%block thing%}{%endblock%}")
+        () // That should exercise the parser
+
+    [<Test>]
     /// Recognize block statements correctly with named block close with funny whitespace
-    member x.Test043_NamedEndBlockWS() =
+    member x.Test044_NamedEndBlockWS() =
         let template = Template("{%  block foo  %} La de da da {% endblock foo  %}",fun _ -> "")
         let templateExpected = ""
         let page = template.Render([||])
         sc templateExpected page    
 
+    [<Test>]
+    member x.Test045_BlocksTextInterspersed1() =
+        let template = Template("mary had a little {%block animal%} insert animal here {%endblock%}")
+        () // That should exercise the parser
 
     [<Test>]
+    member x.Test046_BlocksTextInterspersed() =
+        let template = Template("mary had a little {%block animal%} insert animal here {%endblock%} its {%block animalpart %}fleece{%endblock%} was {%block color%}white{%endblock%}")
+        () // That should exercise the parser
+
+    [<Test>]
+    member x.Test047_BlocksTextInterspersed() =
+        let template = Template("mary had a little {%block animal%} insert animal here {%endblock%} its {%block animalpart %}fleece{%endblock%} was {%block color%}white{%endblock%} as {%block thing%}{%endblock%}")
+        () // That should exercise the parser
+    
+    [<Test>]
     /// Recognize block statements correctly with named block close
-    member x.Test044_BasicExtends() =
+    member x.Test050_BasicExtends() =
         let grab page = 
             match page with 
                 | "base.html" -> "mary had a little {%block animal%} insert animal here {%endblock%} its {%block animalpart %}fleece{%endblock%} was {%block color%}white{%endblock%} as {%block thing%}{%endblock%}"

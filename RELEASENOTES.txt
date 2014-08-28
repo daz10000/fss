@@ -1,8 +1,8 @@
 1.1
 ==================
 Freql: Support for null fields in tables, mapped onto option fields in records
-changed extends -> include in jinja2 clone to correctly reflect jinja
-semantics
+changed extends -> include in jinja2 clone to correctly reflect jinja semantics
+implemented jinna2 blocks
 
 Added unit tests for pg_db.fs
 
