@@ -1,0 +1,4 @@
+FssTest contains unit tests using the NUnit framework.
+After installing NUnit, they can be run by executing FssTest.dll
+For the database unit tests, an empty postgres database is required,
+with the connection string placed in the file connection.txt in the same folder as FssTest.dll

@@ -159,8 +159,12 @@ module Template =
             | IFSTART of Expression
             | FORSTART of string*Expression // For var name, iterable var name
             | TEXT of string
-            | ENDBLOCK
+            | BLOCKSTART of string
+            | ENDBLOCK of string option
+            | INCLUDE of string
             | EXTENDS of string
+            | BLOCK of string*TemplatePart list
+            | EXTENDSBUNDLED of (TemplatePart list)*(TemplatePart list)
             | UNKNOWNLOGIC of string
             | RAW 
             | ENDRAW
@@ -179,8 +183,17 @@ module Template =
                         | VAR(v) -> yield sprintf "Var: %s\n" v
                         | LOGIC(v) -> yield sprintf "Logic: %s\n" v
                         | EXTENDS(file) -> yield sprintf "Extends: %s\n" file
+                        | EXTENDSBUNDLED(l1,l2) -> 
+                                    yield sprintf "ExtendsBunded:\n" 
+                                    yield (pp (indent+"111>") l1)
+                                    yield (pp (indent+"222>") l2)
+                        | INCLUDE(file) -> yield sprintf "Include: %s\n" file
                         | FORSTART(fv,fi) -> yield sprintf "For: %s in %s\n" fv (ppExpr fi)
-                        | ENDBLOCK -> yield sprintf "Endblock\n"
+                        | ENDBLOCK(name) -> yield sprintf "Endblock %s\n" (match name with | Some(x) -> x | None -> "none")
+                        | BLOCKSTART(name) -> yield sprintf "Startblock %s\n" name
+                        | BLOCK(name,contents) ->
+                            yield sprintf "BLOCK: %s" name
+                            yield (pp (indent+"iii>") contents)
                         | ELSE -> yield sprintf "Else\n"
                         | ENDFOR -> yield sprintf "Endfor\n"
                         | IFSTART(s) -> yield sprintf "IfStart %s\n" (ppExpr s)
@@ -212,11 +225,13 @@ module Template =
 
     and  (|LogicType|) = function
                             | "endfor" -> ENDFOR
-                            | "endblock" -> ENDBLOCK
+                            | "endblock" -> ENDBLOCK(None) // unnamed endblock
                             | "raw" -> RAW
                             | "endraw" -> ENDRAW
                             | "endif" -> ENDIF
                             | "else" -> ELSE
+                            | x when x.StartsWith("block") -> BLOCKSTART(x.[5..].Trim()) // startblock
+                            | x when x.StartsWith("endblock") -> ENDBLOCK(Some(x.[8..].Trim())) // named endblock
                             | x when x.StartsWith("extends") -> 
                                         let file = x.Trim().[7..]
                                         let m = extendsFileRE.Match(file)
@@ -224,6 +239,13 @@ module Template =
                                             EXTENDS(m.Groups.[1].Value)
                                         else
                                             failwithf "ERROR: extends filename '%s' doesn't match \"filename\" pattern" file
+                            | x when x.StartsWith("include") -> 
+                                        let file = x.Trim().[7..]
+                                        let m = extendsFileRE.Match(file)
+                                        if m.Success then
+                                            INCLUDE(m.Groups.[1].Value)
+                                        else
+                                            failwithf "ERROR: include filename '%s' doesn't match \"filename\" pattern" file
                             | x when x.StartsWith("for") -> 
                                         match x.[4..].Trim() |> List.ofSeq with
                                             | ForIter((forVar,targetVar)) -> 
@@ -300,20 +322,38 @@ module Template =
             | _ -> None
 
 
-
     /// Now go through the parsed parts and roll them up into
     /// larger semantic groups (like pairing start/end block elements.
     /// Takes a list of Template Elements and returns a consolidated list of possibly
     /// high level template elements.
     let rec (|ParsedSection|_|) = function
-                            | EXTENDS(e)::tl -> Some(EXTENDS(e),tl) // pass through
-                            | TEXT(t)::tl -> Some(TEXT(t),tl) // pass through
-                            | FORSTART(fv,fi)::ParsedSections(body,ENDFOR::tl) -> Some(FOR(fv,fi,body),tl) // Gather up FOR/ENDFOR blocks
-                            | IFSTART(f)::ParsedSections(body,ENDIF::tl) -> Some(IF(f,body,None),tl) // Gather up IF/ENDIF blocks
-                            | IFSTART(f)::ParsedSections(body,ELSE::ParsedSections(body2,ENDIF::tl)) -> Some(IF(f,body,Some(body2)),tl) // Gather up IF/ENDIF blocks
-                            | VAR(v)::tl -> Some(VAR(v),tl)
-                            | _  as x -> None
-
+        | EXTENDS(e)::ParsedSections(body,[]) -> Some(EXTENDSBUNDLED(body,[]),[]) // pass through - standalone element
+        | INCLUDE(e)::tl -> Some(INCLUDE(e),tl) // pass through - standalone element
+        | TEXT(t)::tl -> Some(TEXT(t),tl) // pass through
+        | FORSTART(fv,fi)::ParsedSections(body,ENDFOR::tl) -> Some(FOR(fv,fi,body),tl) // Gather up FOR/ENDFOR blocks
+        | FORSTART(fv,fi)::ENDFOR::tl -> Some(FOR(fv,fi,[]),tl) // Gather up FOR/ENDFOR blocks with empty for body
+        | BLOCKSTART(name)::ENDBLOCK(name2)::tl ->
+            if name2.IsNone || name=name2.Value then
+                 Some(BLOCK(name,[]),tl) // Gather up BLOCK/ENDBLOCK blocks
+            else
+                 failwithf "ERROR processing template BLOCK %s doesn't match endblock %s" name 
+                        (match name2 with | Some(x)->x | None -> "none")
+        | BLOCKSTART(name)::ParsedSections(body,ENDBLOCK(name2)::tl) ->
+            if name2.IsNone || name=name2.Value then
+                 Some(BLOCK(name,body),tl) // Gather up BLOCK/ENDBLOCK blocks
+            else
+                 failwithf "ERROR processing template BLOCK %s doesn't match endblock %s" name 
+                        (match name2 with | Some(x)->x | None -> "none")
+        | IFSTART(f)::ParsedSections(body,ENDIF::tl) -> Some(IF(f,body,None),tl) // Gather up IF/ENDIF blocks
+        | IFSTART(f)::ENDIF::tl -> Some(IF(f,[],None),tl) // Gather up IF/ENDIF blocks empty body
+        | IFSTART(f)::ParsedSections(body,ELSE::ParsedSections(body2,ENDIF::tl)) -> Some(IF(f,body,Some(body2)),tl) // Gather up IF/ENDIF blocks
+        | IFSTART(f)::ELSE::ParsedSections(body2,ENDIF::tl) -> Some(IF(f,[],Some(body2)),tl) // Gather up IF/ENDIF blocks
+        | IFSTART(f)::ELSE::ParsedSections(body2,ENDIF::tl) -> Some(IF(f,[],Some(body2)),tl) // Gather up IF/ENDIF blocks
+        | IFSTART(f)::ELSE::ENDIF::tl -> Some(IF(f,[],Some([])),tl) // Gather up IF/ENDIF blocks
+        | VAR(v)::tl -> Some(VAR(v),tl)
+        | EXTENDSBUNDLED(subs,body):: tl -> Some(EXTENDSBUNDLED(subs,body),tl)
+        | _  as x -> None
+        
     and (|ParsedSections|_|) = function
                 | ParsedSection(p,ParsedSections(p2,rem)) -> Some(p::p2,rem)
                 | ParsedSection(p,rem) -> Some([p],rem)
@@ -493,39 +533,49 @@ module Template =
                             | None -> ve.Get(v) 
                             | Some(s) -> s
 
-    /// Main template rendering class.  Instantiated using
+    /// Main template rendering class.  Instantiated usings
     /// string as a constructor and optionally a function to fetch sub templates  
     type Template(input:string,fetcher:string->string) = class
+
+        /// First take the input text and create a list of parts.  This should all roll up to
+        /// a single Page object.   No semantic processing is done at this stage, e.g. matching FOR/ENDFOR
         let parts = match  List.ofSeq input with
                         | Page(p) -> p
                         | _ as x -> failwithf "ERROR: failed to process (parse) page template, received %A instead" x
                         
-        // ve.Print()
-        let rec expandExtends (parts:TemplatePart list) (res:TemplatePart list)=
-                    match parts with
-                        | [] -> List.rev res
-                        | hd::tl -> expandExtends tl ((expandExtend hd |> List.rev)@res)
-
-        and expandExtend (part:TemplatePart) =
-                    match part with
-                        | EXTENDS(file) -> 
-                                let parts = match  List.ofSeq (fetcher file) with
+        // Wipe out any include tokens in the page, recursively so the whole page is now assembled into one
+        // document
+        // ------------------------------------------------
+        let rec expandIncludesExtends (parts:TemplatePart list) (res:TemplatePart list)=
+                    match parts with 
+                        | [] -> List.rev res // reverse final list of parts
+                        | EXTENDS(file)::tl -> // Hit an extends statement, grab parent template and build out tree of template and filled out blocks
+                            let parts = match List.ofSeq (fetcher file) with
                                             | Page(p) -> p
-                                            | _ as x -> failwithf "ERROR: failed to process (parse) page template, received %A instead" x
-                        
-                                let (Parsed parsed) = parts
-                                parts
-                        | _ as x -> [x]
-             
-        let containsExtend(parts:TemplatePart list) = parts |> List.exists (fun p -> match p with | EXTENDS(_) -> true | _ -> false)
-        let rec removeExtends (parts:TemplatePart list) =
-            if containsExtend parts then
-                let parts' = expandExtends parts []
-                removeExtends parts'
-            else parts
+                                            | _ as x -> failwithf "ERROR: failed to process (parse) extends page template %s, received %A instead" file x
+                            let (Parsed parsed) = parts
+                            let (Parsed parsedTail) = tl // Parse remainder of this page past the extends 
+                            [EXTENDSBUNDLED(parsedTail,parsed)]
+                        | INCLUDE(file)::tl ->
+                            let parts = match  List.ofSeq (fetcher file) with
+                                            | Page(p) -> p
+                                            | _ as x -> failwithf "ERROR: failed to process (parse) included page template %s, received %A instead" file x
+                            expandIncludesExtends tl (( (expandIncludesExtends parts [] )|> List.rev)@res)
+                        | hd::tl -> expandIncludesExtends tl (hd::res)
 
-        let extendsFreePartsList = parts |> removeExtends
-        let (Parsed parsed) = extendsFreePartsList
+             
+        //let containsIncludeOrExtends(parts:TemplatePart list) = parts |> List.exists (fun p -> match p with | INCLUDE(_) -> true | EXTENDS(_) -> true | _ -> false)
+        //let rec removeIncludeOrExtends (parts:TemplatePart list) =
+        //    if containsIncludeOrExtends parts then
+        //        let parts' = expandIncludesExtends parts []
+        //        removeIncludeOrExtends parts'
+        //    else parts
+
+        let includeFreePartsList =  expandIncludesExtends parts []
+
+        /// Interpreted template part list, so matching open/close elements are rolled up
+        /// into consolidated template parts. e.g. FORSTART/ENDFOR -> FOR()
+        let (Parsed parsed) = includeFreePartsList
         
         let rec calc (vf:VarFetcher) (expression:Expression)  =
             let c = calc vf
@@ -627,34 +677,41 @@ module Template =
         ///   Class with members representing different fields
         member x.Render(args:obj) =
             let t = args.GetType()
-            //if FSharpType.IsUnion(t) then
-            //    let union,fields = FSharpValue.GetUnionFields(args,t)
-            //    ""
-            //else
-            //    ""
             let ve = VarExtractor(args)
+            /// Accumulates assembled page
             let sb = StringBuilder()
             
-            // ve.Print()
-            let rec expandParts (locals:Map<string,Expression>) (parts:TemplatePart list) =
+            let rec expandParts (locals:Map<string,Expression>) (blocks:Map<string,TemplatePart list>) (parts:TemplatePart list) =
                         match parts with
                             | [] -> ()
                             | hd::tl -> 
-                                expandPart locals hd
-                                expandParts locals tl
-            and expandPart (locals:Map<string,Expression>) (part:TemplatePart) =
+                                expandPart locals blocks hd
+                                expandParts locals blocks tl
+            and expandPart (locals:Map<string,Expression>) (blocks:Map<string,TemplatePart list>) (part:TemplatePart) =
                         match part with
                             | TEXT(t) -> sb.Append(t) |> ignore
                             | IF(expression,ifBlock,elseBlock) ->
                                 if isTrue expression (VarFetcher(ve,locals)) then
-                                    expandParts locals ifBlock
+                                    expandParts locals blocks ifBlock
                                 else
                                     match elseBlock with
                                         | None -> () // No else statement
-                                        | Some(c) -> expandParts locals c
+                                        | Some(c) -> expandParts  locals blocks c
+                            | BLOCK(name,body) ->   
+                                match blocks.TryFind name with
+                                    | None -> expandParts locals blocks body // Use existing block body since it hasn't been replaced
+                                    | Some(content) -> expandParts locals blocks content
+                            | EXTENDSBUNDLED(defs,body) ->
+                                  let newBlocks = defs |> List.choose (fun p -> match p with 
+                                                                                | BLOCK(n,c) -> Some(n,c) 
+                                                                                | _ -> None)
+                                                    |> Map.ofSeq
+                                  expandParts locals (blocks |> Seq.fold (fun m v -> m.Add(v.Key,v.Value)) newBlocks) body
+
                             | RAW ->
                                 failwithf "Unimplemented RAW block expansion"
-                            | EXTENDS(file) -> sb.Append(fetcher file) |> ignore // file name for now
+                            | INCLUDE(file) -> sb.Append(fetcher file) |> ignore 
+                            | EXTENDS(file) -> failwithf "ERROR: unimpemented extends for file %s" file // FIXFIX
                             | FOR(fv,expr,parts) ->
                                 let arr = 
                                     match expr with
@@ -667,17 +724,17 @@ module Template =
                                             failwithf "ERROR: loop expansion only permitted over array types, not %A" x
                                 for v in arr do
                                     // Now expand the inner block
-                                    expandParts (locals.Add(fv,v)) parts
+                                    expandParts (locals.Add(fv,v)) blocks parts
                             | VAR(v) ->
                                 // Try local variable and if that fails, passed in global
                                 sb.Append((match (lookupLocals locals v) with | Some(s) ->s | None -> ve.Get(v) ) |> ppExpr) |> ignore
-                            | IFSTART(_)  | ENDBLOCK | ENDFOR | ENDIF | ENDRAW | FORSTART(_) | LOGIC(_) | ELSE as x -> 
+                            | IFSTART(_)  | BLOCKSTART(_) | ENDBLOCK(_) | ENDFOR | ENDIF | ENDRAW | FORSTART(_) | LOGIC(_) | ELSE as x -> 
                                 failwithf "Internal error: Unexpected %A element that should have been consolidated" x
                             | UNKNOWNLOGIC(u) -> 
                                 failwithf "Unknown logic element %A encountered in expansion" u
                             | EXPANDED(s) -> sb.Append(s) |> ignore
             
-            expandParts Map.empty parsed
+            expandParts Map.empty Map.empty parsed
             sb.ToString()
     end
 
