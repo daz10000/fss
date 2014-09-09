@@ -156,7 +156,7 @@ type TestPGDbBasic() = class
         use conn = gc()
         setupT3 conn
         conn.InsertMany([ t3a; t3b]) |> ignore
-        let results = conn.Query "select * from test3"  |> Array.ofSeq
+        let results : Test3 [] = conn.Query "select * from test3"  |> Array.ofSeq
 
         let (someLast,noneLast) = results |> Array.partition (fun r -> r.last.IsSome)
         Assert.IsTrue(someLast.Length=1) |> ignore
