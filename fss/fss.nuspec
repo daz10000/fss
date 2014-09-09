@@ -7,7 +7,7 @@
     <authors>$author$</authors>
     <owners>$author$</owners>
     <licenseUrl>http://www.apache.org/licenses/LICENSE-2.0</licenseUrl>
-    <!-- <projectUrl>http://feb17.org/fss</projectUrl> -->
+    <projectUrl>https://github.com/daz10000/fss</projectUrl>
     <requireLicenseAcceptance>false</requireLicenseAcceptance>
     <description>$description$</description>
     <releaseNotes>Added FreQL F# Records to SQL connection</releaseNotes>
