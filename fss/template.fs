@@ -554,7 +554,8 @@ module Template =
                                             | Page(p) -> p
                                             | _ as x -> failwithf "ERROR: failed to process (parse) extends page template %s, received %A instead" file x
                             let (Parsed parsed) = parts
-                            [EXTENDSBUNDLED(tl,parsed)]
+                            let (Parsed parsedTail) = tl // Parse remainder of this page past the extends 
+                            [EXTENDSBUNDLED(parsedTail,parsed)]
                         | INCLUDE(file)::tl ->
                             let parts = match  List.ofSeq (fetcher file) with
                                             | Page(p) -> p

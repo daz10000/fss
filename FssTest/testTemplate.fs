@@ -431,7 +431,7 @@ type TestTemplateBasic() = class
     /// Recognize block statements correctly
     member x.Test040_Block() =
         let template = Template("{%block foo%} La de da da {%endblock%}",fun _ -> "")
-        let templateExpected = ""
+        let templateExpected = " La de da da "
         let page = template.Render([||])
         sc templateExpected page    
 
@@ -439,14 +439,14 @@ type TestTemplateBasic() = class
     /// Recognize block statements correctly with named block close
     member x.Test041_NamedEndBlock() =
         let template = Template("{%block foo%} La de da da {%endblock foo%}",fun _ -> "")
-        let templateExpected = ""
+        let templateExpected = " La de da da "
         let page = template.Render([||])
         sc templateExpected page   
          
     /// Recognize block statements correctly with funny whitespace
     member x.Test042_BlockWS() =
         let template = Template("{% block foo %} La de da da {% endblock %}",fun _ -> "")
-        let templateExpected = ""
+        let templateExpected = " La de da da "
         let page = template.Render([||])
         sc templateExpected page    
 
@@ -459,7 +459,7 @@ type TestTemplateBasic() = class
     /// Recognize block statements correctly with named block close with funny whitespace
     member x.Test044_NamedEndBlockWS() =
         let template = Template("{%  block foo  %} La de da da {% endblock foo  %}",fun _ -> "")
-        let templateExpected = ""
+        let templateExpected = " La de da da "
         let page = template.Render([||])
         sc templateExpected page    
 
@@ -483,7 +483,7 @@ type TestTemplateBasic() = class
     member x.Test050_BasicExtends() =
         let grab page = 
             match page with 
-                | "base.html" -> "mary had a little {%block animal%} insert animal here {%endblock%} its {%block animalpart %}fleece{%endblock%} was {%block color%}white{%endblock%} as {%block thing%}{%endblock%}"
+                | "base.html" -> "mary had a little {%block animal%} insert animal here {%endblock%} its {%block animalpart %}animal part{%endblock%} was {%block color%}a color{%endblock%} as {%block thing%}{%endblock%}"
                 | "lamb.html" -> ""
                 | _ -> "file not found"
         let template1 = Template("{%extends \"base.html\"%}
