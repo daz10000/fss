@@ -35,6 +35,7 @@ module Template =
             | ADD of Expression*Expression
             | SUB of Expression*Expression
             | EQUALS of Expression*Expression
+            | NOTEQUAL of Expression*Expression
             | LESSTHAN of Expression*Expression
             | GREATERTHAN of Expression*Expression
             | MULT of Expression*Expression
@@ -58,6 +59,7 @@ module Template =
             | MOD(e1,e2) -> sprintf "%s%%%s" (ppExpr e1) (ppExpr e2)
             | DIVIDE(e1,e2) -> sprintf "%s/%s" (ppExpr e1) (ppExpr e2)
             | EQUALS(e1,e2) -> sprintf "%s=%s" (ppExpr e1) (ppExpr e2)
+            | NOTEQUAL(e1,e2) -> sprintf "%s!=%s" (ppExpr e1) (ppExpr e2)
             | GREATERTHAN(e1,e2) -> sprintf "%s>%s" (ppExpr e1) (ppExpr e2)
             | LESSTHAN(e1,e2) -> sprintf "%s<%s" (ppExpr e1) (ppExpr e2)
             | FCONST(f) -> sprintf "%f" f
@@ -80,12 +82,13 @@ module Template =
                                         }
                             )
 
-    /// Pattern to match an expression, including equality
+    /// Pattern to match an expression, including equality and inequality
     let rec (|Comparison|_|) = function
         | 'n'::'o'::'t'::' '::Comparison(e,rem) -> Some(NOT(e),rem)
         | 'n'::'o'::'t'::' '::Factor(e,rem) -> Some(NOT(e),rem)
         | '('::Comparison(e,[')']) -> Some(e,[]) // parenthetic comparator  e.g. not (a=6)
         | Expr(e1,'='::Expr(e2,rem)) -> Some(EQUALS(e1,e2),rem)
+        | Expr(e1,'!'::'='::Expr(e2,rem)) -> Some(NOTEQUAL(e1,e2),rem)
         | Expr(e1,'<'::Expr(e2,rem)) -> Some(LESSTHAN(e1,e2),rem)
         | Expr(e1,'>'::Expr(e2,rem)) -> Some(GREATERTHAN(e1,e2),rem)
         | _ -> None
@@ -136,9 +139,9 @@ module Template =
          | '"'::t -> // Double quoted string
             let sb = StringBuilder()
             let rec aux = function
-                          | c::t when c <> '\'' -> sb.Append(c) |> ignore ; aux t
+                          | c::t when c <> '"' -> sb.Append(c) |> ignore ; aux t
                           | '"'::t -> Some(SCONST(sb.ToString()),t)
-                          | _ -> failwithf "Unexpected end of string constant"
+                          | _ -> failwithf "Unexpected end of string in constant (\"%s)" (new string(Array.ofList t))
             aux t
         | '('::Expr(e, ')'::t) -> Some(e, t)
         | c::tl when legalStart.Contains(c) ->
@@ -624,7 +627,15 @@ module Template =
                     | SCONST(i1),SCONST(i2) -> BCONST(i1=i2)
                     | FCONST(i1),FCONST(i2) -> BCONST(i1=i2)
                     | _,_ as x -> failwithf "Error: evaluating expression, equality performed on inappropriate types %A" x
-
+            | NOTEQUAL(e1,e2) -> 
+                match (c e1),(c e2) with
+                    | ICONST(i1),ICONST(i2) -> BCONST(i1<>i2)
+                    | ICONST64(i1),ICONST64(i2) -> BCONST(i1<>i2)
+                    | ICONST64(i1),ICONST(i2) -> BCONST(i1<>int64 i2)
+                    | ICONST(i1),ICONST64(i2) -> BCONST(int64 i1<>i2)
+                    | SCONST(i1),SCONST(i2) -> BCONST(i1<>i2)
+                    | FCONST(i1),FCONST(i2) -> BCONST(i1<>i2)
+                    | _,_ as x -> failwithf "Error: evaluating expression, equality performed on inappropriate types %A" x
             | GREATERTHAN(e1,e2) -> 
                 match (c e1),(c e2) with
                     | ICONST(i1),ICONST(i2) -> BCONST(i1>i2)

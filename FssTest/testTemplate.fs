@@ -386,8 +386,72 @@ type TestTemplateBasic() = class
         let templateExpected = "hello"
         let page = template.Render([| ("x",box false) |])
         sc templateExpected page
+
     [<Test>]
-    member x.Test015Null() =
+    member x.Test015a_IfStrExprTrue() =
+        let template = Template("""{% if x="hi"%}hello{%endif%}""")
+        let templateExpected = "hello"
+        let page = template.Render([| ("x",box "hi") |])
+        sc templateExpected page
+
+    [<Test>]
+    member x.Test015b_IfStrExprFalse() =
+        let template = Template("""{% if x="hi"%}hello{%endif%}""")
+        let templateExpected = ""
+        let page = template.Render([| ("x",box "ho") |])
+        sc templateExpected page
+
+    [<Test>]
+    member x.Test015c_IfStrNETrue() =
+        let template = Template("""{% if x!="hi"%}hello{%endif%}""")
+        let templateExpected = "hello"
+        let page = template.Render([| ("x",box "ho") |])
+        sc templateExpected page
+
+    [<Test>]
+    member x.Test015d_IfStrNEFalse() =
+        let template = Template("""{% if x!="hi"%}hello{%endif%}""")
+        let templateExpected = ""
+        let page = template.Render([| ("x",box "hi") |])
+        sc templateExpected page
+
+    [<Test>]
+    member x.Test015e_IfSingleQuotes() =
+        let template = Template("""{% if x='hi'%}hello{%endif%}""")
+        let templateExpected = "hello"
+        let page = template.Render([| ("x",box "hi") |])
+        sc templateExpected page
+
+    [<Test>]
+    member x.Test015f_IfGT() =
+        let template = Template("""{% if 'zebra'>'aardvark'%}hello{%endif%}""")
+        let templateExpected = "hello"
+        let page = template.Render([| ("x",box "hi") |])
+        sc templateExpected page
+   
+    [<Test>]
+    member x.Test015g_IfGTFalse() =
+        let template = Template("""{% if 'aardvark'>'zebra'%}hello{%endif%}""")
+        let templateExpected = ""
+        let page = template.Render([| ("x",box "hi") |])
+        sc templateExpected page
+    
+    [<Test>]
+    member x.Test015g_IfGTWS() =
+        let template = Template("""{% if 'zebra' > 'aardvark'%}hello{%endif%}""")
+        let templateExpected = "hello"
+        let page = template.Render([| ("x",box "hi") |])
+        sc templateExpected page
+
+    [<Test>]
+    member x.Test16a_OneEqOne() =
+        let template = Template("""{% if 1=1%}hello{%endif%}""")
+        let templateExpected = "hello"
+        let page = template.Render([| ("x",box "hi") |])
+        sc templateExpected page
+
+    [<Test>]
+    member x.Test019Null() =
         let template = Template("The value is {{x}}.")
         let templateExpected = "The value is none."
         let page = template.Render([| ("x",box null) |])

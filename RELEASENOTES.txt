@@ -1,3 +1,8 @@
+1.06
+==================
+templates: bug in double quoted string parsing fixed  "hello" not recognized :(
+templates: != operator implemented for {% if %}
+
 1.05
 ==================
 Freql: Support for null fields in tables, mapped onto option fields in records
