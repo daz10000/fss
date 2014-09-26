@@ -37,6 +37,10 @@ module Server =
     let explanation code =
         match code with
             | 200 -> "OK"
+            | 302 -> "Found"
+            | 303 -> "See Other"
+            | 304 -> "Not Modified"
+            | 307 -> "Temporary Redirect"
             | 404 -> "Not found"
             | 401 -> "Authorization required"
             | _ -> "unknown"
@@ -105,6 +109,14 @@ module Server =
         do
             this.Text <- html
     end    
+    
+    // support for 303 Redirect
+    type Http303(location:string) as this = class
+        inherit Response(303,"text/html")
+        do
+            this.AddHeader("Location",location)
+    end
+
     type MyLock() = class 
         let x = 9
         do 
@@ -609,6 +621,9 @@ module Server =
 
     /// http page not found response
     let http404 text = Http404(text) :> Response
+
+    /// http redirect
+    let http303 location = Http303(location) :> Response
 
     /// helper for xml responses
     let xmlResp text = XMLResponse(text) :> Response
