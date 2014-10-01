@@ -676,6 +676,7 @@ module Template =
         let isTrue (expression:Expression) (vf:VarFetcher) = 
             match calc vf expression with
                 | BCONST(b) -> b
+                | SCONST(s) -> s <> "" // allow "" or false to indicate variable is unset
                 | _ as x -> 
                     failwithf "Non boolean expression %s used in if statement" (ppExpr expression)
 
