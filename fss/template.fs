@@ -674,11 +674,16 @@ module Template =
             | CLASS(_) -> failwithf "Error: evaluating expression: can't evaluate a class"
                 
         let isTrue (expression:Expression) (vf:VarFetcher) = 
-            match calc vf expression with
-                | BCONST(b) -> b
-                | SCONST(s) -> s <> "" // allow "" or false to indicate variable is unset
-                | _ as x -> 
-                    failwithf "Non boolean expression %s used in if statement" (ppExpr expression)
+            match expression with 
+            | VARIABLE(v) -> match vf.Get(v) with
+                             | SCONST(s) -> s <> ""
+                             | BCONST(b) -> b
+                             | _ -> true
+            | _ -> match calc vf expression with
+                   | BCONST(b) -> b
+                   | SCONST(s) -> s <> "" // allow "" or false to indicate variable is unset
+                   | _ as x -> 
+                       failwithf "Non boolean expression %s used in if statement" (ppExpr expression)
 
 
         new (templateString:string) = Template(templateString,fun s -> sprintf "[Warning: no data source to fetch '%s']" s)
