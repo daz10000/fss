@@ -31,7 +31,7 @@ module Server =
     ///
     /// Simple http protocol implementation
     ///
-    let version = "fss 1.05" // see also AssemblyInfo.fs
+    let version = "fss 1.06" // see also AssemblyInfo.fs
     let protocolVersion = "HTTP/1.1"
 
     let explanation code =
