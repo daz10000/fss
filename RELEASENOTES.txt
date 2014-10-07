@@ -2,6 +2,7 @@
 ==================
 templates: bug in double quoted string parsing fixed  "hello" not recognized :(
 templates: != operator implemented for {% if %}
+test:  additional unit tests for string , != operations
 
 1.05
 ==================
