@@ -31,12 +31,16 @@ module Server =
     ///
     /// Simple http protocol implementation
     ///
-    let version = "fss 1.05" // see also AssemblyInfo.fs
+    let version = "fss 1.06" // see also AssemblyInfo.fs
     let protocolVersion = "HTTP/1.1"
 
     let explanation code =
         match code with
             | 200 -> "OK"
+            | 302 -> "Found"
+            | 303 -> "See Other"
+            | 304 -> "Not Modified"
+            | 307 -> "Temporary Redirect"
             | 404 -> "Not found"
             | 401 -> "Authorization required"
             | _ -> "unknown"
@@ -105,6 +109,14 @@ module Server =
         do
             this.Text <- html
     end    
+    
+    // support for 303 Redirect
+    type Http303(location:string) as this = class
+        inherit Response(303,"text/html")
+        do
+            this.AddHeader("Location",location)
+    end
+
     type MyLock() = class 
         let x = 9
         do 
@@ -454,12 +466,12 @@ module Server =
     end
 
 
-    type UR = { handleId : int ; sr : Stream option ; isPost : bool ; sw : StreamWriter ; path : string ; 
+    type UR = { handleId : int ; sr : Stream option ; isPost : bool ; sw : StreamWriter ; path : string ;
                         ud : FSS ; headers : Map<string,string> ; session : Session option ;
                             GET : Map<string,string> } with
         /// Read from input stream 
         member x.ReadPostAsBytes(limit:int) =
-                if not x.isPost then failwith "ERROR: ReadPost() requested for non POST request" 
+                if not x.isPost then failwith "ERROR: ReadPost() requested for non POST request"
                 else match x.sr with
                         | None -> failwith "ERROR: ReadPost() no stream to read from.  Non POST requst?"
                         | Some(s) -> // Some stream available
@@ -471,7 +483,7 @@ module Server =
                                     if remaining = 0 then ()
                                     else
                                         let n = s.Read(buffer,offset,remaining)
-                                        if n = remaining then () 
+                                        if n = remaining then ()
                                         else if n = 0 then failwithf "ERROR: end of stream reading %d of %d byes in ReadBytesAsPost" (buffer.Length-remaining) buffer.Length
                                         else
                                             readWhile (offset+n) (remaining-n)
@@ -509,24 +521,21 @@ module Server =
         let urlMatch path (url,_) = Regex.Match(path,url).Success
         let mutable urls = urlsInit
 
+        // question: since path is in urInit, why have a separate path var at all?
         let dispatch urInit path =
             let ok,ur = this.preCheck path urInit
             if not ok then
-                if ur.isPost then
-                    ur.ReadPostAsBytes() |> ignore // take out the post content to avoid problems with follow on
-                let r = Response(401,"text/plain")
-                r.Text <- "Authentication required"
-                r
+                this.preCheckFailed ur
             else
                 //printf "Testing path='%s'\n urls=%A" path (urls |> List.map (fst))
-                match List.tryFind (urlMatch path) urls with
+                match List.tryFind (urlMatch ur.path) urls with
                     | None ->
                         this.Log 1 (sprintf "Unmatched url...")
-                        Http404(sprintf "<HTML>Unmatched URL; '%s'\n</HTML>" path) :> Response
+                        Http404(sprintf "<HTML>Unmatched URL; '%s'\n</HTML>" ur.path) :> Response
                     | Some(url,fn) ->
                         let m = Regex.Match(path,url)
                         let x = m.Groups
-                        sprintf "fss%d UD: matching %s -> %s\n" ur.handleId path url |> this.Log 3
+                        sprintf "fss%d UD: matching %s -> %s\n" ur.handleId ur.path url |> this.Log 3
                         try
                             let g (x:int) = m.Groups.[x].Value
                             match m.Groups.Count-1,fn with
@@ -569,12 +578,22 @@ module Server =
         /// Default implementation lets everything through
         default this.preCheck path ur = true,ur 
 
+        /// Result of preCheck failure
+        abstract preCheckFailed : UR->Response
+        default this.preCheckFailed ur =
+            if ur.isPost then
+                // take out the post content to avoid problems with follow on
+                ur.ReadPostAsBytes() |> ignore
+            let r = Response(401,"text/plain")   
+            r.Text <- "Authentication required."
+            r
+
         member this.Start() = start()
         member this.Stop() = stop()
         override this.doGet (handleId:int) (sw : StreamWriter) (path:string) headers =
             let parseQueryArgs(s:string) =
-                s.Split([| '&' |]) |> Array.map (fun s -> match s.Split([|'='|]) with 
-                                                                | [| k ; v |] ->(k,Uri.UnescapeDataString(v)) 
+                s.Split([| '&' |]) |> Array.map (fun s -> match s.Split([|'='|]) with
+                                                                | [| k ; v |] ->(k,Uri.UnescapeDataString(v))
                                                                 | _ -> failwithf "Invalid form args: %s" s) |> Map.ofSeq
 
             let path',args = match path.IndexOf('?') with
@@ -602,6 +621,9 @@ module Server =
 
     /// http page not found response
     let http404 text = Http404(text) :> Response
+
+    /// http redirect
+    let http303 location = Http303(location) :> Response
 
     /// helper for xml responses
     let xmlResp text = XMLResponse(text) :> Response

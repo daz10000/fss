@@ -227,26 +227,40 @@ type TestTemplateBasic() = class
     [<Test>]
     member x.Test006aNestedIfs() =
         // If block inside if block
-        let t = Template("{%if x=0%} x is zero {%if y=0 %}y is zero too{%endif%}{%endif%}")
+        let t = Template("{%if x==0%} x is zero {%if y==0 %}y is zero too{%endif%}{%endif%}")
         let page = t.Render( [| ("x" , box 0) ; ("y",box 0) ; ("hello",box "there") |])
         sc " x is zero y is zero too" page
 
     [<Test>]
     member x.Test006bNestedIfs() =
         // If block inside if block
-        let t = Template("{%if x=0%} x is zero {{hello}}{%if y=0 %}y is zero {{hello}} too{%endif%}{%endif%}")
+        let t = Template("{%if x==0%} x is zero {{hello}}{%if y==0 %}y is zero {{hello}} too{%endif%}{%endif%}")
         let page = t.Render( [| ("x" , box 0) ; ("y",box 0) ; ("hello",box "there") |])
         sc " x is zero therey is zero there too" page
 
     [<Test>]
     member x.Test006cEmptyIfBlock() =
-        let _ = Template("{%if x=0%}{%endif%}")
+        let _ = Template("{%if x==0%}{%endif%}")
         ()
 
     [<Test>]
     member x.Test006dEmptyElseBlock() =
-        let _ = Template("{%if x=0%}{%else%}{%endif%}")
+        let _ = Template("{%if x==0%}{%else%}{%endif%}")
         ()
+
+    [<Test>]
+    member x.Test006eIfVarIsSet() =
+        let t = Template("{%if x%}Yes{%endif%}")
+        let page = t.Render( [| ("x", box t) |])
+        sc "Yes" page
+
+    [<Test>]
+    member x.Test006fEmptyArrayShouldBeFalse() =
+        let t = Template("{% if x %}Yes{% else %}No{% endif %}")
+        let page1 = t.Render( [| ("x", box [|1 ; 2; 3|]) |])
+        sc "Yes" page1
+        let page = t.Render( [| ("x", box [||]) |])
+        sc "No" page 
 
 
     (*
@@ -335,7 +349,7 @@ type TestTemplateBasic() = class
         ()
     [<Test>]
     member x.Test012_ifDot() =
-        let template = Template("{% for x in var1 %}{{x.str}}{% if x.str='cat' %}ok{% endif %}{% endfor %}")
+        let template = Template("{% for x in var1 %}{{x.str}}{% if x.str=='cat' %}ok{% endif %}{% endfor %}")
         let test12Expected = "catokdog"
         let page = template.Render( [| ("var1",box [| {id= 1; str= "cat"} ; {id= 2; str= "dog"}|]) ; ("var2", box 2)|])
         sc test12Expected page    
@@ -343,7 +357,7 @@ type TestTemplateBasic() = class
 
     [<Test>]
     member x.Test013a_If() =
-        let template = Template("{% if x=7 %}hello{%endif%}")
+        let template = Template("{% if x==7 %}hello{%endif%}")
         let templateExpected = "hello"
         let page = template.Render([| ("x",box 7) |])
         sc templateExpected page
@@ -351,26 +365,26 @@ type TestTemplateBasic() = class
     
     [<Test>]
     member x.Test013b_IfNot() =
-        let template = Template("{% if not x=6 %}hello{%endif%}")
+        let template = Template("{% if not x==6 %}hello{%endif%}")
         let templateExpected = "hello"
         let page = template.Render([| ("x",box 7) |])
         sc templateExpected page
 
     [<Test>]
     member x.Test013c_IfNotParens() =
-        let template = Template("{% if not (x=6) %}hello{%endif%}")
+        let template = Template("{% if not (x==6) %}hello{%endif%}")
         let templateExpected = "hello"
         let page = template.Render([| ("x",box 7) |])
         sc templateExpected page
     [<Test>]
     member x.Test014a_elseTrueBranch() =
-        let template = Template("{% if x=6 %}x is 6{%else%}x is not 6{%endif%}")
+        let template = Template("{% if x==6 %}x is 6{%else%}x is not 6{%endif%}")
         let templateExpected = "x is 6"
         let page = template.Render([| ("x",box 6) |])
         sc templateExpected page
     [<Test>]
     member x.Test014b_elseFalseBranch() =
-        let template = Template("{% if x=6 %}x is 6{%else%}x is not 6{%endif%}")
+        let template = Template("{% if x==6 %}x is 6{%else%}x is not 6{%endif%}")
         let templateExpected = "x is not 6"
         let page = template.Render([| ("x",box 7) |])
         sc templateExpected page
@@ -389,14 +403,14 @@ type TestTemplateBasic() = class
 
     [<Test>]
     member x.Test015a_IfStrExprTrue() =
-        let template = Template("""{% if x="hi"%}hello{%endif%}""")
+        let template = Template("""{% if x=="hi"%}hello{%endif%}""")
         let templateExpected = "hello"
         let page = template.Render([| ("x",box "hi") |])
         sc templateExpected page
 
     [<Test>]
     member x.Test015b_IfStrExprFalse() =
-        let template = Template("""{% if x="hi"%}hello{%endif%}""")
+        let template = Template("""{% if x=="hi"%}hello{%endif%}""")
         let templateExpected = ""
         let page = template.Render([| ("x",box "ho") |])
         sc templateExpected page
@@ -417,7 +431,7 @@ type TestTemplateBasic() = class
 
     [<Test>]
     member x.Test015e_IfSingleQuotes() =
-        let template = Template("""{% if x='hi'%}hello{%endif%}""")
+        let template = Template("""{% if x=='hi'%}hello{%endif%}""")
         let templateExpected = "hello"
         let page = template.Render([| ("x",box "hi") |])
         sc templateExpected page
@@ -445,7 +459,7 @@ type TestTemplateBasic() = class
 
     [<Test>]
     member x.Test16a_OneEqOne() =
-        let template = Template("""{% if 1=1%}hello{%endif%}""")
+        let template = Template("""{% if 1==1%}hello{%endif%}""")
         let templateExpected = "hello"
         let page = template.Render([| ("x",box "hi") |])
         sc templateExpected page

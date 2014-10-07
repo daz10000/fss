@@ -30,7 +30,7 @@ module Template =
 
 
     /// Components of mathematical expressions
-    type Expression =
+    type   Expression =
             | VARIABLE of string
             | ADD of Expression*Expression
             | SUB of Expression*Expression
@@ -58,7 +58,7 @@ module Template =
             | MULT(e1,e2) -> sprintf "%s*%s" (ppExpr e1) (ppExpr e2)
             | MOD(e1,e2) -> sprintf "%s%%%s" (ppExpr e1) (ppExpr e2)
             | DIVIDE(e1,e2) -> sprintf "%s/%s" (ppExpr e1) (ppExpr e2)
-            | EQUALS(e1,e2) -> sprintf "%s=%s" (ppExpr e1) (ppExpr e2)
+            | EQUALS(e1,e2) -> sprintf "%s==%s" (ppExpr e1) (ppExpr e2)
             | NOTEQUAL(e1,e2) -> sprintf "%s!=%s" (ppExpr e1) (ppExpr e2)
             | GREATERTHAN(e1,e2) -> sprintf "%s>%s" (ppExpr e1) (ppExpr e2)
             | LESSTHAN(e1,e2) -> sprintf "%s<%s" (ppExpr e1) (ppExpr e2)
@@ -87,7 +87,7 @@ module Template =
         | 'n'::'o'::'t'::' '::Comparison(e,rem) -> Some(NOT(e),rem)
         | 'n'::'o'::'t'::' '::Factor(e,rem) -> Some(NOT(e),rem)
         | '('::Comparison(e,[')']) -> Some(e,[]) // parenthetic comparator  e.g. not (a=6)
-        | Expr(e1,'='::Expr(e2,rem)) -> Some(EQUALS(e1,e2),rem)
+        | Expr(e1,'='::'='::Expr(e2,rem)) -> Some(EQUALS(e1,e2),rem)
         | Expr(e1,'!'::'='::Expr(e2,rem)) -> Some(NOTEQUAL(e1,e2),rem)
         | Expr(e1,'<'::Expr(e2,rem)) -> Some(LESSTHAN(e1,e2),rem)
         | Expr(e1,'>'::Expr(e2,rem)) -> Some(GREATERTHAN(e1,e2),rem)
@@ -674,10 +674,17 @@ module Template =
             | CLASS(_) -> failwithf "Error: evaluating expression: can't evaluate a class"
                 
         let isTrue (expression:Expression) (vf:VarFetcher) = 
-            match calc vf expression with
-                | BCONST(b) -> b
-                | _ as x -> 
-                    failwithf "Non boolean expression %s used in if statement" (ppExpr expression)
+            match expression with 
+            | VARIABLE(v) -> match vf.Get(v) with
+                             | SCONST(s) -> s <> ""
+                             | BCONST(b) -> b
+                             | ARRAYCONST(a) -> a.Length > 0
+                             | _ -> true
+            | _ -> match calc vf expression with
+                   | BCONST(b) -> b
+                   | SCONST(s) -> s <> "" // allow "" or false to indicate variable is unset
+                   | _ as x -> 
+                       failwithf "Non boolean expression %s used in if statement" (ppExpr expression)
 
 
         new (templateString:string) = Template(templateString,fun s -> sprintf "[Warning: no data source to fetch '%s']" s)

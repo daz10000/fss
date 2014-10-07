@@ -3,13 +3,16 @@
 templates: bug in double quoted string parsing fixed  "hello" not recognized :(
 templates: != operator implemented for {% if %}
 test:  additional unit tests for string , != operations
+templates: == instead of = for equals comparison (for consistency with standard jinja2 docs)
+templates: single variable to if {% if foo %} will test whether variable is set or has a non false value ("" and [||] considered false)
+fss: added support for 302, 303, 304, and 307 response codes and http303 redirect helper
+fss: added overridable preCheckFailed to UD and ability to modify url path within precheck
 
 1.05
 ==================
 Freql: Support for null fields in tables, mapped onto option fields in records
 templates: changed extends -> include in jinja2 clone to correctly reflect jinja semantics
-templates: implemented jinna2 blocks
-ji
+templates: implemented jinja2 blocks
 templates: implemented jinja2 extend
 templates: fixed empty for/if blocks
 
