@@ -67,6 +67,7 @@
     <Compile Include="sec.fs" />
     <Compile Include="fss.fs" />
     <Compile Include="cookie.fs" />
+    <Compile Include="db_common.fs" />
     <Compile Include="db_pg.fs" />
     <None Include="packages.config" />
   </ItemGroup>

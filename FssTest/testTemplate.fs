@@ -456,6 +456,13 @@ type TestTemplateBasic() = class
         let templateExpected = "hello"
         let page = template.Render([| ("x",box "hi") |])
         sc templateExpected page
+    
+    [<Test>]
+    member x.Test015h_IfStrExprWithRecordTrue() =
+        let template = Template("""{% if x.name=="Brenda" %}hello{%endif%}""")
+        let templateExpected = "hello"
+        let page = template.Render([| ("x",box { name = "Brenda" ; age = 28.2 ; zip = 90210 }) |])
+        sc templateExpected page
 
     [<Test>]
     member x.Test16a_OneEqOne() =

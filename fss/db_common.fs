@@ -39,12 +39,16 @@ module Common =
 
     /// SqlCommand wrapper that allows setting properties of a
     /// stored procedure using dynamic setter operator
-    type DynamicSqlCommand(cmd:DbCommand,release:unit->unit,opts:ConnOpts,log:string->unit) = 
+    type DynamicSqlCommand<'Parameter when 'Parameter :> DbParameter and 'Parameter:(new:unit->'Parameter)>(cmd:DbCommand,release:unit->unit,opts:ConnOpts,log:string->unit) = 
       member private x.Command = cmd
       member x.GetConnHash() = cmd.Connection.GetHashCode()
       // Adds parameter with the specified name and value
-      static member (?<-) (cmd:DynamicSqlCommand, name:string, value) = 
-        cmd.Command.Parameters.Add("@"+name,box value) |> ignore
+      static member (?<-) (cmd:DynamicSqlCommand<'Parameter>, name:string, value) = 
+        //cmd.Command.Parameters.Add("@"+name,box value) |> ignore
+        let p = new 'Parameter() 
+        p.ParameterName <- "@"+name
+        p.Value <- box value
+        cmd.Command.Parameters.Add(p) |> ignore
       // Execute command and wrap returned SqlDataReader
       member x.ExecuteReader() =  
                     let start = System.DateTime.Now
@@ -78,7 +82,7 @@ module Common =
     /// Sql Transaction wrapper that encapsulates an active database
     /// connection and hands of DynamicSqlCommand objects with the
     /// connection and transcation set correctly
-    type DynamicSqlTransaction(conn:DbConnection,dispose:unit->unit,opts:ConnOpts,log:string->unit) =
+    type DynamicSqlTransaction<'Parameter when 'Parameter :> DbParameter and 'Parameter:(new:unit->'Parameter)>(conn:DbConnection,dispose:unit->unit,opts:ConnOpts,log:string->unit) =
         let trans = conn.BeginTransaction()
         do
             ()
@@ -86,7 +90,7 @@ module Common =
             use comm = conn.CreateCommand()
             comm.CommandText <- commandText
             comm.Transaction<-trans
-            new DynamicSqlCommand(comm,(fun () -> ()),opts,log)
+            new DynamicSqlCommand<'Parameter>(comm,(fun () -> ()),opts,log)
 
         member x.Rollback() = trans.Rollback()
         member x.Commit() = trans.Commit()
@@ -148,7 +152,7 @@ module Common =
           member x.LogQueries with get() = opts.logQueries and set(v) = opts.logQueries <- v  
           member x.LogLongerThan with get() = opts.logLongerThan  and set(v) = opts.logLongerThan <- v  
                                                     
-          member x.InsertMany<'T,'R> (items : 'T seq,?table:string,?transProvided:DynamicSqlTransaction,?ignoredColumns:string seq) =
+          member x.InsertMany<'T,'R> (items : 'T seq,?table:string,?transProvided:DynamicSqlTransaction<'Parameter>,?ignoredColumns:string seq) =
             // Determine table name from item to be inserted
             let table = match table with
                             | Some(x) -> x.ToLower()
@@ -161,7 +165,7 @@ module Common =
                 | None -> Set.empty
 
             // Inspect table definition.
-            use command : DynamicSqlCommand = x.Command "select a.attname as attname,t.typname as tname,attnum,attnotnull from 
+            use command : DynamicSqlCommand<'Parameter> = x.Command "select a.attname as attname,t.typname as tname,attnum,attnotnull from 
 	                                                        pg_class c JOIN pg_attribute a ON c.oid = a.attrelid 
 	                                                        JOIN pg_type t ON t.oid = a.atttypid WHERE
 	                                                        c.relname = :tablename AND
@@ -285,7 +289,7 @@ module Common =
                             (trans :> IDisposable).Dispose()
                         ret
 
-          member x.InsertOne<'T,'R> (item : 'T,?table:string,?transProvided:DynamicSqlTransaction,?ignoredColumns:string seq) = 
+          member x.InsertOne<'T,'R> (item : 'T,?table:string,?transProvided:DynamicSqlTransaction<'Parameter>,?ignoredColumns:string seq) = 
             match table,transProvided,ignoredColumns with
                 | None,None,None -> x.InsertMany<'T,'R>([item]).[0]
                 | Some(t),None,None -> x.InsertMany<'T,'R>([item],table=t).[0]
@@ -297,7 +301,7 @@ module Common =
                 | Some(ta),Some(tr),Some(cols) -> x.InsertMany<'T,'R>([item],table=ta,transProvided=tr,ignoredColumns=cols).[0]
 
           member x.Query<'T>(sql:string) : seq<'T> =
-            let command : DynamicSqlCommand = x.Command sql
+            let command : DynamicSqlCommand<'Parameter> = x.Command sql
             /// Determine details of this record's constructor
             let cons = typeof<'T>.UnderlyingSystemType.GetConstructors() |> Array.filter (fun c -> c.IsConstructor) |> Seq.head
 
@@ -363,7 +367,7 @@ module Common =
             use command =  connection.CreateCommand() 
             command.CommandText <- name 
             command.CommandType <- CommandType.StoredProcedure
-            new DynamicSqlCommand(command,(fun () -> conn.Release(connection)),conn.Opts,conn.Log)
+            new DynamicSqlCommand<'Parameter>(command,(fun () -> conn.Release(connection)),conn.Opts,conn.Log)
 
           member x.cc comm = x.Command comm
           member x.Command(commandText:string) =
@@ -371,11 +375,11 @@ module Common =
             let comm = conn.CreateCommand()
             comm.CommandText <- commandText
             //match trans with | None -> () | Some(t) -> comm.Transaction <- t
-            new DynamicSqlCommand(comm,(fun () -> x.Release(conn)),x.Opts,x.Log)
+            new DynamicSqlCommand<'Parameter>(comm,(fun () -> x.Release(conn)),x.Opts,x.Log)
 
           member x.StartTrans() = 
             let conn = x.Take() // reserve a connection that will be shared across the transaction
-            new DynamicSqlTransaction(conn,(fun () -> x.Release(conn)),x.Opts,x.Log)
+            new DynamicSqlTransaction<'Parameter>(conn,(fun () -> x.Release(conn)),x.Opts,x.Log)
 
           interface IDisposable with
             member x.Dispose() = 
