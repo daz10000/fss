@@ -501,7 +501,7 @@ module Server =
             let text = new String(post |> Array.map (char))
             let unescape (v:string) = v.Replace("+"," ") |> Uri.UnescapeDataString
             text.Split([| '&' |]) |> Array.map (fun s -> match s.Split([|'='|]) with | [| k ; v |] ->(k,unescape v)  | _ -> failwithf "Invalid form args: %s" s) |> Map.ofSeq
-
+        member x.parseMultipart (post : byte array) = Fss.Multipart.parse post
     // ---------------------------------------------------------------------------------
 
     /// Different function signatures for URL callbacks
