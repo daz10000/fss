@@ -31,7 +31,6 @@ module Server =
     ///
     /// Simple http protocol implementation
     ///
-    let version = "fss 1.06" // see also AssemblyInfo.fs
     let protocolVersion = "HTTP/1.1"
 
     let explanation code =
@@ -232,7 +231,7 @@ module Server =
             let sendResp code message =
                 sw.Write(sprintf "%s %d %s\r\n" protocolVersion code message)
                 sendHeader "Date" (DateTime.Now |> string)
-                sendHeader "Server" version
+                sendHeader "Server" (sprintf "Fss %s" version.version)
                 
 
             let endHeaders() = sw.Write("\r\n")

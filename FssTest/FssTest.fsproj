@@ -66,6 +66,11 @@
     <None Include="packages.config" />
   </ItemGroup>
   <ItemGroup>
+    <ProjectReference Include="..\fss-postgres\fss-postgres.fsproj">
+      <Name>fss-postgres</Name>
+      <Project>{02149e9b-bce3-4989-a21b-299dc8c7586f}</Project>
+      <Private>True</Private>
+    </ProjectReference>
     <ProjectReference Include="..\fss\fss.fsproj">
       <Name>fss</Name>
       <Project>{4adbc4f8-ffa1-4ef9-a773-85ef425cc07c}</Project>

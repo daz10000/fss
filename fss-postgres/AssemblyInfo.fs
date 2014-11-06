@@ -7,12 +7,12 @@ open System.Runtime.InteropServices
 // General Information about an assembly is controlled through the following 
 // set of attributes. Change these attribute values to modify the information
 // associated with an assembly.
-[<assembly: AssemblyTitle("Fss")>]
-[<assembly: AssemblyName("Fss")>]
-[<assembly: AssemblyDescription("F# Server - lightweight F# web server")>]
+[<assembly: AssemblyTitle("Fss-Postgres")>]
+[<assembly: AssemblyName("Fss-Postgres")>]
+[<assembly: AssemblyDescription("F# Server - Postgres database wrapper")>]
 [<assembly: AssemblyConfiguration("")>]
 [<assembly: AssemblyCompany("Darren Platt")>]
-[<assembly: AssemblyProduct("Fss")>]
+[<assembly: AssemblyProduct("Fss-Postgres")>]
 [<assembly: AssemblyCopyright("Copyright ©  2014")>]
 [<assembly: AssemblyTrademark("")>]
 [<assembly: AssemblyCulture("")>]
