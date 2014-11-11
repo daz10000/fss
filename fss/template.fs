@@ -92,18 +92,32 @@ module Template =
         | x -> x
 
     /// Pattern to match an expression, including equality and inequality
-    /// deprecated FIXFIX
+    /// Two tiered to capture and / or precedence.  Cascades into general expressions lower down
     let rec (|Comparison|_|) = function
         | 'n'::'o'::'t'::Ws(Comparison(e,rem)) -> Some(NOT(e),rem)
-        | 'n'::'o'::'t'::Ws(Factor(e,rem)) -> Some(NOT(e),rem)
+        | 'n'::'o'::'t'::Ws(ComparisonFactor(e,rem)) -> Some(NOT(e),rem)
         | '('::Comparison(e,[')']) -> Some(e,[]) // parenthetic comparator  e.g. not (a=6)
-        | Expr(e1,Ws(rem)) ->
+        | ComparisonExpr(e1,Ws(rem)) ->
             match rem with
-                | '='::'='::Ws(Expr(e2,rem)) -> Some(EQUALS(e1,e2),rem)
-                | '!'::'='::Ws(Expr(e2,rem)) -> Some(NOTEQUAL(e1,e2),rem)
-                | '<'::Ws(Expr(e2,rem)) -> Some(LESSTHAN(e1,e2),rem)
-                | '>'::Ws(Expr(e2,rem)) -> Some(GREATERTHAN(e1,e2),rem)
+                | '='::'='::Ws(ComparisonExpr(e2,rem)) -> Some(EQUALS(e1,e2),rem)
+                | '!'::'='::Ws(ComparisonExpr(e2,rem)) -> Some(NOTEQUAL(e1,e2),rem)
+                | '<'::Ws(ComparisonExpr(e2,rem)) -> Some(LESSTHAN(e1,e2),rem)
+                | '>'::Ws(ComparisonExpr(e2,rem)) -> Some(GREATERTHAN(e1,e2),rem)
                 | _  -> Some(BOOLEXP(e1),rem)
+        | _ -> None
+    and (|ComparisonExpr|_|) = function // series of or statements
+        | ComparisonFactor(e1, Ws(t)) ->
+            let rec aux e1 = function
+              | 'o'::'r'::Ws(Expr(e2, t)) -> aux (OR(e1,e2)) t
+              | _ as t -> Some(e1,t)
+            aux e1 t
+        | _ -> None
+    and (|ComparisonFactor|_|) = function
+        | Expr(e1,Ws(t)) ->
+            let rec aux e = function
+                | 'a'::'n'::'d'::Ws(ComparisonFactor(e2,t)) -> aux (AND(e1,e2)) t
+                | t -> Some(e,t)
+            aux e1 t
         | _ -> None
 
     and (|Expr|_|) = function
@@ -111,6 +125,7 @@ module Template =
             let rec aux e1 = function
               | 'o'::'r'::Ws(Expr(e2, t)) -> aux (OR(e1,e2)) t
               | '!'::'='::Ws(Factor(e2,t)) -> aux(NOTEQUAL(e1,e2)) t
+              | '='::'='::Ws(Factor(e2,t)) -> aux (EQUALS(e1,e2)) t
               | '+'::Ws(Factor(e2, t)) -> aux (ADD(e1,e2)) t
               | '-'::Ws(Factor(e2, t)) -> aux (SUB(e1,e2)) t
               | '<'::Ws(Expr(e2,t)) -> aux(LESSTHAN(e1,e2)) t
@@ -120,14 +135,14 @@ module Template =
         | _ -> None
       and (|Factor|_|) = function
         | '-'::Factor(e, t) -> Some(NEGATE(e), t)
-        | Ws('n'::'o'::'t'::Ws(Factor(e, t))) -> Some(NOT(e), t)
-        | Atom(e1,t) ->
+     //   | Ws('n'::'o'::'t'::Ws(Factor(e, t))) -> Some(NOT(e), t)
+        | Atom(e1,Ws(t)) ->
             match t with
                 | '*'::Ws(Factor(e2, t)) -> Some(MULT(e1,e2), t)
+         //       | 'a'::'n'::'d'::Ws(Expr(e2,t)) ->
+           //          Some(AND(e1,e2),t)
                 | '/'::Ws(Factor(e2, t)) -> Some(DIVIDE(e1,e2), t)
-                | '='::'='::Ws(Factor(e2,t)) -> Some(EQUALS(e1,e2),t)
                 | '%'::Ws(Factor(e2, t)) -> Some(MOD(e1,e2), t)
-                | Ws('a'::'n'::'d'::Ws(Factor(e2, t))) -> Some(AND(e1,e2), t)
                 | _ -> Some(e1, t)
         | _ -> None
 
@@ -284,7 +299,7 @@ module Template =
                             | x when x.StartsWith("if") -> 
                                         match (List.ofSeq x.[3..]) with
                                                     //| Comparison(c,[]) -> IFSTART(c)
-                                                    | Expr(c,[]) -> IFSTART(c) // boolean expression like if x
+                                                    | Comparison(c,[]) -> IFSTART(c) // boolean expression like if x
                                                     | _ as x -> failwithf "ERROR: parsing if expression, unparseable expression encountered %A" x
                                         //IFSTART(c)
                             | _ as x -> UNKNOWNLOGIC(x)

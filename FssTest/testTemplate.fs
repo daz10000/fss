@@ -604,21 +604,21 @@ type TestTemplateBoolean() = class
     member x.Test017_BoolPrecedence1() =
         let template = Template("""{% if f and t or f %}true{%else%}false{%endif%}""")
         let templateExpected = "false"
-        let page = template.Render([| ("f" , box false, "t",box true) |])
+        let page = template.Render([| ("f" , box false); ( "t",box true) |])
         sc templateExpected page
 
     [<Test>]
     member x.Test017_BoolPrecedence2() =
         let template = Template("""{% if t or f and t or f %}true{%else%}false{%endif%}""")
         let templateExpected = "true"
-        let page = template.Render([| ("f" , box false, "t",box true) |])
+        let page = template.Render([| ("f" , box false);( "t",box true) |])
         sc templateExpected page
 
     [<Test>]
     member x.Test017_BoolVar() =
         let template = Template("""{% if t %}true{%else%}false{%endif%}""")
         let templateExpected = "true"
-        let page = template.Render([| ("f" , box false, "t",box true) |])
+        let page = template.Render([| ("f" , box false) ; ( "t",box true) |])
         sc templateExpected page
 
 
