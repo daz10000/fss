@@ -28,7 +28,6 @@ module Template =
                             yield '_'
                         } |> Set.ofSeq
 
-
     /// Components of mathematical expressions
     type   Expression =
             | VARIABLE of string
@@ -42,6 +41,9 @@ module Template =
             | MOD of Expression*Expression
             | NEGATE of Expression
             | NOT of Expression
+            | AND of Expression*Expression
+            | BOOLEXP of Expression
+            | OR of Expression*Expression
             | DIVIDE of Expression*Expression
             | FCONST of float
             | ICONST of int
@@ -68,6 +70,9 @@ module Template =
             | SCONST(s) -> s
             | NEGATE(e) -> sprintf "-%s" (ppExpr e)
             | NOT(e) -> sprintf "not %s" (ppExpr e)
+            | BOOLEXP(e) -> sprintf "%s" (ppExpr e)
+            | AND(e1,e2) -> sprintf "%s and %s" (ppExpr e1) (ppExpr e2)
+            | OR(e1,e2) -> sprintf "%s or %s" (ppExpr e1) (ppExpr e2)
             | VARIABLE(v) -> sprintf "%s" v
             | BCONST(b) -> sprintf "%s" (if b then "True" else "False")
             | ARRAYCONST(a) -> 
@@ -81,32 +86,51 @@ module Template =
                                           yield "}"
                                         }
                             )
+    /// Whitespace removal
+    let rec (|Ws|) = function
+        | ' '::Ws(rem) -> rem
+        | x -> x
 
     /// Pattern to match an expression, including equality and inequality
+    /// deprecated FIXFIX
     let rec (|Comparison|_|) = function
-        | 'n'::'o'::'t'::' '::Comparison(e,rem) -> Some(NOT(e),rem)
-        | 'n'::'o'::'t'::' '::Factor(e,rem) -> Some(NOT(e),rem)
+        | 'n'::'o'::'t'::Ws(Comparison(e,rem)) -> Some(NOT(e),rem)
+        | 'n'::'o'::'t'::Ws(Factor(e,rem)) -> Some(NOT(e),rem)
         | '('::Comparison(e,[')']) -> Some(e,[]) // parenthetic comparator  e.g. not (a=6)
-        | Expr(e1,'='::'='::Expr(e2,rem)) -> Some(EQUALS(e1,e2),rem)
-        | Expr(e1,'!'::'='::Expr(e2,rem)) -> Some(NOTEQUAL(e1,e2),rem)
-        | Expr(e1,'<'::Expr(e2,rem)) -> Some(LESSTHAN(e1,e2),rem)
-        | Expr(e1,'>'::Expr(e2,rem)) -> Some(GREATERTHAN(e1,e2),rem)
+        | Expr(e1,Ws(rem)) ->
+            match rem with
+                | '='::'='::Ws(Expr(e2,rem)) -> Some(EQUALS(e1,e2),rem)
+                | '!'::'='::Ws(Expr(e2,rem)) -> Some(NOTEQUAL(e1,e2),rem)
+                | '<'::Ws(Expr(e2,rem)) -> Some(LESSTHAN(e1,e2),rem)
+                | '>'::Ws(Expr(e2,rem)) -> Some(GREATERTHAN(e1,e2),rem)
+                | _  -> Some(BOOLEXP(e1),rem)
         | _ -> None
+
     and (|Expr|_|) = function
-        | Factor(e1, t) ->
+        | Factor(e1, Ws(t)) ->
             let rec aux e1 = function
-              | '+'::Factor(e2, t) -> aux (ADD(e1,e2)) t
-              | '-'::Factor(e2, t) -> aux (SUB(e1,e2)) t
+              | 'o'::'r'::Ws(Expr(e2, t)) -> aux (OR(e1,e2)) t
+              | '!'::'='::Ws(Factor(e2,t)) -> aux(NOTEQUAL(e1,e2)) t
+              | '+'::Ws(Factor(e2, t)) -> aux (ADD(e1,e2)) t
+              | '-'::Ws(Factor(e2, t)) -> aux (SUB(e1,e2)) t
+              | '<'::Ws(Expr(e2,t)) -> aux(LESSTHAN(e1,e2)) t
+              | '>'::Ws(Expr(e2,t)) -> aux(GREATERTHAN(e1,e2)) t
               | t -> Some(e1, t)
             aux e1 t
         | _ -> None
       and (|Factor|_|) = function
         | '-'::Factor(e, t) -> Some(NEGATE(e), t)
-        | Atom(e1, '*'::Factor(e2, t)) -> Some(MULT(e1,e2), t)
-        | Atom(e1, '/'::Factor(e2, t)) -> Some(DIVIDE(e1,e2), t)
-        | Atom(e1, '%'::Factor(e2, t)) -> Some(MOD(e1,e2), t)
-        | Atom(e, t) -> Some(e, t)
+        | Ws('n'::'o'::'t'::Ws(Factor(e, t))) -> Some(NOT(e), t)
+        | Atom(e1,t) ->
+            match t with
+                | '*'::Ws(Factor(e2, t)) -> Some(MULT(e1,e2), t)
+                | '/'::Ws(Factor(e2, t)) -> Some(DIVIDE(e1,e2), t)
+                | '='::'='::Ws(Factor(e2,t)) -> Some(EQUALS(e1,e2),t)
+                | '%'::Ws(Factor(e2, t)) -> Some(MOD(e1,e2), t)
+                | Ws('a'::'n'::'d'::Ws(Factor(e2, t))) -> Some(AND(e1,e2), t)
+                | _ -> Some(e1, t)
         | _ -> None
+
       and (|Atom|_|) = function
         | c::tl1 when '0'<=c && c<='9' ->
             let sb = StringBuilder().Append(c)
@@ -217,6 +241,7 @@ module Template =
 
                     })
 
+    
     let rec (|ForIter|_|) = function
                 | Atom(fv,remainder) ->
                     let rec aux = function
@@ -258,7 +283,7 @@ module Template =
                                             | _ as x -> failwithf "ERROR: bad for loop format %A" x
                             | x when x.StartsWith("if") -> 
                                         match (List.ofSeq x.[3..]) with
-                                                    | Comparison(c,[]) -> IFSTART(c)
+                                                    //| Comparison(c,[]) -> IFSTART(c)
                                                     | Expr(c,[]) -> IFSTART(c) // boolean expression like if x
                                                     | _ as x -> failwithf "ERROR: parsing if expression, unparseable expression encountered %A" x
                                         //IFSTART(c)
@@ -663,18 +688,28 @@ module Template =
                     | ICONST64(i1) -> ICONST64(-i1)
                     | FCONST(i1) -> FCONST(-i1)
                     | _ as x -> failwithf "Error: evaluating expression, negation performed on inappropriate types %A" x
+            | BOOLEXP(e) -> match (c e) with
+                            | BCONST(_) -> e
+                            | _ as x -> failwithf "Error: evaluating bool expression, %A not a boolean const"  x
 
             | NOT(e) -> match (c e) with
                             | BCONST(b) -> BCONST(not b)
                             | _ as x -> failwithf "Error: evaluating expression, not performed on inappropriate types %A" x
-
+            | AND(e1,e2) -> match (c e1),(c e2) with
+                            | BCONST(b1),BCONST(b2) -> BCONST(b1&&b2)
+                            | _ as x -> failwithf "Error: evaluating AND expression, not performed on inappropriate types %A" x
+            | OR(e1,e2) -> match (c e1),(c e2) with
+                            | BCONST(b1),BCONST(b2) -> BCONST(b1||b2)
+                            | _ as x -> failwithf "Error: evaluating OR expression, not performed on inappropriate types %A" x
             | VARIABLE(v) -> vf.Get(v) // TODO - implement dot notation
             | BCONST(_) as x -> x // Nothing to calculate here
             | ARRAYCONST(_) as x -> x
             | CLASS(_) -> failwithf "Error: evaluating expression: can't evaluate a class"
                 
-        let isTrue (expression:Expression) (vf:VarFetcher) = 
+        let rec isTrue (expression:Expression) (vf:VarFetcher) = 
             match expression with 
+            | BOOLEXP(e) -> isTrue e vf
+            | NOT e -> isTrue e vf |> not
             | VARIABLE(v) -> match vf.Get(v) with
                              | SCONST(s) -> s <> ""
                              | BCONST(b) -> b

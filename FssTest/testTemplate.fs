@@ -54,6 +54,11 @@ preamble
 postamble
 "
 
+let flat(s:string) = s.Replace("\n","\\n").Replace("\r","\\r").Replace("\t","\\t")
+/// Expected Actual comparison
+let sc (s1:string) (s2:string) =
+    if s1<>s2 then
+        Assert.Fail(sprintf "String mismatch\nExpected>>>>>%s<<<<<<\nActual  >>>>>%s<<<<<<" (flat s1) (flat s2))
 
 [<TestFixture>]
 type TestTemplateBasic() = class     
@@ -81,22 +86,6 @@ type TestTemplateBasic() = class
      
     "
 
-    /// TODO: test extends when it is implemented
-    let test3 = "
-{% extends \"layout.html\" %}
-{% block body %}
-  <ul>
-  {% for user in users %}
-    <li><a href=\"{{ user.url }}\">{{ user.username }}</a></li>
-  {% endfor %}
-  </ul>
-{% endblock %}
-"
-    let flat(s:string) = s.Replace("\n","\\n").Replace("\r","\\r").Replace("\t","\\t")
-    /// Expected Actual comparison
-    let sc (s1:string) (s2:string) =
-        if s1<>s2 then
-            Assert.Fail(sprintf "String mismatch\nExpected>>>>>%s<<<<<<\nActual  >>>>>%s<<<<<<" (flat s1) (flat s2))
     do
         ()
 
@@ -255,7 +244,7 @@ type TestTemplateBasic() = class
         sc "Yes" page
 
     [<Test>]
-    member x.Test006fEmptyArrayShouldBeFalse() =
+    member x.Test006ifEmptyArrayShouldBeFalse() =
         let t = Template("{% if x %}Yes{% else %}No{% endif %}")
         let page1 = t.Render( [| ("x", box [|1 ; 2; 3|]) |])
         sc "Yes" page1
@@ -388,18 +377,6 @@ type TestTemplateBasic() = class
         let templateExpected = "x is not 6"
         let page = template.Render([| ("x",box 7) |])
         sc templateExpected page
-    [<Test>]
-    member x.Test014c_IfBoolVar() =
-        let template = Template("{% if x%}hello{%endif%}")
-        let templateExpected = "hello"
-        let page = template.Render([| ("x",box true) |])
-        sc templateExpected page
-    [<Test>]
-    member x.Test014d_IfBoolExpr() =
-        let template = Template("{% if not x%}hello{%endif%}")
-        let templateExpected = "hello"
-        let page = template.Render([| ("x",box false) |])
-        sc templateExpected page
 
     [<Test>]
     member x.Test015a_IfStrExprTrue() =
@@ -464,12 +441,6 @@ type TestTemplateBasic() = class
         let page = template.Render([| ("x",box { name = "Brenda" ; age = 28.2 ; zip = 90210 }) |])
         sc templateExpected page
 
-    [<Test>]
-    member x.Test16a_OneEqOne() =
-        let template = Template("""{% if 1==1%}hello{%endif%}""")
-        let templateExpected = "hello"
-        let page = template.Render([| ("x",box "hi") |])
-        sc templateExpected page
 
     [<Test>]
     member x.Test019Null() =
@@ -591,4 +562,98 @@ type TestTemplateBasic() = class
         let page2 = template2.Render([||])
         sc templateExpected2 page2
           
+end
+
+[<TestFixture>]
+type TestTemplateBoolean() = class    
+    [<Test>]
+    member x.Test014c_IfBoolVar() =
+        let template = Template("{% if x%}hello{%endif%}")
+        let templateExpected = "hello"
+        let page = template.Render([| ("x",box true) |])
+        sc templateExpected page
+    [<Test>]
+    member x.Test014d_IfBoolExpr() =
+        let template = Template("{% if not x%}hello{%endif%}")
+        let templateExpected = "hello"
+        let page = template.Render([| ("x",box false) |])
+        sc templateExpected page
+ 
+    [<Test>]
+    member x.Test016a_OneEqOne() =
+        let template = Template("""{% if 1==1%}hello{%endif%}""")
+        let templateExpected = "hello"
+        let page = template.Render([| ("x",box "hi") |])
+        sc templateExpected page
+
+    [<Test>]
+    member x.Test016b_OneEqOneAnd() =
+        let template = Template("""{% if 1==1 and 1==1%}hello{%endif%}""")
+        let templateExpected = "hello"
+        let page = template.Render([| ("x",box "hi") |])
+        sc templateExpected page
+
+    [<Test>]
+    member x.Test016bC_OneEqOneoR() =
+        let template = Template("""{% if 1==1 or 1==1%}hello{%endif%}""")
+        let templateExpected = "hello"
+        let page = template.Render([| ("x",box "hi") |])
+        sc templateExpected page
+
+    [<Test>]
+    member x.Test017_BoolPrecedence1() =
+        let template = Template("""{% if f and t or f %}true{%else%}false{%endif%}""")
+        let templateExpected = "false"
+        let page = template.Render([| ("f" , box false, "t",box true) |])
+        sc templateExpected page
+
+    [<Test>]
+    member x.Test017_BoolPrecedence2() =
+        let template = Template("""{% if t or f and t or f %}true{%else%}false{%endif%}""")
+        let templateExpected = "true"
+        let page = template.Render([| ("f" , box false, "t",box true) |])
+        sc templateExpected page
+
+    [<Test>]
+    member x.Test017_BoolVar() =
+        let template = Template("""{% if t %}true{%else%}false{%endif%}""")
+        let templateExpected = "true"
+        let page = template.Render([| ("f" , box false, "t",box true) |])
+        sc templateExpected page
+
+
+    [<Test>]
+    member x.Test018_ExprPlus1() =
+        let template = Template("""{% if 1+1==2 %}true{%else%}false{%endif%}""")
+        let templateExpected = "true"
+        let page = template.Render([| |])
+        sc templateExpected page
+    
+    [<Test>]
+    member x.Test018_ExprPlus2() =
+        let template = Template("""{% if 1+1==2+2 %}true{%else%}false{%endif%}""")
+        let templateExpected = "false"
+        let page = template.Render([| |])
+        sc templateExpected page
+
+    [<Test>]
+    member x.Test018_ExprPlusTimes1() =
+        let template = Template("""{% if 2*3+1==7 %}true{%else%}false{%endif%}""")
+        let templateExpected = "true"
+        let page = template.Render([| |])
+        sc templateExpected page
+
+    [<Test>]
+    member x.Test018_ExprPlusTimes2() =
+        let template = Template("""{% if 1+3*2==7 %}true{%else%}false{%endif%}""")
+        let templateExpected = "true"
+        let page = template.Render([| |])
+        sc templateExpected page
+
+    [<Test>]
+    member x.Test018_ExprPlusTimesVar() =
+        let template = Template("""{% if 1+x*2==7 %}true{%else%}false{%endif%}""")
+        let templateExpected = "true"
+        let page = template.Render([| "x",box 3|])
+        sc templateExpected page
 end
