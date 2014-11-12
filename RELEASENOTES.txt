@@ -1,3 +1,7 @@
+nextver
+==================
+Freql:  bug in Query led to delayed connection pool release for incomplete seq {} consumption
+
 1.1.5
 ==================
 templates: overhaul of operator precedence to implement boolean expressions correctly

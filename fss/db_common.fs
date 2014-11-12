@@ -318,35 +318,35 @@ module Common =
             seq {
             
                 let start = System.DateTime.Now
+                try
+                    use reader = command.ExecuteReader()
+                    let fieldMap = [for i in 0..reader.Reader.FieldCount-1 -> 
+                                        match argMap.TryFind (reader.Reader.GetName(i).ToLower()) with
+                                                | Some(x) -> i,x
+                                                | None -> failwithf "ERROR: name mapping,  SQL name '%s' not found in target Record" 
+                                                                (reader.Reader.GetName(i))
+                                   ]
 
-                use reader = command.ExecuteReader()
-                let fieldMap = [for i in 0..reader.Reader.FieldCount-1 -> 
-                                    match argMap.TryFind (reader.Reader.GetName(i).ToLower()) with
-                                            | Some(x) -> i,x
-                                            | None -> failwithf "ERROR: name mapping,  SQL name '%s' not found in target Record" 
-                                                            (reader.Reader.GetName(i))
-                               ]
-
-                while reader.Read() do            
-                        for i,j in fieldMap do
-                            args.[j] <- (
-                                    if isOption.[j] then
-                                        match reader.Reader.GetValue(i) with
-                                            | :? DBNull ->box None
-                                            | :? string as x -> box (Some(x))
-                                            | :? int64 as x -> box (Some(x))
-                                            | :? float as x -> box (Some(x))
-                                            | :? bool as x -> box (Some(x))
-                                            | :? int32 as x -> box (Some(x))
-                                            | :? DateTime as x -> box (Some(x))
-                                            | _ as x -> failwithf "ERROR: unsupported nullable dbtype %s" (x.GetType().Name)
-                                    else
-                                        reader.Reader.GetValue(i) 
-                            )
-                        yield cons.Invoke(args) :?> 'T
-
-                // Don't dispose till the sequence is finally used. (within sequence generator)
-                (command :> IDisposable).Dispose()
+                    while reader.Read() do            
+                            for i,j in fieldMap do
+                                args.[j] <- (
+                                        if isOption.[j] then
+                                            match reader.Reader.GetValue(i) with
+                                                | :? DBNull ->box None
+                                                | :? string as x -> box (Some(x))
+                                                | :? int64 as x -> box (Some(x))
+                                                | :? float as x -> box (Some(x))
+                                                | :? bool as x -> box (Some(x))
+                                                | :? int32 as x -> box (Some(x))
+                                                | :? DateTime as x -> box (Some(x))
+                                                | _ as x -> failwithf "ERROR: unsupported nullable dbtype %s" (x.GetType().Name)
+                                        else
+                                            reader.Reader.GetValue(i) 
+                                )
+                            yield cons.Invoke(args) :?> 'T
+                finally
+                    // Don't dispose till the sequence is finally used. (within sequence generator)
+                    (command :> IDisposable).Dispose()
             } 
 
           member x.ExecuteScalar(sql:string) =
