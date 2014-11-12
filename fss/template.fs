@@ -93,10 +93,10 @@ module Template =
 
     /// Pattern to match an expression, including equality and inequality
     /// Two tiered to capture and / or precedence.  Cascades into general expressions lower down
-    let rec (|Comparison|_|) = function
-        | 'n'::'o'::'t'::Ws(Comparison(e,rem)) -> Some(NOT(e),rem)
+    let rec (|BoolExpr|_|) = function
+        | 'n'::'o'::'t'::Ws(BoolExpr(e,rem)) -> Some(NOT(e),rem)
         | 'n'::'o'::'t'::Ws(ComparisonFactor(e,rem)) -> Some(NOT(e),rem)
-        | '('::Comparison(e,[')']) -> Some(e,[]) // parenthetic comparator  e.g. not (a=6)
+        | '('::BoolExpr(e,[')']) -> Some(e,[]) // parenthetic comparator  e.g. not (a=6)
         | ComparisonExpr(e1,Ws(rem)) ->
             match rem with
                 | '='::'='::Ws(ComparisonExpr(e2,rem)) -> Some(EQUALS(e1,e2),rem)
@@ -108,29 +108,38 @@ module Template =
     and (|ComparisonExpr|_|) = function // series of or statements
         | ComparisonFactor(e1, Ws(t)) ->
             let rec aux e1 = function
-              | 'o'::'r'::Ws(Expr(e2, t)) -> aux (OR(e1,e2)) t
+              | 'o'::'r'::Ws(ComparisonFactor(e2, t)) -> aux (OR(e1,e2)) t
               | _ as t -> Some(e1,t)
             aux e1 t
         | _ -> None
     and (|ComparisonFactor|_|) = function
-        | Expr(e1,Ws(t)) ->
+        | Comparison(e1,Ws(t)) ->
             let rec aux e = function
-                | 'a'::'n'::'d'::Ws(ComparisonFactor(e2,t)) -> aux (AND(e1,e2)) t
+                | 'a'::'n'::'d'::Ws(Comparison(e2,t)) -> aux (AND(e1,e2)) t
                 | t -> Some(e,t)
             aux e1 t
         | _ -> None
 
+    and (|Comparison|_|) = function
+        | Expr(e1,rem) ->
+            match rem with
+                | '='::'='::Ws(Expr(e2,rem)) -> Some(EQUALS(e1,e2),rem)
+                | '!'::'='::Ws(Expr(e2,rem)) -> Some(NOTEQUAL(e1,e2),rem)
+                | '<'::Ws(Expr(e2,rem)) -> Some(LESSTHAN(e1,e2),rem)
+                | '>'::Ws(Expr(e2,rem)) -> Some(GREATERTHAN(e1,e2),rem)
+                | _  -> Some(BOOLEXP(e1),rem)
+        | _ -> None
     and (|Expr|_|) = function
         | Factor(e1, Ws(t)) ->
             let rec aux e1 = function
-              | 'o'::'r'::Ws(Expr(e2, t)) -> aux (OR(e1,e2)) t
-              | '!'::'='::Ws(Factor(e2,t)) -> aux(NOTEQUAL(e1,e2)) t
-              | '='::'='::Ws(Factor(e2,t)) -> aux (EQUALS(e1,e2)) t
-              | '+'::Ws(Factor(e2, t)) -> aux (ADD(e1,e2)) t
-              | '-'::Ws(Factor(e2, t)) -> aux (SUB(e1,e2)) t
-              | '<'::Ws(Expr(e2,t)) -> aux(LESSTHAN(e1,e2)) t
-              | '>'::Ws(Expr(e2,t)) -> aux(GREATERTHAN(e1,e2)) t
-              | t -> Some(e1, t)
+ //             | 'o'::'r'::Ws(Expr(e2, t)) -> aux (OR(e1,e2)) t
+            //    | '!'::'='::Ws(Factor(e2,t)) -> aux(NOTEQUAL(e1,e2)) t
+            //    | '='::'='::Ws(Factor(e2,t)) -> aux (EQUALS(e1,e2)) t
+                | '+'::Ws(Factor(e2, t)) -> aux (ADD(e1,e2)) t
+                | '-'::Ws(Factor(e2, t)) -> aux (SUB(e1,e2)) t
+ //             | '<'::Ws(Expr(e2,t)) -> aux(LESSTHAN(e1,e2)) t
+ //             | '>'::Ws(Expr(e2,t)) -> aux(GREATERTHAN(e1,e2)) t
+                | t -> Some(e1, t)
             aux e1 t
         | _ -> None
       and (|Factor|_|) = function
@@ -299,7 +308,7 @@ module Template =
                             | x when x.StartsWith("if") -> 
                                         match (List.ofSeq x.[3..]) with
                                                     //| Comparison(c,[]) -> IFSTART(c)
-                                                    | Comparison(c,[]) -> IFSTART(c) // boolean expression like if x
+                                                    | BoolExpr(c,[]) -> IFSTART(c) // boolean expression like if x
                                                     | _ as x -> failwithf "ERROR: parsing if expression, unparseable expression encountered %A" x
                                         //IFSTART(c)
                             | _ as x -> UNKNOWNLOGIC(x)
@@ -575,6 +584,15 @@ module Template =
         member x.Get(v) = match lookupLocals locals  v with // match locals.TryFind(v) with 
                             | None -> ve.Get(v) 
                             | Some(s) -> s
+    /// Match either a  Bool const or variable that's a bool
+    let (|BConstOrVar|_|) (vf:VarFetcher) = function
+        | BCONST(c) -> Some(c)
+        | VARIABLE(v) ->
+            match vf.Get(v) with
+                | BCONST(e) ->
+                    Some(e)
+                | _ as x -> failwithf "ERROR: '%A' not a boolean expression" (x.ToString())
+        | _ -> None
 
     /// Main template rendering class.  Instantiated usings
     /// string as a constructor and optionally a function to fetch sub templates  
@@ -704,17 +722,17 @@ module Template =
                     | FCONST(i1) -> FCONST(-i1)
                     | _ as x -> failwithf "Error: evaluating expression, negation performed on inappropriate types %A" x
             | BOOLEXP(e) -> match (c e) with
-                            | BCONST(_) -> e
+                            | BConstOrVar vf (r) -> BCONST(r)
                             | _ as x -> failwithf "Error: evaluating bool expression, %A not a boolean const"  x
 
             | NOT(e) -> match (c e) with
-                            | BCONST(b) -> BCONST(not b)
+                            | BConstOrVar vf (b) -> BCONST(not b)
                             | _ as x -> failwithf "Error: evaluating expression, not performed on inappropriate types %A" x
             | AND(e1,e2) -> match (c e1),(c e2) with
-                            | BCONST(b1),BCONST(b2) -> BCONST(b1&&b2)
+                            | BConstOrVar vf (b1),BConstOrVar vf (b2) -> BCONST(b1&&b2)
                             | _ as x -> failwithf "Error: evaluating AND expression, not performed on inappropriate types %A" x
             | OR(e1,e2) -> match (c e1),(c e2) with
-                            | BCONST(b1),BCONST(b2) -> BCONST(b1||b2)
+                            | BConstOrVar vf (b1),BConstOrVar vf (b2) -> BCONST(b1||b2)
                             | _ as x -> failwithf "Error: evaluating OR expression, not performed on inappropriate types %A" x
             | VARIABLE(v) -> vf.Get(v) // TODO - implement dot notation
             | BCONST(_) as x -> x // Nothing to calculate here
