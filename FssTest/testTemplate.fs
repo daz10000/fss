@@ -3,30 +3,6 @@
 open NUnit.Framework
 open Fss.Template
 
-type person = { name : string ; zip : int ; age : float }
-type Test12Type = {id: int; str: string}
-let test1 = "
-        some text some {% for a in b %}
-        {{ var1 }}
-        some following text
-        {% endfor %}
-        "
-let test1Result ="
-        some text some 
-        linecontents
-        some following text
-        
-        linecontents
-        some following text
-        
-        linecontents
-        some following text
-        
-        linecontents
-        some following text
-        
-        "
-
 
 
 
@@ -61,7 +37,7 @@ let sc (s1:string) (s2:string) =
         Assert.Fail(sprintf "String mismatch\nExpected>>>>>%s<<<<<<\nActual  >>>>>%s<<<<<<" (flat s1) (flat s2))
 
 [<TestFixture>]
-type TestTemplateBasic() = class     
+type Basic() = class     
     let test1 = "
         some text some {% for a in b %}
         {{ var1 }}
@@ -89,89 +65,7 @@ type TestTemplateBasic() = class
     do
         ()
 
-    [<Test>]
-    member x.Test001() =
-        let t = Template(test1)
-        let page = t.Render( [| ("b",box [| "cat" ; "dog" ; "mouse" ;"kangaroo"|] ); ("var1" , box "linecontents")|] )
-        sc test1Result page
-
-    [<Test>]
-    member x.Test002a() = 
-        // Inline variable expansion outside a block
-        let t = Template(" Simple inline variable var1={{var1}} . ")
-        let page = t.Render( [| ("var1" , box 99)|] )
-        sc " Simple inline variable var1=99 . " page
-    [<Test>]
-    member x.Test002b() = 
-        let t = Template(" Simple inline terminal variable var1={{var1}}")
-        let page = t.Render( [| ("var1" , box 99)|] )
-        sc " Simple inline terminal variable var1=99" page
-    [<Test>]
-    member x.Test002c() = 
-        let t = Template("{{var1}} simple leading variable")
-        let page = t.Render( [| ("var1" , box 99)|] )
-        sc "99 simple leading variable" page
-
-    [<Test>]
-    member x.Test002d() = 
-        // leading variable inside a for block
-        let t = Template("preamble {% for x in var1 %}{{x}} leading var{% endfor %} postamble")
-        sc "preamble 1 leading var2 leading var3 leading var postamble" (t.Render( [| ("var1" , box [| 1 ;2 ; 3|])|] ))
-    
-    [<Test>]
-    member x.Test002e() = 
-        // only variable inside a for block
-        let t = Template("preamble {% for x in var1 %}{{x}}{% endfor %} postamble")
-        let page = t.Render( [| ("var1" , box [| 1 ;2 ; 3|])|] )
-        sc "preamble 123 postamble" page
-
-    [<Test>]
-    member x.Test002f() =
-        // trailing variable inside a for block
-        let t = Template("preamble {% for x in var1 %} trailing {{x}}{% endfor %} postamble")
-        let page = t.Render( [| ("var1" , box [| 1 ;2 ; 3|])|] )
-        sc "preamble  trailing 1 trailing 2 trailing 3 postamble" page
-
-    [<Test>]
-    member x.Test002g() = 
-        let test002gTemplate = "<br/>{{var2}}<br/>{{var1}} foobar {% for run in rundata %}{{run}}{% endfor %}"
-        let rundata = [| "mary" ; "had" ; "lamb" |]
-        let t = Template(test002gTemplate)
-        let page = t.Render( [| ("rundata" , box rundata) ; ("var1",box "party") ; ("var2",box "discoball")|])
-        sc "<br/>discoball<br/>party foobar maryhadlamb" page
-
-    [<Test>]
-    member x.Test003a() = 
-        let t = Template("{% for x in var1 %}{{x}} leading var{% endfor %}")
-        let page = t.Render( [| ("var1" , box [| 1 ;2 ; 3|])|] )
-        sc "1 leading var2 leading var3 leading var" page
-
-    [<Test>]
-    member x.Test003b() = 
-        let t = Template("preamble {% for x in var1 %}{{x}} leading var{% endfor %}")
-        let page = t.Render( [| ("var1" , box [| 1 ;2 ; 3|])|] )
-        sc "preamble 1 leading var2 leading var3 leading var" page
-
-
-    [<Test>]
-    /// Simple class passed to the template renderer, class name used to look up fields
-    member x.Test004aClass() =
-        let t = Template("{{person.name}}")
-        sc "Brenda" ( t.Render({ name = "Brenda" ; age = 28.2 ; zip = 90210 }))
-
-    [<Test>]
-    /// Simple class passed as an array element
-    member x.Test004bClass() =
-        let t = Template("{{person.name}}")
-        sc "Brenda" ( t.Render( [| ("person" , { name = "Brenda" ; age = 22.2 ; zip = 90210 }) |] ) )
-
-    [<Test>]
-    /// Iterate over an array of classes
-    member x.Test004cClass() =
-        let bh90210 = [| { name = "Brenda" ; age = 22.2 ; zip = 90210 } ; { name = "Dylan" ; age = 23.5 ; zip = 90210 } ; { name = "Kelly" ; age = 22.3 ; zip = 90210 } |]
-        let t = Template("{% for x in bh90210cast %}{{x.name}} {{x.age}} {{x.zip}}\n{% endfor %}")
-        sc "Brenda 22.200000 90210\nDylan 23.500000 90210\nKelly 22.300000 90210\n" ( t.Render( [| ("bh90210cast" , bh90210) |] ) )
-
+   
     [<Test>]
     member x.Test005aNestedFors() =
         let t = Template("{% for x in var1 %}{% for y in var2%}{{y}}{% endfor %}{% endfor %}")
@@ -452,8 +346,127 @@ type TestTemplateBasic() = class
           
 end
 
+// Test variable substitution
+
+type person = { name : string ; zip : int ; age : float }
+type Test12Type = {id: int; str: string}
+let test1 = "
+        some text some {% for a in b %}
+        {{ var1 }}
+        some following text
+        {% endfor %}
+        "
+let test1Result ="
+        some text some 
+        linecontents
+        some following text
+        
+        linecontents
+        some following text
+        
+        linecontents
+        some following text
+        
+        linecontents
+        some following text
+        
+        "
+
+
 [<TestFixture>]
-type TestTemplateBoolean() = class    
+type Vars() = class     
+ [<Test>]
+    member x.Test001() =
+        let t = Template(test1)
+        let page = t.Render( [| ("b",box [| "cat" ; "dog" ; "mouse" ;"kangaroo"|] ); ("var1" , box "linecontents")|] )
+        sc test1Result page
+
+    [<Test>]
+    member x.Test002a() = 
+        // Inline variable expansion outside a block
+        let t = Template(" Simple inline variable var1={{var1}} . ")
+        let page = t.Render( [| ("var1" , box 99)|] )
+        sc " Simple inline variable var1=99 . " page
+    [<Test>]
+    member x.Test002b() = 
+        let t = Template(" Simple inline terminal variable var1={{var1}}")
+        let page = t.Render( [| ("var1" , box 99)|] )
+        sc " Simple inline terminal variable var1=99" page
+    [<Test>]
+    member x.Test002c() = 
+        let t = Template("{{var1}} simple leading variable")
+        let page = t.Render( [| ("var1" , box 99)|] )
+        sc "99 simple leading variable" page
+
+    [<Test>]
+    member x.Test002d() = 
+        // leading variable inside a for block
+        let t = Template("preamble {% for x in var1 %}{{x}} leading var{% endfor %} postamble")
+        sc "preamble 1 leading var2 leading var3 leading var postamble" (t.Render( [| ("var1" , box [| 1 ;2 ; 3|])|] ))
+    
+    [<Test>]
+    member x.Test002e() = 
+        // only variable inside a for block
+        let t = Template("preamble {% for x in var1 %}{{x}}{% endfor %} postamble")
+        let page = t.Render( [| ("var1" , box [| 1 ;2 ; 3|])|] )
+        sc "preamble 123 postamble" page
+
+    [<Test>]
+    member x.Test002f() =
+        // trailing variable inside a for block
+        let t = Template("preamble {% for x in var1 %} trailing {{x}}{% endfor %} postamble")
+        let page = t.Render( [| ("var1" , box [| 1 ;2 ; 3|])|] )
+        sc "preamble  trailing 1 trailing 2 trailing 3 postamble" page
+
+    [<Test>]
+    member x.Test002g() = 
+        let test002gTemplate = "<br/>{{var2}}<br/>{{var1}} foobar {% for run in rundata %}{{run}}{% endfor %}"
+        let rundata = [| "mary" ; "had" ; "lamb" |]
+        let t = Template(test002gTemplate)
+        let page = t.Render( [| ("rundata" , box rundata) ; ("var1",box "party") ; ("var2",box "discoball")|])
+        sc "<br/>discoball<br/>party foobar maryhadlamb" page
+
+    [<Test>]
+    member x.Test003a() = 
+        let t = Template("{% for x in var1 %}{{x}} leading var{% endfor %}")
+        let page = t.Render( [| ("var1" , box [| 1 ;2 ; 3|])|] )
+        sc "1 leading var2 leading var3 leading var" page
+
+    [<Test>]
+    member x.Test003b() = 
+        let t = Template("preamble {% for x in var1 %}{{x}} leading var{% endfor %}")
+        let page = t.Render( [| ("var1" , box [| 1 ;2 ; 3|])|] )
+        sc "preamble 1 leading var2 leading var3 leading var" page
+
+
+    [<Test>]
+    /// Simple class passed to the template renderer, class name used to look up fields
+    member x.Test004aClass() =
+        let t = Template("{{person.name}}")
+        sc "Brenda" ( t.Render({ name = "Brenda" ; age = 28.2 ; zip = 90210 }))
+
+    [<Test>]
+    /// Simple class passed as an array element
+    member x.Test004bClass() =
+        let t = Template("{{person.name}}")
+        sc "Brenda" ( t.Render( [| ("person" , { name = "Brenda" ; age = 22.2 ; zip = 90210 }) |] ) )
+
+    [<Test>]
+    /// Iterate over an array of classes
+    member x.Test004cClass() =
+        let bh90210 = [| { name = "Brenda" ; age = 22.2 ; zip = 90210 } ; { name = "Dylan" ; age = 23.5 ; zip = 90210 } ; { name = "Kelly" ; age = 22.3 ; zip = 90210 } |]
+        let t = Template("{% for x in bh90210cast %}{{x.name}} {{x.age}} {{x.zip}}\n{% endfor %}")
+        sc "Brenda 22.200000 90210\nDylan 23.500000 90210\nKelly 22.300000 90210\n" ( t.Render( [| ("bh90210cast" , bh90210) |] ) )
+
+    [<Test>]
+    /// Expressions inside {{ }}
+    member x.Test010Expression1() =
+        let t = Template("{{x*y}}")
+        sc "54" (t.Render([| ("x",box 6) ; ("y", box 9) |]))
+end
+
+[<TestFixture>]
+type Boolean() = class    
     [<Test>]
     member x.Test014c_IfBoolVar() =
         let template = Template("{% if x%}hello{%endif%}")
@@ -728,7 +741,7 @@ type TestIfParsing() = class
 end  
 
 [<TestFixture>]
-type TestTemplateRange() = class    
+type Range() = class    
     [<Test>]
     member x.Test001_RangeBasic() =
         let template = Template("{% for x in range(1,10)%}{{x}} {%endfor%}")
