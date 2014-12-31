@@ -36,6 +36,8 @@ module Template =
             | EQUALS of Expression*Expression
             | NOTEQUAL of Expression*Expression
             | LESSTHAN of Expression*Expression
+            | LESSTHANOREQUALTO of Expression*Expression
+            | GREATERTHANOREQUALTO of Expression*Expression
             | GREATERTHAN of Expression*Expression
             | MULT of Expression*Expression
             | MOD of Expression*Expression
@@ -52,6 +54,7 @@ module Template =
             | ARRAYCONST of Expression array
             | BCONST of bool
             | CLASS of Map<string,Expression>
+            | RANGE of Expression*Expression option*Expression
 
     /// Pretty print expression
     let rec ppExpr = function
@@ -64,6 +67,8 @@ module Template =
             | NOTEQUAL(e1,e2) -> sprintf "%s!=%s" (ppExpr e1) (ppExpr e2)
             | GREATERTHAN(e1,e2) -> sprintf "%s>%s" (ppExpr e1) (ppExpr e2)
             | LESSTHAN(e1,e2) -> sprintf "%s<%s" (ppExpr e1) (ppExpr e2)
+            | LESSTHANOREQUALTO(e1,e2) -> sprintf "%s<=%s" (ppExpr e1) (ppExpr e2)
+            | GREATERTHANOREQUALTO(e1,e2) -> sprintf "%s>=%s" (ppExpr e1) (ppExpr e2)
             | FCONST(f) -> sprintf "%f" f
             | ICONST(d) -> sprintf "%d" d
             | ICONST64(d) -> sprintf "%d" d
@@ -86,6 +91,9 @@ module Template =
                                           yield "}"
                                         }
                             )
+            | RANGE(f,s,t) -> match s with
+                                | None -> sprintf "range(%s,%s)" (ppExpr f) (ppExpr t)
+                                | Some(sv) -> sprintf "range(%s,%s,%s)"(ppExpr f) (ppExpr sv) (ppExpr t)
     /// Whitespace removal
     let rec (|Ws|) = function
         | ' '::Ws(rem) -> rem
@@ -101,6 +109,8 @@ module Template =
             match rem with
                 | '='::'='::Ws(ComparisonExpr(e2,rem)) -> Some(EQUALS(e1,e2),rem)
                 | '!'::'='::Ws(ComparisonExpr(e2,rem)) -> Some(NOTEQUAL(e1,e2),rem)
+                | '<'::'='::Ws(ComparisonExpr(e2,rem)) -> Some(LESSTHANOREQUALTO(e1,e2),rem)
+                | '>'::'='::Ws(ComparisonExpr(e2,rem)) -> Some(GREATERTHANOREQUALTO(e1,e2),rem)
                 | '<'::Ws(ComparisonExpr(e2,rem)) -> Some(LESSTHAN(e1,e2),rem)
                 | '>'::Ws(ComparisonExpr(e2,rem)) -> Some(GREATERTHAN(e1,e2),rem)
                 | _  -> Some(BOOLEXP(e1),rem)
@@ -125,6 +135,8 @@ module Template =
             match rem with
                 | '='::'='::Ws(Expr(e2,rem)) -> Some(EQUALS(e1,e2),rem)
                 | '!'::'='::Ws(Expr(e2,rem)) -> Some(NOTEQUAL(e1,e2),rem)
+                | '<'::'='::Ws(Expr(e2,rem)) -> Some(LESSTHANOREQUALTO(e1,e2),rem)
+                | '>'::'='::Ws(Expr(e2,rem)) -> Some(GREATERTHANOREQUALTO(e1,e2),rem)
                 | '<'::Ws(Expr(e2,rem)) -> Some(LESSTHAN(e1,e2),rem)
                 | '>'::Ws(Expr(e2,rem)) -> Some(GREATERTHAN(e1,e2),rem)
                 | _  -> Some(BOOLEXP(e1),rem)
@@ -132,13 +144,8 @@ module Template =
     and (|Expr|_|) = function
         | Factor(e1, Ws(t)) ->
             let rec aux e1 = function
- //             | 'o'::'r'::Ws(Expr(e2, t)) -> aux (OR(e1,e2)) t
-            //    | '!'::'='::Ws(Factor(e2,t)) -> aux(NOTEQUAL(e1,e2)) t
-            //    | '='::'='::Ws(Factor(e2,t)) -> aux (EQUALS(e1,e2)) t
                 | '+'::Ws(Factor(e2, t)) -> aux (ADD(e1,e2)) t
                 | '-'::Ws(Factor(e2, t)) -> aux (SUB(e1,e2)) t
- //             | '<'::Ws(Expr(e2,t)) -> aux(LESSTHAN(e1,e2)) t
- //             | '>'::Ws(Expr(e2,t)) -> aux(GREATERTHAN(e1,e2)) t
                 | t -> Some(e1, t)
             aux e1 t
         | _ -> None
@@ -177,6 +184,12 @@ module Template =
                                     ,t
                                 )
             aux 0 tl1
+        | 'r'::'a'::'n'::'g'::'e'::'('::Expr(e1,','::Expr(e2,rem)) ->
+                match rem with
+                    | ')'::rem2 -> Some(RANGE(e1,None,e2),rem2)
+                    | ','::Expr(e3,')'::rem2) -> Some(RANGE(e1,Some(e2),e3),rem2)
+                    | _ as x -> failwithf "Unexpected tokens in range statement '%A'" x
+
         | '\''::t -> // Single quoted string
             let sb = StringBuilder()
             let rec aux = function
@@ -702,6 +715,23 @@ module Template =
                     | SCONST(i1),SCONST(i2) -> BCONST(i1>i2)
                     | FCONST(i1),FCONST(i2) -> BCONST(i1>i2)
                     | _,_ as x -> failwithf "Error: evaluating expression, > performed on inappropriate types %A" x
+            | GREATERTHANOREQUALTO(e1,e2) ->
+                match (c e1),(c e2) with
+                    | ICONST(i1),ICONST(i2) -> BCONST(i1>=i2)
+                    | ICONST64(i1),ICONST(i2) -> BCONST(i1>=int64 i2)
+                    | ICONST(i1),ICONST64(i2) -> BCONST(int64 i1>=i2)
+                    | SCONST(i1),SCONST(i2) -> BCONST(i1>=i2)
+                    | FCONST(i1),FCONST(i2) -> BCONST(i1>=i2)
+                    | _,_ as x -> failwithf "Error: evaluating expression, >= performed on inappropriate types %A" x
+
+            | LESSTHANOREQUALTO(e1,e2) ->
+                match (c e1),(c e2) with
+                    | ICONST(i1),ICONST(i2) -> BCONST(i1<=i2)
+                    | ICONST64(i1),ICONST(i2) -> BCONST(i1<=int64 i2)
+                    | ICONST(i1),ICONST64(i2) -> BCONST(int64 i1<=i2)
+                    | SCONST(i1),SCONST(i2) -> BCONST(i1<=i2)
+                    | FCONST(i1),FCONST(i2) -> BCONST(i1<=i2)
+                    | _,_ as x -> failwithf "Error: evaluating expression, => performed on inappropriate types %A" x
 
             | LESSTHAN(e1,e2) -> 
                 match (c e1),(c e2) with
@@ -738,6 +768,24 @@ module Template =
             | BCONST(_) as x -> x // Nothing to calculate here
             | ARRAYCONST(_) as x -> x
             | CLASS(_) -> failwithf "Error: evaluating expression: can't evaluate a class"
+            | RANGE(f,s,t) ->
+                let fi = match calc vf f with
+                            | ICONST(i) -> int64 i
+                            | ICONST64(i) -> i
+                            | _ as x -> failwithf "ERROR: range constant start must be ints, found %A instead" x
+                let ti = match calc vf t with
+                            | ICONST(i) -> int64 i
+                            | ICONST64(i) -> i
+                            | _ as x -> failwithf "ERROR: range constant end must be ints, found %A instead" x
+                match s with
+                    | None -> ARRAYCONST([| for i in fi..ti -> ICONST64(i) |])
+                    | Some(sv) -> 
+                        let svi = match calc vf sv with
+                                    | ICONST(i) -> int64 i
+                                    | ICONST64(i) -> i
+                                    | _ as x -> failwithf "ERROR: range constant step must be int, found %A instead" x
+                        ARRAYCONST([| for i in fi..svi..ti -> ICONST64(i) |])
+
                 
         let rec isTrue (expression:Expression) (vf:VarFetcher) = 
             match expression with 
@@ -806,6 +854,11 @@ module Template =
                                                 | ARRAYCONST(expArr) -> expArr
                                                 | _ as x -> failwithf "ERROR: loop expansion only permitted over array types.  %s is %A" name x
                                         | ARRAYCONST(expArr) -> expArr
+                                        | RANGE(a,b,c) as r -> 
+                                                        let vf = VarFetcher(ve,locals) 
+                                                        match calc vf r with
+                                                                | ARRAYCONST(x) -> x
+                                                                | _ -> failwithf "ERROR: unexpected eval type for range expression"
                                         | _ as x ->
                                             failwithf "ERROR: loop expansion only permitted over array types, not %A" x
                                 for v in arr do
