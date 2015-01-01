@@ -769,7 +769,8 @@ type Range() = class
         let template = Template("{% for y in range(1,n)%}\n\
                                     {%for x in range(1,n)%}{{x*y}} {%endfor%}\
                                  {%endfor%}")
-        let templateExpected = "1 2 3 4 \n\
+        let templateExpected = "\n\
+        1 2 3 4 \n\
                                 2 4 6 8 \n\
                                 3 6 9 12 \n\
                                 4 8 12 16 "

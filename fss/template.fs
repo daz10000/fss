@@ -31,6 +31,7 @@ module Template =
     /// Components of mathematical expressions
     type   Expression =
             | VARIABLE of string
+            | CURLYEXP of Expression
             | ADD of Expression*Expression
             | SUB of Expression*Expression
             | EQUALS of Expression*Expression
@@ -79,6 +80,7 @@ module Template =
             | AND(e1,e2) -> sprintf "%s and %s" (ppExpr e1) (ppExpr e2)
             | OR(e1,e2) -> sprintf "%s or %s" (ppExpr e1) (ppExpr e2)
             | VARIABLE(v) -> sprintf "%s" v
+            | CURLYEXP(e) -> sprintf "{{%s}}" (ppExpr e)
             | BCONST(b) -> sprintf "%s" (if b then "True" else "False")
             | ARRAYCONST(a) -> 
                 let s = a |> Array.map (ppExpr)
@@ -215,7 +217,7 @@ module Template =
 
     /// Components of template language
     type TemplatePart =
-            | VAR of string
+            | CURLYBLOCK of Expression
             | LOGIC of string
             | ENDFOR
             | ELSE
@@ -244,7 +246,7 @@ module Template =
                     stdout.Write(indent)
                     match part with 
                         | TEXT(b) -> yield sprintf "text: %s\n" b
-                        | VAR(v) -> yield sprintf "Var: %s\n" v
+                        | CURLYBLOCK(v) -> yield sprintf "Var: %s\n" (ppExpr v)
                         | LOGIC(v) -> yield sprintf "Logic: %s\n" v
                         | EXTENDS(file) -> yield sprintf "Extends: %s\n" file
                         | EXTENDSBUNDLED(l1,l2) -> 
@@ -343,10 +345,10 @@ module Template =
                       Some(l::p)
 
             // Leading variable in a page
-            | Var(v,Page(p)) -> Some(VAR(v)::p)
+            | Var(v,Page(p)) -> Some(CURLYBLOCK(v)::p)
 
             // Just a variable
-            | Var(v,[]) -> Some( [VAR(v)])
+            | Var(v,[]) -> Some( [CURLYBLOCK(v)])
             //| Block(b,Var(v,[])) -> Some( [TEXT(b) ; VAR(v) ])
 
             // Just some logic
@@ -371,9 +373,12 @@ module Template =
                 let rec aux res = function
                                     | c::d::tl when c <> '}' || d <> '}' ->  aux (c::res) (d::tl)
                                     | '}'::'}'::tl -> 
-                                        let name = new string(List.rev res |> Array.ofList)
-                                        Some(name.Trim(),tl)
-                                    | _ -> failwithf "Unexpected EOF parsing {{ }} variable started from %s" (l2s tl)
+                                        // Get text between the curly braces
+                                        let text = new string(List.rev res |> Array.ofList)
+                                        match text.Trim().ToCharArray() |> List.ofArray with
+                                            | Expr(e,[]) -> Some(CURLYEXP(e),tl)
+                                            | _ -> None // Some(name.Trim(),tl)
+                                    | _ -> failwithf "Unexpected EOF parsing {{ }} expression started from %s" (l2s tl)
                 aux [] tl
             | _ -> None
         /// Block of text leading up to a { delimiter
@@ -415,7 +420,7 @@ module Template =
         | IFSTART(f)::ELSE::ParsedSections(body2,ENDIF::tl) -> Some(IF(f,[],Some(body2)),tl) // Gather up IF/ENDIF blocks
         | IFSTART(f)::ELSE::ParsedSections(body2,ENDIF::tl) -> Some(IF(f,[],Some(body2)),tl) // Gather up IF/ENDIF blocks
         | IFSTART(f)::ELSE::ENDIF::tl -> Some(IF(f,[],Some([])),tl) // Gather up IF/ENDIF blocks
-        | VAR(v)::tl -> Some(VAR(v),tl)
+        | CURLYBLOCK(e)::tl -> Some(CURLYBLOCK(e),tl)
         | EXTENDSBUNDLED(subs,body):: tl -> Some(EXTENDSBUNDLED(subs,body),tl)
         | _  as x -> None
         
@@ -765,6 +770,7 @@ module Template =
                             | BConstOrVar vf (b1),BConstOrVar vf (b2) -> BCONST(b1||b2)
                             | _ as x -> failwithf "Error: evaluating OR expression, not performed on inappropriate types %A" x
             | VARIABLE(v) -> vf.Get(v) // TODO - implement dot notation
+            | CURLYEXP(e) -> calc vf e 
             | BCONST(_) as x -> x // Nothing to calculate here
             | ARRAYCONST(_) as x -> x
             | CLASS(_) -> failwithf "Error: evaluating expression: can't evaluate a class"
@@ -864,9 +870,12 @@ module Template =
                                 for v in arr do
                                     // Now expand the inner block
                                     expandParts (locals.Add(fv,v)) blocks parts
-                            | VAR(v) ->
+                            | CURLYBLOCK(e) ->
                                 // Try local variable and if that fails, passed in global
-                                sb.Append((match (lookupLocals locals v) with | Some(s) ->s | None -> ve.Get(v) ) |> ppExpr) |> ignore
+                                //sb.Append((match (lookupLocals locals v) with | Some(s) ->s | None -> ve.Get(v) ) |> ppExpr) |> ignore
+                                // FIXFIX - this should now be an expression, need to evaluate????
+                                let vf = VarFetcher(ve,locals) 
+                                calc vf e |> ppExpr |> sb.Append |> ignore
                             | IFSTART(_)  | BLOCKSTART(_) | ENDBLOCK(_) | ENDFOR | ENDIF | ENDRAW | FORSTART(_) | LOGIC(_) | ELSE as x -> 
                                 failwithf "Internal error: Unexpected %A element that should have been consolidated" x
                             | UNKNOWNLOGIC(u) -> 
