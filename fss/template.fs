@@ -163,8 +163,13 @@ module Template =
                 | _ -> Some(e1, t)
         | _ -> None
       and (|IndexedAtom|_|) = function
-        | Atom(a,'['::Expr(e,']'::tl)) -> Some(INDEX(a,e),tl)
-        | Atom(a,tl) -> Some(a,tl)
+        | Atom(a,tl) -> 
+            let rec aux e ca = // accumulate serial index operations
+                match ca with
+                    | '['::Expr(e2,']'::tl2) ->
+                        aux (INDEX(e,e2)) tl2
+                    | _ as tl -> Some(e,tl)
+            aux a tl
         | _ -> None
       and (|Atom|_|) = function
         | c::tl1 when '0'<=c && c<='9' ->
@@ -493,18 +498,6 @@ module Template =
             if FSharpType.IsTuple(o.GetType()) then
                 match FSharpValue.GetTupleFields(o) with
                     | [| f1 ; f2 |] when f1.GetType() = stringType ->
-                            (*
-                            let f2t = f2.GetType() // FIX FIX - doesn't handle list type
-                            let v = 
-                                if f2t = intType then ICONST(f2 :?> int)
-                                elif f2t = floatType then FCONST(f2 :?> float)
-                                elif f2t = stringType then SCONST(string f2)
-                                elif f2t.IsGenericType && f2t.GetGenericTypeDefinition() = genericListType then 
-                                    let x : Array = f2 :?> Array
-                                    let y = [| for i in x -> procOne i |] |> Array.choose (id)
-                                    ARRAYCONST(y)
-                                else failwithf "ERROR: unknown type %A used in variable" f2t
-                            *)
                             match procAtom f2 with
                                 | None -> failwithf "ERROR: unable to unbox expression %A" f2
                                 | Some(v) ->
