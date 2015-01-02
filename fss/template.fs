@@ -53,6 +53,7 @@ module Template =
             | ICONST64 of int64
             | SCONST of string
             | ARRAYCONST of Expression array
+            | INDEX of Expression * Expression
             | BCONST of bool
             | CLASS of Map<string,Expression>
             | RANGE of Expression*Expression option*Expression
@@ -85,6 +86,7 @@ module Template =
             | ARRAYCONST(a) -> 
                 let s = a |> Array.map (ppExpr)
                 sprintf "[%s]" (String.Join(";",s))
+            | INDEX(e,i) -> sprintf "%s[%s]" (ppExpr e) (ppExpr i)
             | CLASS(c) ->
                 String.Join("",
                                     seq { yield "{"
@@ -153,17 +155,17 @@ module Template =
         | _ -> None
       and (|Factor|_|) = function
         | '-'::Factor(e, t) -> Some(NEGATE(e), t)
-     //   | Ws('n'::'o'::'t'::Ws(Factor(e, t))) -> Some(NOT(e), t)
-        | Atom(e1,Ws(t)) ->
+        | IndexedAtom(e1,Ws(t)) ->
             match t with
                 | '*'::Ws(Factor(e2, t)) -> Some(MULT(e1,e2), t)
-         //       | 'a'::'n'::'d'::Ws(Expr(e2,t)) ->
-           //          Some(AND(e1,e2),t)
                 | '/'::Ws(Factor(e2, t)) -> Some(DIVIDE(e1,e2), t)
                 | '%'::Ws(Factor(e2, t)) -> Some(MOD(e1,e2), t)
                 | _ -> Some(e1, t)
         | _ -> None
-
+      and (|IndexedAtom|_|) = function
+        | Atom(a,'['::Expr(e,']'::tl)) -> Some(INDEX(a,e),tl)
+        | Atom(a,tl) -> Some(a,tl)
+        | _ -> None
       and (|Atom|_|) = function
         | c::tl1 when '0'<=c && c<='9' ->
             let sb = StringBuilder().Append(c)
@@ -773,6 +775,15 @@ module Template =
             | CURLYEXP(e) -> calc vf e 
             | BCONST(_) as x -> x // Nothing to calculate here
             | ARRAYCONST(_) as x -> x
+            | INDEX(e,i) -> // Index into expression(array e) distance i (zero based)
+                match (calc vf e) with
+                    | ARRAYCONST(a) ->
+                        match i with
+                            | ICONST(ii) -> a.[ii]
+                            | ICONST64(ii) -> a.[int ii]
+                            | _ as x -> failwithf "ERROR: index into array should be int or int64, not %A" x 
+                    | _ as x ->
+                        failwithf "ERROR: attempt to index [] into non array expression %s" (ppExpr e)
             | CLASS(_) -> failwithf "Error: evaluating expression: can't evaluate a class"
             | RANGE(f,s,t) ->
                 let fi = match calc vf f with

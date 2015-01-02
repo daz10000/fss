@@ -463,6 +463,19 @@ type Vars() = class
     member x.Test010Expression1() =
         let t = Template("{{x*y}}")
         sc "54" (t.Render([| ("x",box 6) ; ("y", box 9) |]))
+
+    [<Test>]
+    /// Expressions inside {{ }}
+    member x.Test010Expression2() =
+        let t = Template("{{10*y}}")
+        sc "90" (t.Render([| ("x",box 6) ; ("y", box 9) |]))
+
+    [<Test>]
+    /// Expressions with array indixes inside {{ }}
+    member x.Test020ExpressionArray() =
+        let t = Template("{{x[4]}}")
+        sc "40" (t.Render([| ("x",box [|0;10;20;30;40;50;60|]) ; ("y", box 9) |]))
+
 end
 
 [<TestFixture>]
