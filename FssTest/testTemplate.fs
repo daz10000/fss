@@ -490,6 +490,20 @@ type Vars() = class
                                         
                               ) |]))
 
+    [<Test>]
+    /// Expressions with array indices inside 2D {{ }}
+    member x.Test022Array2DIndexExpressions() =
+        let t = Template("{{a[y-1][x-1]}}")
+        sc "6" (t.Render([| ("a",
+                                box [|
+                                    [|1;2;3;4;5;6|];
+                                    [|2;4;6;8;10;12|];
+                                    [|3;6;9;12;15;18|];
+                                    [|4;8;12;16;20;24|]
+                                |]
+                                        
+                              ) ; ("x",box 2) ; ("y",box 3) |]))
+
 end
 
 [<TestFixture>]

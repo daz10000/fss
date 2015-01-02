@@ -771,7 +771,7 @@ module Template =
             | INDEX(e,i) -> // Index into expression(array e) distance i (zero based)
                 match (calc vf e) with
                     | ARRAYCONST(a) ->
-                        match i with
+                        match (calc vf i) with
                             | ICONST(ii) -> a.[ii]
                             | ICONST64(ii) -> a.[int ii]
                             | _ as x -> failwithf "ERROR: index into array should be int or int64, not %A" x 
