@@ -18,7 +18,7 @@ Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "FssTest", "FssTest\FssTest.
 EndProject
 Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "FssLoginExample", "FssLoginExample\FssLoginExample.fsproj", "{612D80B4-DCAE-4231-9036-B5AA050DF1B7}"
 EndProject
-Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "fss-postgres", "fss-postgres\Fss-Postgres.fsproj", "{02149E9B-BCE3-4989-A21B-299DC8C7586F}"
+Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "fss-postgres", "fss-postgres\fss-postgres.fsproj", "{02149E9B-BCE3-4989-A21B-299DC8C7586F}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
