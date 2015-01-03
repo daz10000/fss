@@ -773,7 +773,9 @@ module Template =
                             | _ as x -> failwithf "Error: evaluating OR expression, not performed on inappropriate types %A" x
             | VARIABLE(v) -> vf.Get(v) 
             | DOT(e,f) -> match (calc vf e) with
-                                | CLASS (x) -> x.[f] // vf.Dot (calc vf e) f
+                                | CLASS (x) -> match x.TryFind f with
+                                                | Some(v) -> v
+                                                | None -> failwithf "ERROR: no field '%s' in expression %A " f x
                                 | _ as x -> failwithf "ERROR: can't apply dot notation to %A" x
             | CURLYEXP(e) -> calc vf e 
             | BCONST(_) as x -> x // Nothing to calculate here
@@ -782,8 +784,12 @@ module Template =
                 match (calc vf e) with
                     | ARRAYCONST(a) ->
                         match (calc vf i) with
-                            | ICONST(ii) -> a.[ii]
-                            | ICONST64(ii) -> a.[int ii]
+                            | ICONST(ii) -> 
+                                if ii<0 || ii>=a.Length then failwithf "ERROR: index %d out of bounds for array %A" ii a
+                                a.[ii]
+                            | ICONST64(ii) -> 
+                                if ii<0L || ii>=(int64 a.Length) then failwithf "ERROR: index %d out of bounds for array %A" ii a
+                                a.[int ii]
                             | _ as x -> failwithf "ERROR: index into array should be int or int64, not %A" x 
                     | _ as x ->
                         failwithf "ERROR: attempt to index [] into non array expression %s" (ppExpr e)
