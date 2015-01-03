@@ -1,6 +1,10 @@
-nextver
+1.2
 ==================
 Freql:  bug in Query led to delayed connection pool release for incomplete seq {} consumption
+templates: ENH - range expressions for for loops implemented
+templates: ENH - expressions allowed within {{ }} substitution blocks
+templates: ENH - array indices implemented for expressions
+templates: ENH - <= and >= implemented
 
 1.1.5
 ==================

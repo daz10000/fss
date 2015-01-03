@@ -53,6 +53,7 @@ module Template =
             | ICONST64 of int64
             | SCONST of string
             | ARRAYCONST of Expression array
+            | DOT of Expression * string // a.b notation
             | INDEX of Expression * Expression
             | BCONST of bool
             | CLASS of Map<string,Expression>
@@ -81,6 +82,7 @@ module Template =
             | AND(e1,e2) -> sprintf "%s and %s" (ppExpr e1) (ppExpr e2)
             | OR(e1,e2) -> sprintf "%s or %s" (ppExpr e1) (ppExpr e2)
             | VARIABLE(v) -> sprintf "%s" v
+            | DOT(v,f) -> sprintf "%s.%s" (ppExpr v) f
             | CURLYEXP(e) -> sprintf "{{%s}}" (ppExpr e)
             | BCONST(b) -> sprintf "%s" (if b then "True" else "False")
             | ARRAYCONST(a) -> 
@@ -168,6 +170,11 @@ module Template =
                 match ca with
                     | '['::Expr(e2,']'::tl2) ->
                         aux (INDEX(e,e2)) tl2
+                    | '.'::nextChar::tl when legalStart.Contains(nextChar) ->
+                        match nextChar::tl with
+                            | Atom(VARIABLE(v),tl2) ->
+                                aux (DOT(e,v)) tl2
+                            | _ as tl2 -> Some(e,tl2)
                     | _ as tl -> Some(e,tl)
             aux a tl
         | _ -> None
@@ -384,7 +391,7 @@ module Template =
                                         let text = new string(List.rev res |> Array.ofList)
                                         match text.Trim().ToCharArray() |> List.ofArray with
                                             | Expr(e,[]) -> Some(CURLYEXP(e),tl)
-                                            | _ -> None // Some(name.Trim(),tl)
+                                            | _ -> None  
                                     | _ -> failwithf "Unexpected EOF parsing {{ }} expression started from %s" (l2s tl)
                 aux [] tl
             | _ -> None
@@ -764,7 +771,10 @@ module Template =
             | OR(e1,e2) -> match (c e1),(c e2) with
                             | BConstOrVar vf (b1),BConstOrVar vf (b2) -> BCONST(b1||b2)
                             | _ as x -> failwithf "Error: evaluating OR expression, not performed on inappropriate types %A" x
-            | VARIABLE(v) -> vf.Get(v) // TODO - implement dot notation
+            | VARIABLE(v) -> vf.Get(v) 
+            | DOT(e,f) -> match (calc vf e) with
+                                | CLASS (x) -> x.[f] // vf.Dot (calc vf e) f
+                                | _ as x -> failwithf "ERROR: can't apply dot notation to %A" x
             | CURLYEXP(e) -> calc vf e 
             | BCONST(_) as x -> x // Nothing to calculate here
             | ARRAYCONST(_) as x -> x
@@ -780,21 +790,21 @@ module Template =
             | CLASS(_) -> failwithf "Error: evaluating expression: can't evaluate a class"
             | RANGE(f,s,t) ->
                 let fi = match calc vf f with
-                            | ICONST(i) -> int64 i
-                            | ICONST64(i) -> i
+                            | ICONST(i) ->  i
+                            | ICONST64(i) -> int i
                             | _ as x -> failwithf "ERROR: range constant start must be ints, found %A instead" x
                 let ti = match calc vf t with
-                            | ICONST(i) -> int64 i
-                            | ICONST64(i) -> i
+                            | ICONST(i) -> i
+                            | ICONST64(i) -> int i
                             | _ as x -> failwithf "ERROR: range constant end must be ints, found %A instead" x
                 match s with
-                    | None -> ARRAYCONST([| for i in fi..ti -> ICONST64(i) |])
+                    | None -> ARRAYCONST([| for i in fi..ti -> ICONST(i) |])
                     | Some(sv) -> 
                         let svi = match calc vf sv with
-                                    | ICONST(i) -> int64 i
-                                    | ICONST64(i) -> i
+                                    | ICONST(i) ->  i
+                                    | ICONST64(i) -> int i
                                     | _ as x -> failwithf "ERROR: range constant step must be int, found %A instead" x
-                        ARRAYCONST([| for i in fi..svi..ti -> ICONST64(i) |])
+                        ARRAYCONST([| for i in fi..svi..ti -> ICONST(i) |])
 
                 
         let rec isTrue (expression:Expression) (vf:VarFetcher) = 

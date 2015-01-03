@@ -349,6 +349,8 @@ end
 // Test variable substitution
 
 type person = { name : string ; zip : int ; age : float }
+let bh90210 = [| { name = "Brenda" ; age = 22.2 ; zip = 90210 } ; { name = "Dylan" ; age = 23.5 ; zip = 90210 } ; { name = "Kelly" ; age = 22.3 ; zip = 90210 } |]
+
 type Test12Type = {id: int; str: string}
 let test1 = "
         some text some {% for a in b %}
@@ -454,7 +456,7 @@ type Vars() = class
     [<Test>]
     /// Iterate over an array of classes
     member x.Test004cClass() =
-        let bh90210 = [| { name = "Brenda" ; age = 22.2 ; zip = 90210 } ; { name = "Dylan" ; age = 23.5 ; zip = 90210 } ; { name = "Kelly" ; age = 22.3 ; zip = 90210 } |]
+        //let bh90210 = [| { name = "Brenda" ; age = 22.2 ; zip = 90210 } ; { name = "Dylan" ; age = 23.5 ; zip = 90210 } ; { name = "Kelly" ; age = 22.3 ; zip = 90210 } |]
         let t = Template("{% for x in bh90210cast %}{{x.name}} {{x.age}} {{x.zip}}\n{% endfor %}")
         sc "Brenda 22.200000 90210\nDylan 23.500000 90210\nKelly 22.300000 90210\n" ( t.Render( [| ("bh90210cast" , bh90210) |] ) )
 
@@ -503,6 +505,12 @@ type Vars() = class
                                 |]
                                         
                               ) ; ("x",box 2) ; ("y",box 3) |]))
+
+    [<Test>]
+    /// array index dot something {{ }}
+    member x.Test023ArrayDot() =
+        let t = Template("{{x[i].age}}")
+        sc "22.300000" (t.Render([| ("x",box bh90210) ; ("i",box 2) |]))
 
 end
 
