@@ -26,6 +26,8 @@ module Server =
     open System.Collections.Specialized
     open System.Collections.Generic
 
+    /// Fss release version
+    let version = version.version
 
     // TODO - http/1.1  can reuse connection for extra speed.
     ///
@@ -231,7 +233,7 @@ module Server =
             let sendResp code message =
                 sw.Write(sprintf "%s %d %s\r\n" protocolVersion code message)
                 sendHeader "Date" (DateTime.Now |> string)
-                sendHeader "Server" (sprintf "Fss %s" version.version)
+                sendHeader "Server" (sprintf "Fss %s" version)
                 
 
             let endHeaders() = sw.Write("\r\n")
