@@ -514,6 +514,8 @@ type Vars() = class
 
 end
 
+type Test019 = { url : string}
+
 [<TestFixture>]
 type Boolean() = class    
     [<Test>]
@@ -606,6 +608,13 @@ type Boolean() = class
         let templateExpected = "true"
         let page = template.Render([| "x",box 3|])
         sc templateExpected page
+
+    [<Test>]
+    member x.Test019_IfDot() =
+        let f = { url = "http"}
+        let template = Template("""{% if f.url=='' %}yes {% else %}no{%endif%}""")
+        sc "no" (template.Render([| "f",box f|]))
+
     [<Test>]
     member x.Test015f_IfGT1() =
         let template = Template("""{% if 'zebra'>'aardvark'%}hello{%endif%}""")
