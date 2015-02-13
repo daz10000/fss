@@ -176,5 +176,14 @@ type TestPGDbBasic() = class
         let original2 = {t4b with id = results.[1].id}
         let matches2 = original2 = results.[1]
         Assert.IsTrue(matches2)
+
+
+    [<Test>]
+    member x.Test050ExecuteScalarLogged() =
+        use conn = gc()
+        conn.LogQueries<-true
+        setupT4 conn
+        conn.InsertOne ([ t4a ; t4b ],ignoredColumns=["id"]) |> ignore
+       
 end
 
