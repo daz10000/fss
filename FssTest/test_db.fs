@@ -179,11 +179,11 @@ type TestPGDbBasic() = class
 
 
     [<Test>]
-    member x.Test050ExecuteScalarLogged() =
+    member x.Test050InsertOneLogged() =
         use conn = gc()
         conn.LogQueries<-true
         setupT4 conn
-        conn.InsertOne ([ t4a ; t4b ],ignoredColumns=["id"]) |> ignore
+        conn.InsertOne (t4a,ignoredColumns=["id"]) |> ignore
        
 end
 
