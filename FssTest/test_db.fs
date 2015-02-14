@@ -48,7 +48,8 @@ create table Test4 (
 	first	varchar(100),
 	last   varchar(100),
 	rate   float,
-    happy  boolean
+    happy  boolean,
+    constraint pk_t4 primary key(id)
 )"""
 
 type Test4 = { id : int ; age : int option ; first : string option ; last : string option; rate : float option ; happy : bool option}
@@ -182,8 +183,9 @@ type TestPGDbBasic() = class
     member x.Test050InsertOneLogged() =
         use conn = gc()
         conn.LogQueries<-true
+        conn.Logfile <- "dblog.txt"
         setupT4 conn
-        conn.InsertOne (t4a,ignoredColumns=["id"]) |> ignore
+        conn.InsertOne<Test4,int>(t4a,ignoredColumns=["id"]) |> ignore
        
 end
 

@@ -68,7 +68,10 @@ module Common =
                     let start = System.DateTime.Now
                     let r = cmd.ExecuteScalar()
                     if opts.logQueries || ((System.DateTime.Now - start).TotalMilliseconds > opts.logLongerThan) then
-                        sprintf "%d\t%f\t%s" (x.Command.Connection.GetHashCode()) ((System.DateTime.Now-start).TotalMilliseconds) x.Command.CommandText |> log
+                        sprintf "%d\t%f\t%s" 
+                            (x.Command.Connection.GetHashCode()) 
+                            ((System.DateTime.Now-start).TotalMilliseconds) 
+                            x.Command.CommandText |> log
                     r
       member x.Parameters = cmd.Parameters
       member x.Close() = cmd.Connection.Close()
@@ -87,10 +90,10 @@ module Common =
         do
             ()
         member x.cc commandText =
-            use comm = conn.CreateCommand()
+            let comm = conn.CreateCommand()
             comm.CommandText <- commandText
             comm.Transaction<-trans
-            new DynamicSqlCommand<'Parameter>(comm,(fun () -> ()),opts,log)
+            new DynamicSqlCommand<'Parameter>(comm,(fun () -> comm.Dispose()),opts,log)
 
         member x.Rollback() = trans.Rollback()
         member x.Commit() = trans.Commit()
