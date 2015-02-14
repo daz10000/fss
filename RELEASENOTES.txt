@@ -1,3 +1,10 @@
+
+1.2.5
+==================
+Freql: premature release of transaction connection fixed
+Server: reexposed Fss.Server.version string
+templates:  if x.y case fixed and tested
+
 1.2
 ==================
 Freql:  bug in Query led to delayed connection pool release for incomplete seq {} consumption
