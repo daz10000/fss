@@ -103,6 +103,19 @@ module Common =
                             | Some(x) -> x.ToLower()
                             | None -> typeof<'T>.Name.ToLower()
             conn
+        (*
+        member x.InsertOne<'T,'R> (item : 'T,?table:string,?ignoredColumns:string seq) = 
+            conn
+
+
+            new DynamicSqlCommand<'Parameter>(comm,(fun () -> comm.Dispose()),opts,log)   
+            match table,ignoredColumns with
+                | None,None -> x.InsertMany<'T,'R>([item]).[0]
+                | Some(ta),None -> x.InsertMany<'T,'R>([item],table=ta).[0]
+                | None,Some(cols) -> x.InsertMany<'T,'R>([item],ignoredColumns=cols).[0]
+                | Some(ta),Some(cols) -> x.InsertMany<'T,'R>([item],table=ta,ignoredColumns=cols).[0]
+        *)
+
         interface IDisposable with
             member x.Dispose() =
                 trans.Dispose()

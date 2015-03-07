@@ -17,6 +17,9 @@ create table Test1 (
 type Test1 = { id : int ; age : int ; first : string ; last : string ; rate : float}
 
 let t1a = { id = 1 ; age = 30 ; first = "fred" ; last = "flintstone" ; rate = 1.2}
+let t1b = { id = 2 ; age = 245 ; first = "wilma" ; last = "flintstone" ; rate = 1.0}
+let t1c = { id = 100 ; age = 32 ; first = "Barney" ; last = "rubble" ; rate = 0.6}
+let t1d = { id = 1000 ; age = 3 ; first = "pebbles" ; last = "flintstone" ; rate = 1.9}
 
 let createT2SQL = """
 create table Test2 (
@@ -210,7 +213,7 @@ type TestTransactions() = class
 
         trans.Commit()
 
-        Assert.IsTrue(conn.ExecuteScalar "select count(*) from test1" :?> int64 = 1L) |> ignore
+        Assert.IsTrue(conn.ExecuteScalar "select count(*) from test1" :?> int64 = 1L) 
         cleanTable()
     
     [<Test>]
@@ -223,35 +226,90 @@ type TestTransactions() = class
 
         trans.Rollback()
 
-        Assert.IsTrue(conn.ExecuteScalar "select count(*) from test1" :?> int64 = 0L) |> ignore
+        Assert.IsTrue(conn.ExecuteScalar "select count(*) from test1" :?> int64 = 0L) 
         cleanTable()
 
     [<Test>]
     /// Insert many rows then commit and check they're in there properly
-    member x.Test001MultiInsertCommit() =
+    member x.Test003InsertManyCommit() =
         // Clean up table
         cleanTable()
         let trans = conn.StartTrans()
-        conn.InsertOne(t1a,transProvided=trans)
+        conn.InsertMany([| t1a ; t1b; t1c; t1d |],transProvided=trans) |> ignore
 
         trans.Commit()
 
-        Assert.IsTrue(conn.ExecuteScalar "select count(*) from test1" :?> int64 = 1L) |> ignore
+        Assert.IsTrue(conn.ExecuteScalar "select count(*) from test1" :?> int64 = 4L)
         cleanTable()
     
     [<Test>]
     /// Insert a row then roll transaction back to ensure it's gone
-    member x.Test002MultinsertRollback() =
+    member x.Test004InsertManyRollback() =
         // Clean up table
         cleanTable()
         let trans = conn.StartTrans()
-        conn.InsertOne(t1a,transProvided=trans)
+        conn.InsertMany([| t1a ; t1b; t1c; t1d |],transProvided=trans) |> ignore
 
         trans.Rollback()
 
-        Assert.IsTrue(conn.ExecuteScalar "select count(*) from test1" :?> int64 = 0L) |> ignore
+        Assert.IsTrue(conn.ExecuteScalar "select count(*) from test1" :?> int64 = 0L) 
         cleanTable()
-        
+
+    [<Test>]
+    /// Insert many rows then commit and check they're in there properly
+    member x.Test005InsertManyTwoStepsCommit() =
+        // Clean up table
+        cleanTable()
+        let trans = conn.StartTrans()
+        conn.InsertMany([| t1a ; t1b |],transProvided=trans) |> ignore
+        conn.InsertMany([| t1c ; t1d |],transProvided=trans) |> ignore
+
+        trans.Commit()
+
+        Assert.IsTrue(conn.ExecuteScalar "select count(*) from test1" :?> int64 = 4L)
+        cleanTable()
+    
+    [<Test>]
+    /// Insert a row then roll transaction back to ensure it's gone
+    member x.Test006InsertManyRollback() =
+        // Clean up table
+        cleanTable()
+        let trans = conn.StartTrans()
+        conn.InsertMany([| t1a ; t1b |],transProvided=trans) |> ignore
+        conn.InsertMany([| t1c ; t1d |],transProvided=trans) |> ignore
+
+
+        trans.Rollback()
+
+        Assert.IsTrue(conn.ExecuteScalar "select count(*) from test1" :?> int64 = 0L) 
+        cleanTable()
+    (*
+    [<Test>]
+    /// Insert a row then commit and check it's in there properly
+    member x.Test007SingleInsertViaTransCommit() =
+        // Clean up table
+        cleanTable()
+        let trans = conn.StartTrans()
+        trans.InsertOne(t1a)
+        trans.Commit()
+
+        Assert.IsTrue(conn.ExecuteScalar "select count(*) from test1" :?> int64 = 1L) 
+        cleanTable()
+    
+    [<Test>]
+    /// Insert a row then roll transaction back to ensure it's gone
+    member x.Test002SingleInsertViaTransRollback() =
+        // Clean up table
+        cleanTable()
+        let trans = conn.StartTrans()
+        trans.InsertOne(t1a)
+
+        trans.Rollback()
+
+        Assert.IsTrue(conn.ExecuteScalar "select count(*) from test1" :?> int64 = 0L) 
+        cleanTable()
+
+      *)  
     interface IDisposable with
         member x.Dispose() =
             drop "test1" conn
