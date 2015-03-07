@@ -3,6 +3,7 @@ open NUnit.Framework
 
 open Fss.Data.Postgres
 open System.IO
+open System
 
 let createT1SQL = """
 create table Test1 (
@@ -187,5 +188,73 @@ type TestPGDbBasic() = class
         setupT4 conn
         conn.InsertOne<Test4,int>(t4a,ignoredColumns=["id"]) |> ignore
        
+end
+
+[<TestFixture>]
+type TestTransactions() = class
+    let conn = gc()
+    do
+        use conn = gc()
+        setupT1 conn
+        
+    let cleanTable() =
+        conn.ExecuteScalar("delete from test1") |> ignore
+
+    [<Test>]
+    /// Insert a row then commit and check it's in there properly
+    member x.Test001SingleInsertCommit() =
+        // Clean up table
+        cleanTable()
+        let trans = conn.StartTrans()
+        conn.InsertOne(t1a,transProvided=trans)
+
+        trans.Commit()
+
+        Assert.IsTrue(conn.ExecuteScalar "select count(*) from test1" :?> int64 = 1L) |> ignore
+        cleanTable()
+    
+    [<Test>]
+    /// Insert a row then roll transaction back to ensure it's gone
+    member x.Test002SingleInsertRollback() =
+        // Clean up table
+        cleanTable()
+        let trans = conn.StartTrans()
+        conn.InsertOne(t1a,transProvided=trans)
+
+        trans.Rollback()
+
+        Assert.IsTrue(conn.ExecuteScalar "select count(*) from test1" :?> int64 = 0L) |> ignore
+        cleanTable()
+
+    [<Test>]
+    /// Insert many rows then commit and check they're in there properly
+    member x.Test001MultiInsertCommit() =
+        // Clean up table
+        cleanTable()
+        let trans = conn.StartTrans()
+        conn.InsertOne(t1a,transProvided=trans)
+
+        trans.Commit()
+
+        Assert.IsTrue(conn.ExecuteScalar "select count(*) from test1" :?> int64 = 1L) |> ignore
+        cleanTable()
+    
+    [<Test>]
+    /// Insert a row then roll transaction back to ensure it's gone
+    member x.Test002MultinsertRollback() =
+        // Clean up table
+        cleanTable()
+        let trans = conn.StartTrans()
+        conn.InsertOne(t1a,transProvided=trans)
+
+        trans.Rollback()
+
+        Assert.IsTrue(conn.ExecuteScalar "select count(*) from test1" :?> int64 = 0L) |> ignore
+        cleanTable()
+        
+    interface IDisposable with
+        member x.Dispose() =
+            drop "test1" conn
+            (conn :> IDisposable).Dispose()
 end
 
