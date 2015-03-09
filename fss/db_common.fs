@@ -41,7 +41,7 @@ module Common =
     /// stored procedure using dynamic setter operator
     type DynamicSqlCommand<'Parameter when 'Parameter :> DbParameter and 'Parameter:(new:unit->'Parameter)>(cmd:DbCommand,release:unit->unit,opts:ConnOpts,log:string->unit) = 
       member private x.Command = cmd
-      member x.GetConnHash() = cmd.Connection.GetHashCode()
+      member x.GetConnHash() = cmd.GetHashCode()
       // Adds parameter with the specified name and value
       static member (?<-) (cmd:DynamicSqlCommand<'Parameter>, name:string, value) = 
         //cmd.Command.Parameters.Add("@"+name,box value) |> ignore
@@ -82,44 +82,7 @@ module Common =
 
       member x.Transaction with set(v) = cmd.Transaction <- v
 
-    /// Sql Transaction wrapper that encapsulates an active database
-    /// connection and hands of DynamicSqlCommand objects with the
-    /// connection and transcation set correctly
-    type DynamicSqlTransaction<'Parameter when 'Parameter :> DbParameter and 'Parameter:(new:unit->'Parameter)>(conn:DbConnection,dispose:unit->unit,opts:ConnOpts,log:string->unit) =
-        let trans = conn.BeginTransaction()
-        do
-            ()
-        member x.cc commandText =
-            let comm = conn.CreateCommand()
-            comm.CommandText <- commandText
-            comm.Transaction<-trans
-            new DynamicSqlCommand<'Parameter>(comm,(fun () -> comm.Dispose()),opts,log)
-
-        member x.Rollback() = trans.Rollback()
-        member x.Commit() = trans.Commit()
-        member x.InsertMany<'T,'R> (items : 'T seq,?table:string) =
-            // Determine table name from item to be inserted
-            let table = match table with
-                            | Some(x) -> x.ToLower()
-                            | None -> typeof<'T>.Name.ToLower()
-            conn
-        (*
-        member x.InsertOne<'T,'R> (item : 'T,?table:string,?ignoredColumns:string seq) = 
-            conn
-
-
-            new DynamicSqlCommand<'Parameter>(comm,(fun () -> comm.Dispose()),opts,log)   
-            match table,ignoredColumns with
-                | None,None -> x.InsertMany<'T,'R>([item]).[0]
-                | Some(ta),None -> x.InsertMany<'T,'R>([item],table=ta).[0]
-                | None,Some(cols) -> x.InsertMany<'T,'R>([item],ignoredColumns=cols).[0]
-                | Some(ta),Some(cols) -> x.InsertMany<'T,'R>([item],table=ta,ignoredColumns=cols).[0]
-        *)
-
-        interface IDisposable with
-            member x.Dispose() =
-                trans.Dispose()
-                dispose()
+   
 
     /// Details of one table column for dynamic record filling
     type ColDetail = { cname : string ; ctype : string ; cpos : int16 ; cNotNull : bool}
@@ -143,7 +106,7 @@ module Common =
                 | None -> ()
                 | Some(f) -> lock opts.logfile ( fun _ -> f.Write(System.DateTime.Now.ToString("yyyyddMM HH:mm:ss.FFF")); f.Write("\t") ; f.WriteLine(msg) ; f.Flush())
           
-          let take() = 
+          let takeInternal() = 
             let c = pool.Take()
             let z = System.Threading.Thread.CurrentThread.ManagedThreadId
             if opts.logConnUse then log(sprintf "take %d %d" z (c.GetHashCode()))
@@ -160,7 +123,7 @@ module Common =
                                     opts.logfileName <- Some(fileName)
                                     opts.logfile<- Some(new StreamWriter(fileName))
 
-          member x.Take() = take()
+          member x.Take() = takeInternal()
           member x.Release(z) = release z
           member x.Opts with get() = opts
           member x.Log(msg:string) = log msg
@@ -168,7 +131,7 @@ module Common =
           member x.LogQueries with get() = opts.logQueries and set(v) = opts.logQueries <- v  
           member x.LogLongerThan with get() = opts.logLongerThan  and set(v) = opts.logLongerThan <- v  
                                                     
-          member x.InsertMany<'T,'R> (items : 'T seq,?table:string,?transProvided:DynamicSqlTransaction<'Parameter>,?ignoredColumns:string seq) =
+          member x.InsertMany<'T,'R> (items : 'T seq,?table:string,?transProvided:DynamicSqlTransaction<'Parameter,'Conn>,?ignoredColumns:string seq) =
             // Determine table name from item to be inserted
             let table = match table with
                             | Some(x) -> x.ToLower()
@@ -247,11 +210,12 @@ module Common =
                                     returningClause
                             
                         /// Transaction to wrap the insertion into    
-                        let trans = match transProvided with
+                        let trans : DynamicSqlTransaction<'Parameter,'Conn> = 
+                                    match transProvided with
                                         | None -> x.StartTrans()  // they didn't give us one, make it
                                         | Some t -> t
 
-                        use comm2 = trans.cc sql
+                        use comm2 : DynamicSqlCommand<_> = trans.cc sql
                         // let vals = fields |> Array.mapi (fun i f -> NpgsqlParameter(sprintf "p%d" (i+1),f.GetValue(item,null)))
 
                         (*
@@ -305,7 +269,7 @@ module Common =
                             (trans :> IDisposable).Dispose()
                         ret
 
-          member x.InsertOne<'T,'R> (item : 'T,?table:string,?transProvided:DynamicSqlTransaction<'Parameter>,?ignoredColumns:string seq) = 
+          member x.InsertOne<'T,'R> (item : 'T,?table:string,?transProvided:DynamicSqlTransaction<'Parameter,'Conn>,?ignoredColumns:string seq) = 
             match table,transProvided,ignoredColumns with
                 | None,None,None -> x.InsertMany<'T,'R>([item]).[0]
                 | Some(t),None,None -> x.InsertMany<'T,'R>([item],table=t).[0]
@@ -395,8 +359,9 @@ module Common =
             new DynamicSqlCommand<'Parameter>(comm,(fun () -> x.Release(conn)),x.Opts,x.Log)
 
           member x.StartTrans() = 
-            let conn = x.Take() // reserve a connection that will be shared across the transaction
-            new DynamicSqlTransaction<'Parameter>(conn,(fun () -> x.Release(conn)),x.Opts,x.Log)
+            //let conn = x.Take() // reserve a connection that will be shared across the transaction
+            //new DynamicSqlTransaction<'Parameter>(conn,(fun () -> x.Release(conn)),x.Opts,x.Log)
+            new DynamicSqlTransaction<'Parameter,'Conn>(x,x.Opts,x.Log)
 
           interface IDisposable with
             member x.Dispose() = 
@@ -404,4 +369,41 @@ module Common =
                 // This involves first casting to an IDisposable class instance)
                 (x.Pool :> IDisposable).Dispose()
 
+
+     /// Sql Transaction wrapper that encapsulates an active database
+    /// connection and hands of DynamicSqlCommand objects with the
+    /// connection and transcation set correctly
+    //and DynamicSqlTransaction<'Parameter when 'Parameter :> DbParameter and 'Parameter:(new:unit->'Parameter)>(conn:DbConnection,dispose:unit->unit,opts:ConnOpts,log:string->unit) =
+    and DynamicSqlTransaction<'Parameter,'Conn when 'Parameter :> DbParameter and 'Parameter:(new:unit->'Parameter)  and 'Conn :> DbConnection and 'Conn:(new:unit->'Conn) and 'Conn:equality>(conn:DynamicSqlConnection<'Conn,'Parameter>,opts:ConnOpts,log:string->unit) =
+        let baseConn :DbConnection = conn.Take()
+        let trans = baseConn.BeginTransaction()
+        do
+            ()
+        member x.cc commandText =
+            let comm = baseConn.CreateCommand()
+            comm.CommandText <- commandText
+            comm.Transaction<-trans
+            new DynamicSqlCommand<'Parameter>(comm,(fun () -> comm.Dispose()),opts,log)
+
+        member x.Rollback() = trans.Rollback()
+        member x.Commit() = trans.Commit()
+        member x.InsertMany<'T,'R> (items : 'T seq,?table:string) =
+            failwithf "ERROR: unimplemented"
+            // Determine table name from item to be inserted
+            let table = match table with
+                            | Some(x) -> x.ToLower()
+                            | None -> typeof<'T>.Name.ToLower()
+            conn
+        
+        member x.InsertOne<'T,'R> (item : 'T,?table:string,?ignoredColumns:string seq) = 
+            match table,ignoredColumns with
+                | None,None -> conn.InsertMany<'T,'R>([item],transProvided=x).[0]
+                | Some(ta),None -> conn.InsertMany<'T,'R>([item],table=ta,transProvided=x).[0]
+                | None,Some(cols) -> conn.InsertMany<'T,'R>([item],ignoredColumns=cols,transProvided=x).[0]
+                | Some(ta),Some(cols) -> conn.InsertMany<'T,'R>([item],table=ta,ignoredColumns=cols,transProvided=x).[0]
+
+        interface IDisposable with
+            member x.Dispose() =
+                trans.Dispose()
+                conn.Release baseConn
 

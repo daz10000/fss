@@ -283,7 +283,6 @@ type TestTransactions() = class
 
         Assert.IsTrue(conn.ExecuteScalar "select count(*) from test1" :?> int64 = 0L) 
         cleanTable()
-    (*
     [<Test>]
     /// Insert a row then commit and check it's in there properly
     member x.Test007SingleInsertViaTransCommit() =
@@ -309,7 +308,6 @@ type TestTransactions() = class
         Assert.IsTrue(conn.ExecuteScalar "select count(*) from test1" :?> int64 = 0L) 
         cleanTable()
 
-      *)  
     interface IDisposable with
         member x.Dispose() =
             drop "test1" conn
