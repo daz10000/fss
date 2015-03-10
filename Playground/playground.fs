@@ -23,11 +23,11 @@ let drop table (conn:DynamicSqlConnection)  = table |> sprintf "drop table if ex
                                                 |> conn.ExecuteScalar |> ignore
 let createT1SQL = """
 create table Test1 (
-	id integer NOT NULL,
-	age   integer NOT NULL,
-	first	varchar(100) NOT NULL,
-	last   varchar(100) NOT NULL,
-	rate   float NOT NULL
+    id integer NOT NULL,
+    age   integer NOT NULL,
+    first	varchar(100) NOT NULL,
+    last   varchar(100) NOT NULL,
+    rate   float NOT NULL
 )"""
 
 type Test1 = { id : int ; age : int ; first : string ; last : string ; rate : float}
@@ -36,21 +36,21 @@ let t1a = { id = 1 ; age = 30 ; first = "fred" ; last = "flintstone" ; rate = 1.
 
 let createT2SQL = """
 create table Test2 (
-	id serial,
-	age   integer  NOT NULL,
-	first	varchar(100) NOT NULL,
-	last   varchar(100) NOT NULL,
-	rate   float NOT NULL default 999.0
+    id serial,
+    age   integer  NOT NULL,
+    first	varchar(100) NOT NULL,
+    last   varchar(100) NOT NULL,
+    rate   float NOT NULL default 999.0
 )"""
 
 
 let createT3SQL = """
 create table Test3 (
-	id serial,
-	age   integer NOT NULL,
-	first	varchar(100) NOT NULL,
-	last   varchar(100),
-	rate   float NOT NULL
+    id serial,
+    age   integer NOT NULL,
+    first	varchar(100) NOT NULL,
+    last   varchar(100),
+    rate   float NOT NULL
 )"""
 
 type Test3 = { id : int ; age : int ; first : string ; last : string option ; rate : float}
@@ -60,11 +60,11 @@ let t3b = { id = -1 ; age = 4 ; first = "dino" ; last = None ; rate = 1.2}
 
 let createT4SQL = """
 create table Test4 (
-	id serial,
-	age   integer,
-	first	varchar(100),
-	last   varchar(100),
-	rate   float,
+    id serial,
+    age   integer,
+    first	varchar(100),
+    last   varchar(100),
+    rate   float,
     happy  boolean,
     CONSTRAINT pk_proj PRIMARY KEY (id)
 )"""
