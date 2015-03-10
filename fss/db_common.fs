@@ -145,10 +145,10 @@ module Common =
 
             // Inspect table definition.
             use command : DynamicSqlCommand<'Parameter> = x.Command "select a.attname as attname,t.typname as tname,attnum,attnotnull from 
-	                                                        pg_class c JOIN pg_attribute a ON c.oid = a.attrelid 
-	                                                        JOIN pg_type t ON t.oid = a.atttypid WHERE
-	                                                        c.relname = :tablename AND
-	                                                        a.attnum > 0"
+                                                            pg_class c JOIN pg_attribute a ON c.oid = a.attrelid 
+                                                            JOIN pg_type t ON t.oid = a.atttypid WHERE
+                                                            c.relname = :tablename AND
+                                                            a.attnum > 0"
 
             command?tablename <- table
             use r = command.ExecuteReader()
@@ -168,10 +168,10 @@ module Common =
                                         
             // Determine which if any columns are a primary key that we could return
             use comm3 = x.Command "select conkey from 
-	                        pg_constraint c JOIN pg_class cl ON c.conrelid = cl.oid 
-	                        WHERE 
-		                        contype = 'p' AND
-		                        relname = :tablename
+                            pg_constraint c JOIN pg_class cl ON c.conrelid = cl.oid 
+                            WHERE 
+                                contype = 'p' AND
+                                relname = :tablename
                                 "
             comm3?tablename <- table
 
@@ -285,10 +285,11 @@ module Common =
             /// Determine details of this record's constructor
             let cons = typeof<'T>.UnderlyingSystemType.GetConstructors() |> Array.filter (fun c -> c.IsConstructor) |> Seq.head
 
-            let isOption = cons.GetParameters() |> Array.map (fun f -> 
-                                                                    let pt = f.ParameterType 
-                                                                    pt.IsGenericType &&  pt.GetGenericTypeDefinition() = genericOptionType
-                                                               )
+            let isOption = cons.GetParameters() 
+                           |> Array.map (fun f -> 
+                                            let pt = f.ParameterType 
+                                            pt.IsGenericType &&  pt.GetGenericTypeDefinition() = genericOptionType
+                                        )
             /// Maps argument name onto positon
             let argMap = cons.GetParameters() |> Array.mapi (fun i v -> (v.Name.ToLower(),i)) |> Map.ofSeq
 
@@ -300,45 +301,39 @@ module Common =
                 let start = System.DateTime.Now
                 try
                     use reader = command.ExecuteReader()
-                    let fieldMap = [for i in 0..reader.Reader.FieldCount-1 -> 
-                                        match argMap.TryFind (reader.Reader.GetName(i).ToLower()) with
-                                                | Some(x) -> i,x
-                                                | None -> failwithf "ERROR: name mapping,  SQL name '%s' not found in target Record" 
-                                                                (reader.Reader.GetName(i))
-                                   ]
+                    let fieldMap = [
+                        for i in 0..reader.Reader.FieldCount-1 -> 
+                            match argMap.TryFind (reader.Reader.GetName(i).ToLower()) with
+                            | Some(x) -> i,x
+                            | None -> failwithf "ERROR: name mapping,  SQL name '%s' not found in target Record" 
+                                            (reader.Reader.GetName(i))
+                    ]
 
                     while reader.Read() do            
-                            for i,j in fieldMap do
-                                args.[j] <- (
-                                        if isOption.[j] then
-                                            match reader.Reader.GetValue(i) with
-                                                | :? DBNull ->box None
-                                                | :? string as x -> box (Some(x))
-                                                | :? int64 as x -> box (Some(x))
-                                                | :? float as x -> box (Some(x))
-                                                | :? bool as x -> box (Some(x))
-                                                | :? int32 as x -> box (Some(x))
-                                                | :? DateTime as x -> box (Some(x))
-                                                | _ as x -> failwithf "ERROR: unsupported nullable dbtype %s" (x.GetType().Name)
-                                        else
-                                            reader.Reader.GetValue(i) 
+                        for i,j in fieldMap do
+                            args.[j] <- (
+                                if isOption.[j] then
+                                    match reader.Reader.GetValue(i) with
+                                    | :? DBNull ->box None
+                                    | :? string as x -> box (Some(x))
+                                    | :? int64 as x -> box (Some(x))
+                                    | :? float as x -> box (Some(x))
+                                    | :? bool as x -> box (Some(x))
+                                    | :? int32 as x -> box (Some(x))
+                                    | :? DateTime as x -> box (Some(x))
+                                    | _ as x -> failwithf "ERROR: unsupported nullable dbtype %s" (x.GetType().Name)
+                                else
+                                    reader.Reader.GetValue(i) 
                                 )
-                            yield cons.Invoke(args) :?> 'T
+                        yield cons.Invoke(args) :?> 'T
                 finally
                     // Don't dispose till the sequence is finally used. (within sequence generator)
                     (command :> IDisposable).Dispose()
             } 
 
           member x.ExecuteScalar(sql:string) =
-            //let start = System.DateTime.Now
             use comm = x.Command sql
-            let r = comm.ExecuteScalar()
-
-            // logged in call above
-            //if opts.logQueries || ((System.DateTime.Now - start).TotalMilliseconds > opts.logLongerThan) then
-            //        sprintf "%d\t%f\t%s" (x.GetHashCode()) ((System.DateTime.Now-start).TotalMilliseconds) sql |> x.Log
-            r
-
+            comm.ExecuteScalar()
 
           new(connStr:string) = new DynamicSqlConnection<'Conn,'Parameter>(connStr,10)
           member private x.Pool = pool
@@ -370,11 +365,18 @@ module Common =
                 (x.Pool :> IDisposable).Dispose()
 
 
-     /// Sql Transaction wrapper that encapsulates an active database
+    /// Sql Transaction wrapper that encapsulates an active database
     /// connection and hands of DynamicSqlCommand objects with the
     /// connection and transcation set correctly
     //and DynamicSqlTransaction<'Parameter when 'Parameter :> DbParameter and 'Parameter:(new:unit->'Parameter)>(conn:DbConnection,dispose:unit->unit,opts:ConnOpts,log:string->unit) =
-    and DynamicSqlTransaction<'Parameter,'Conn when 'Parameter :> DbParameter and 'Parameter:(new:unit->'Parameter)  and 'Conn :> DbConnection and 'Conn:(new:unit->'Conn) and 'Conn:equality>(conn:DynamicSqlConnection<'Conn,'Parameter>,opts:ConnOpts,log:string->unit) =
+    and DynamicSqlTransaction<'Parameter,
+                              'Conn when 'Parameter :> DbParameter 
+                                    and 'Parameter:(new:unit->'Parameter)  
+                                    and 'Conn :> DbConnection 
+                                    and 'Conn:(new:unit->'Conn) 
+                                    and 'Conn:equality>(conn:DynamicSqlConnection<'Conn,'Parameter>,
+                                                        opts:ConnOpts,
+                                                        log:string->unit) =
         let baseConn :DbConnection = conn.Take()
         let trans = baseConn.BeginTransaction()
         do
@@ -386,21 +388,28 @@ module Common =
             new DynamicSqlCommand<'Parameter>(comm,(fun () -> comm.Dispose()),opts,log)
 
         member x.Rollback() = trans.Rollback()
+
         member x.Commit() = trans.Commit()
-        member x.InsertMany<'T,'R> (items : 'T seq,?table:string) =
-            failwithf "ERROR: unimplemented"
-            // Determine table name from item to be inserted
-            let table = match table with
-                            | Some(x) -> x.ToLower()
-                            | None -> typeof<'T>.Name.ToLower()
-            conn
-        
+
+        member x.InsertMany<'T,'R> (items : 'T seq,?table:string,?ignoredColumns: string seq) =
+            match table,ignoredColumns with
+            | None,None -> conn.InsertMany<'T,'R>(items,transProvided=x)
+            | Some(ta),None -> conn.InsertMany<'T,'R>(items,table=ta,transProvided=x)
+            | None,Some(cols) -> conn.InsertMany<'T,'R>(items,ignoredColumns=cols,transProvided=x)
+            | Some(ta),Some(cols) -> conn.InsertMany<'T,'R>(items,table=ta,ignoredColumns=cols,transProvided=x)
+
         member x.InsertOne<'T,'R> (item : 'T,?table:string,?ignoredColumns:string seq) = 
             match table,ignoredColumns with
-                | None,None -> conn.InsertMany<'T,'R>([item],transProvided=x).[0]
-                | Some(ta),None -> conn.InsertMany<'T,'R>([item],table=ta,transProvided=x).[0]
-                | None,Some(cols) -> conn.InsertMany<'T,'R>([item],ignoredColumns=cols,transProvided=x).[0]
-                | Some(ta),Some(cols) -> conn.InsertMany<'T,'R>([item],table=ta,ignoredColumns=cols,transProvided=x).[0]
+            | None,None -> conn.InsertMany<'T,'R>([item],transProvided=x).[0]
+            | Some(ta),None -> conn.InsertMany<'T,'R>([item],table=ta,transProvided=x).[0]
+            | None,Some(cols) -> conn.InsertMany<'T,'R>([item],ignoredColumns=cols,transProvided=x).[0]
+            | Some(ta),Some(cols) -> conn.InsertMany<'T,'R>([item],table=ta,ignoredColumns=cols,transProvided=x).[0]
+
+        member x.ExecuteScalar(sql:string) =
+            use comm = baseConn.CreateCommand()
+            comm.CommandText <- sql
+            comm.Transaction<-trans
+            comm.ExecuteScalar()
 
         interface IDisposable with
             member x.Dispose() =

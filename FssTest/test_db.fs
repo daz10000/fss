@@ -7,11 +7,11 @@ open System
 
 let createT1SQL = """
 create table Test1 (
-	id integer NOT NULL,
-	age   integer NOT NULL,
-	first	varchar(100) NOT NULL,
-	last   varchar(100) NOT NULL,
-	rate   float NOT NULL
+    id integer NOT NULL,
+    age   integer NOT NULL,
+    first	varchar(100) NOT NULL,
+    last   varchar(100) NOT NULL,
+    rate   float NOT NULL
 )"""
 
 type Test1 = { id : int ; age : int ; first : string ; last : string ; rate : float}
@@ -23,21 +23,21 @@ let t1d = { id = 1000 ; age = 3 ; first = "pebbles" ; last = "flintstone" ; rate
 
 let createT2SQL = """
 create table Test2 (
-	id serial,
-	age   integer  NOT NULL,
-	first	varchar(100) NOT NULL,
-	last   varchar(100) NOT NULL,
-	rate   float NOT NULL default 999.0
+    id serial,
+    age   integer  NOT NULL,
+    first	varchar(100) NOT NULL,
+    last   varchar(100) NOT NULL,
+    rate   float NOT NULL default 999.0
 )"""
 
 
 let createT3SQL = """
 create table Test3 (
-	id serial,
-	age   integer NOT NULL,
-	first	varchar(100) NOT NULL,
-	last   varchar(100),
-	rate   float NOT NULL
+    id serial,
+    age   integer NOT NULL,
+    first	varchar(100) NOT NULL,
+    last   varchar(100),
+    rate   float NOT NULL
 )"""
 
 type Test3 = { id : int ; age : int ; first : string ; last : string option ; rate : float}
@@ -47,11 +47,11 @@ let t3b = { id = -1 ; age = 4 ; first = "dino" ; last = None ; rate = 1.2}
 
 let createT4SQL = """
 create table Test4 (
-	id serial,
-	age   integer,
-	first	varchar(100),
-	last   varchar(100),
-	rate   float,
+    id serial,
+    age   integer,
+    first	varchar(100),
+    last   varchar(100),
+    rate   float,
     happy  boolean,
     constraint pk_t4 primary key(id)
 )"""
@@ -186,8 +186,8 @@ type TestPGDbBasic() = class
     [<Test>]
     member x.Test050InsertOneLogged() =
         use conn = gc()
-        conn.LogQueries<-true
-        conn.Logfile <- "dblog.txt"
+        conn.LogQueries<-false
+        //conn.Logfile <- "dblog.txt"
         setupT4 conn
         conn.InsertOne<Test4,int>(t4a,ignoredColumns=["id"]) |> ignore
        
@@ -208,7 +208,7 @@ type TestTransactions() = class
     member x.Test001SingleInsertCommit() =
         // Clean up table
         cleanTable()
-        let trans = conn.StartTrans()
+        use trans = conn.StartTrans()
         conn.InsertOne(t1a,transProvided=trans)
 
         trans.Commit()
@@ -221,7 +221,7 @@ type TestTransactions() = class
     member x.Test002SingleInsertRollback() =
         // Clean up table
         cleanTable()
-        let trans = conn.StartTrans()
+        use trans = conn.StartTrans()
         conn.InsertOne(t1a,transProvided=trans)
 
         trans.Rollback()
@@ -234,7 +234,7 @@ type TestTransactions() = class
     member x.Test003InsertManyCommit() =
         // Clean up table
         cleanTable()
-        let trans = conn.StartTrans()
+        use trans = conn.StartTrans()
         conn.InsertMany([| t1a ; t1b; t1c; t1d |],transProvided=trans) |> ignore
 
         trans.Commit()
@@ -247,7 +247,7 @@ type TestTransactions() = class
     member x.Test004InsertManyRollback() =
         // Clean up table
         cleanTable()
-        let trans = conn.StartTrans()
+        use trans = conn.StartTrans()
         conn.InsertMany([| t1a ; t1b; t1c; t1d |],transProvided=trans) |> ignore
 
         trans.Rollback()
@@ -260,7 +260,7 @@ type TestTransactions() = class
     member x.Test005InsertManyTwoStepsCommit() =
         // Clean up table
         cleanTable()
-        let trans = conn.StartTrans()
+        use trans = conn.StartTrans()
         conn.InsertMany([| t1a ; t1b |],transProvided=trans) |> ignore
         conn.InsertMany([| t1c ; t1d |],transProvided=trans) |> ignore
 
@@ -274,7 +274,7 @@ type TestTransactions() = class
     member x.Test006InsertManyRollback() =
         // Clean up table
         cleanTable()
-        let trans = conn.StartTrans()
+        use trans = conn.StartTrans()
         conn.InsertMany([| t1a ; t1b |],transProvided=trans) |> ignore
         conn.InsertMany([| t1c ; t1d |],transProvided=trans) |> ignore
 
@@ -288,7 +288,7 @@ type TestTransactions() = class
     member x.Test007SingleInsertViaTransCommit() =
         // Clean up table
         cleanTable()
-        let trans = conn.StartTrans()
+        use trans = conn.StartTrans()
         trans.InsertOne(t1a)
         trans.Commit()
 
@@ -297,16 +297,47 @@ type TestTransactions() = class
     
     [<Test>]
     /// Insert a row then roll transaction back to ensure it's gone
-    member x.Test002SingleInsertViaTransRollback() =
+    member x.Test008SingleInsertViaTransRollback() =
         // Clean up table
         cleanTable()
-        let trans = conn.StartTrans()
+        use trans = conn.StartTrans()
         trans.InsertOne(t1a)
 
         trans.Rollback()
 
         Assert.IsTrue(conn.ExecuteScalar "select count(*) from test1" :?> int64 = 0L) 
         cleanTable()
+
+    [<Test>]
+    /// Insert a row then roll transaction back to ensure it's gone
+    member x.Test009SingleInsertViaTransRollback() =
+        // Clean up table
+        cleanTable()
+        use trans = conn.StartTrans()
+        trans.InsertOne(t1a)
+
+        trans.Rollback()
+
+        Assert.IsTrue(conn.ExecuteScalar "select count(*) from test1" :?> int64 = 0L) 
+        cleanTable()
+
+    [<Test>]
+    // Insert several rows then roll back; 
+    // confirm transaction isolation
+    // test trans.ExecuteScalar
+    member x.Test010InsertManyViaTrans() =
+        cleanTable()
+        // insert one bit outside the transaction
+        conn.InsertOne(t1a)
+        use trans = conn.StartTrans()
+        trans.InsertMany([| t1b ; t1c; t1d |]) |> ignore
+        // confirm that the transaction is isolated
+        Assert.IsTrue(conn.ExecuteScalar "SELECT COUNT(*) FROM test1" :?> int64 = 1L)
+        Assert.IsTrue(trans.ExecuteScalar "SELECT COUNT(*) FROM test1" :?> int64 = 4L)
+        trans.Rollback()
+        Assert.IsTrue(conn.ExecuteScalar "SELECT COUNT(*) FROM test1" :?> int64 = 1L)
+        cleanTable()
+
 
     interface IDisposable with
         member x.Dispose() =
