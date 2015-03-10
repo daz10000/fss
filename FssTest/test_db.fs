@@ -186,8 +186,8 @@ type TestPGDbBasic() = class
     [<Test>]
     member x.Test050InsertOneLogged() =
         use conn = gc()
-        conn.LogQueries<-false
-        //conn.Logfile <- "dblog.txt"
+        conn.LogQueries<-true
+        conn.Logfile <- "dblog.txt"
         setupT4 conn
         conn.InsertOne<Test4,int>(t4a,ignoredColumns=["id"]) |> ignore
        
@@ -336,6 +336,24 @@ type TestTransactions() = class
         Assert.IsTrue(trans.ExecuteScalar "SELECT COUNT(*) FROM test1" :?> int64 = 4L)
         trans.Rollback()
         Assert.IsTrue(conn.ExecuteScalar "SELECT COUNT(*) FROM test1" :?> int64 = 1L)
+        cleanTable()
+
+    [<Test>]
+    // Insert several rows then roll back; 
+    // confirm transaction isolation
+    // test trans.ExecuteScalar
+    member x.Test011MultipleSimultaneousTransactions() =
+        cleanTable()
+        use trans = conn.StartTrans()
+        use trans2 = conn.StartTrans()
+        trans.InsertMany([| t1b ; t1c; t1d |]) |> ignore
+        trans2.InsertOne(t1a) |> ignore
+        // confirm that the transaction is isolated
+        Assert.IsTrue(conn.ExecuteScalar "SELECT COUNT(*) FROM test1" :?> int64 = 0L)
+        trans2.Commit()
+        Assert.IsTrue(conn.ExecuteScalar "SELECT COUNT(*) FROM test1" :?> int64 = 1L)
+        trans.Commit()
+        Assert.IsTrue(trans.ExecuteScalar "SELECT COUNT(*) FROM test1" :?> int64 = 4L)
         cleanTable()
 
 

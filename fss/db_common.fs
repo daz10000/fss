@@ -271,14 +271,14 @@ module Common =
 
           member x.InsertOne<'T,'R> (item : 'T,?table:string,?transProvided:DynamicSqlTransaction<'Parameter,'Conn>,?ignoredColumns:string seq) = 
             match table,transProvided,ignoredColumns with
-                | None,None,None -> x.InsertMany<'T,'R>([item]).[0]
-                | Some(t),None,None -> x.InsertMany<'T,'R>([item],table=t).[0]
-                | None,Some(t),None -> x.InsertMany<'T,'R>([item],transProvided=t).[0]
-                | Some(ta),Some(tr),None -> x.InsertMany<'T,'R>([item],table=ta,transProvided=tr).[0]
-                | None,None,Some(cols) -> x.InsertMany<'T,'R>([item],ignoredColumns=cols).[0]
-                | Some(t),None,Some(cols) -> x.InsertMany<'T,'R>([item],table=t,ignoredColumns=cols).[0]
-                | None,Some(t),Some(cols) -> x.InsertMany<'T,'R>([item],transProvided=t,ignoredColumns=cols).[0]
-                | Some(ta),Some(tr),Some(cols) -> x.InsertMany<'T,'R>([item],table=ta,transProvided=tr,ignoredColumns=cols).[0]
+            | None,None,None -> x.InsertMany<'T,'R>([item]).[0]
+            | Some(t),None,None -> x.InsertMany<'T,'R>([item],table=t).[0]
+            | None,Some(t),None -> x.InsertMany<'T,'R>([item],transProvided=t).[0]
+            | Some(ta),Some(tr),None -> x.InsertMany<'T,'R>([item],table=ta,transProvided=tr).[0]
+            | None,None,Some(cols) -> x.InsertMany<'T,'R>([item],ignoredColumns=cols).[0]
+            | Some(t),None,Some(cols) -> x.InsertMany<'T,'R>([item],table=t,ignoredColumns=cols).[0]
+            | None,Some(t),Some(cols) -> x.InsertMany<'T,'R>([item],transProvided=t,ignoredColumns=cols).[0]
+            | Some(ta),Some(tr),Some(cols) -> x.InsertMany<'T,'R>([item],table=ta,transProvided=tr,ignoredColumns=cols).[0]
 
           member x.Query<'T>(sql:string) : seq<'T> =
             let command : DynamicSqlCommand<'Parameter> = x.Command sql
