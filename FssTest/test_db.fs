@@ -342,6 +342,7 @@ type TestTransactions() = class
     // Insert several rows then roll back; 
     // confirm transaction isolation
     // test trans.ExecuteScalar
+    // test that trans
     member x.Test011MultipleSimultaneousTransactions() =
         cleanTable()
         use trans = conn.StartTrans()
@@ -350,10 +351,24 @@ type TestTransactions() = class
         trans2.InsertOne(t1a) |> ignore
         // confirm that the transaction is isolated
         Assert.IsTrue(conn.ExecuteScalar "SELECT COUNT(*) FROM test1" :?> int64 = 0L)
+
+
+        let results : Test1 [] = trans.Query "select * from test1"  |> Array.ofSeq
+        Assert.IsTrue(results.Length=3)
+        Assert.IsTrue(trans.ExecuteScalar "SELECT COUNT(*) FROM test1" :?> int64 = 3L)
+
         trans2.Commit()
+
+        // the conn only sees 1 result, because only trans2 has been committed
+        let results2: Test1 [] = conn.Query "select * from test1"  |> Array.ofSeq
+        Assert.IsTrue(results2.Length=1)
         Assert.IsTrue(conn.ExecuteScalar "SELECT COUNT(*) FROM test1" :?> int64 = 1L)
-        trans.Commit()
+        // trans see's 4, because READCOMMIT allows us to see the commit
+        // from trans2 as well as our own.
         Assert.IsTrue(trans.ExecuteScalar "SELECT COUNT(*) FROM test1" :?> int64 = 4L)
+        trans.Commit()
+        // everyone should see 4 now.
+        Assert.IsTrue(conn.ExecuteScalar "SELECT COUNT(*) FROM test1" :?> int64 = 4L)
         cleanTable()
 
 

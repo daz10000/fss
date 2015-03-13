@@ -280,8 +280,13 @@ module Common =
             | None,Some(t),Some(cols) -> x.InsertMany<'T,'R>([item],transProvided=t,ignoredColumns=cols).[0]
             | Some(ta),Some(tr),Some(cols) -> x.InsertMany<'T,'R>([item],table=ta,transProvided=tr,ignoredColumns=cols).[0]
 
-          member x.Query<'T>(sql:string) : seq<'T> =
-            let command : DynamicSqlCommand<'Parameter> = x.Command sql
+          member x.Query<'T>(sql:string,?transProvided:DynamicSqlTransaction<'Parameter,'Conn>) : seq<'T> =
+            
+            let command : DynamicSqlCommand<'Parameter> = 
+                match transProvided with
+                | None -> x.Command sql
+                | Some(t) -> t.cc sql
+                        
             /// Determine details of this record's constructor
             let cons = typeof<'T>.UnderlyingSystemType.GetConstructors() |> Array.filter (fun c -> c.IsConstructor) |> Seq.head
 
@@ -390,6 +395,9 @@ module Common =
         member x.Rollback() = trans.Rollback()
 
         member x.Commit() = trans.Commit()
+
+        member x.Query<'T>(sql:string) : seq<'T> =
+            conn.Query(sql,transProvided=x)
 
         member x.InsertMany<'T,'R> (items : 'T seq,?table:string,?ignoredColumns: string seq) =
             match table,ignoredColumns with
