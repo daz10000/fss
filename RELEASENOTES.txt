@@ -1,4 +1,8 @@
 
+1.2.6
+==================
+Freql:  methods added directly to transaction object to make it behave more like a connection
+
 1.2.5
 ==================
 Freql: premature release of transaction connection fixed

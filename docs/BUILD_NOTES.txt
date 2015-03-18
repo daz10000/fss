@@ -1,0 +1,5 @@
+Notes for Darren
+Hack to get nuget working with F# in VS2013 Community edition
+
+'c:/bin/NuGet.exe' pack fss.fsproj -Properties 'TargetPath=bin/Debug/fss.dll'
+
