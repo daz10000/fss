@@ -1,12 +1,7 @@
 ﻿namespace Fss
 
-type FormPart = { header:Map<string,string> ; body : byte [] ; contentType : string option}
-
-/// Parse multipart form responses from web submissions
-module private Multipart =
-    open System.IO
-
-
+module Multipart =
+    type FormPart = { header:Map<string,string> ; body : byte [] ; contentType : string option}
     /// Parse bytes comprising a multipart form
     let parse (bytes:byte []) =
         let l = bytes.Length
@@ -18,16 +13,22 @@ module private Multipart =
                     (i=l-1 || bytes.[i+1]|> ws |> not) then i
             else findEOL (i+1)
 
-        let rec find (a:byte[]) i j =
-            if a.[i] = bytes.[j] then
-                if i=a.Length-1 then Some(j-a.Length+1)
-                elif j=bytes.Length-1 then None
-                else 
-                    match find a (i+1) (j+1) with
-                        | Some(x) -> Some(x)
-                        | None -> find a 0 (j+1)
-            elif j=bytes.Length-1 then None
-            else find a 0 (j+1)
+        /// Search for sequence of bytes a starting
+        /// from position i against position j in bytes
+        /// Return position in bytes buffer of start of match
+        /// as int option`
+        let rec find (a:byte[]) i j backtrackTo =
+            if a.[i] = bytes.[j] then // match at current position
+                if i=a.Length-1 then Some(j-a.Length+1) // complete
+                elif j=bytes.Length-1 then None // ran off end of search buffer
+                else find a (i+1) (j+1) backtrackTo 
+            elif j=bytes.Length-1 then None // off end of search buffer
+            else 
+                // These two characters don't match, go to backtrackTo point
+                // and start search over
+                if backtrackTo=bytes.Length-1 then None // no point backtracking, we are done
+                else
+                    find a 0 backtrackTo (backtrackTo+1) // start search again at backtrackTo
 
     
         /// Skip over header lines terminated by newlines
@@ -57,7 +58,7 @@ module private Multipart =
                 | _ as i -> s.[..i-1].ToLower(),s.[i+1..]
 
         let rec parseMultipart startSection =      seq{
-                    match find border 0 startSection with
+                    match find border 0 startSection (startSection+1) with
                         | None -> failwithf "ERROR: didn't find terminal boundary"
                         | Some(startNextBoundary) ->
                             let eoh = findEOH (startSection+1)
@@ -69,8 +70,12 @@ module private Multipart =
                                                 System.StringSplitOptions.RemoveEmptyEntries) |>
                                             Array.map(splitOneHeader) |>
                                             Map.ofArray
-
-                            yield {header=headers ; body = bytes.[eoh+1..startNextBoundary-1-newlineLen];
+                            let fr = eoh+1
+                            let t = startNextBoundary-1-newlineLen
+                            assert(fr<=t)
+                            assert(fr>=0)
+                            assert(t<bytes.Length)
+                            yield {header=headers ; body = bytes.[fr..t];
                                     contentType = (match headers.TryFind("content-type") with 
                                                     |None-> None
                                                     |Some(x) -> Some(x.Trim()))}
