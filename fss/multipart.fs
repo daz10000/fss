@@ -72,10 +72,10 @@ module Multipart =
                                             Map.ofArray
                             let fr = eoh+1
                             let t = startNextBoundary-1-newlineLen
-                            assert(fr<=t)
+                            assert(fr<=t+1) // to can be less than from for empty intervals
                             assert(fr>=0)
                             assert(t<bytes.Length)
-                            yield {header=headers ; body = bytes.[fr..t];
+                            yield {header=headers ; body = (if t=fr-1 then [||] else bytes.[fr..t]);
                                     contentType = (match headers.TryFind("content-type") with 
                                                     |None-> None
                                                     |Some(x) -> Some(x.Trim()))}

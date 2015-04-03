@@ -1,3 +1,7 @@
+1.2.8
+==================
+server: BUG empty multipart form parts where triggering assertions incorrectly
+
 1.2.7
 ==================
 server: BUG: rewrote multipart header parser to be tail recursive
