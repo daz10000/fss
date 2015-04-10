@@ -635,7 +635,7 @@ module Template =
                                             | Page(p) -> p
                                             | _ as x -> failwithf "ERROR: failed to process (parse) extends page template %s, received %A instead" file x
                             let (Parsed parsed) = parts
-                            let (Parsed parsedTail) = tl // Parse remainder of this page past the extends 
+                            let (Parsed parsedTail) = expandIncludesExtends tl []// Parse remainder of this page past the extends and recursively expand
                             [EXTENDSBUNDLED(parsedTail,parsed)]
                         | INCLUDE(file)::tl ->
                             let parts = match  List.ofSeq (fetcher file) with
@@ -870,7 +870,7 @@ module Template =
 
                             | RAW ->
                                 failwithf "Unimplemented RAW block expansion"
-                            | INCLUDE(file) -> sb.Append(fetcher file) |> ignore 
+                            | INCLUDE(file) -> sb.Append(fetcher file) |> ignore  // debatable whether this should be here, since we should have expanded away earlier.
                             | EXTENDS(file) -> failwithf "ERROR: unimpemented extends for file %s" file // FIXFIX
                             | FOR(fv,expr,parts) ->
                                 let arr = 

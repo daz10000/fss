@@ -266,6 +266,52 @@ type Basic() = class
         ()
 
     [<Test>]
+    member x.Test023_Include_Recursive_VarSub() =
+        /// Proc (web) filesystem to expose status info
+        let grab page = 
+            match page with 
+                | "mary.html" -> "mary had a little {% include \"lamb.html\"%}"
+                | "fleece.html" -> "its fleece was white as snow"
+                | "lamb.html" -> "lamb name={{lambName}}"
+                | _ -> "file not found"
+        let template = Template("{% include \"mary.html\" %} {% include \"fleece.html\" %}",grab)
+        let templateExpected = "mary had a little lamb name=lambchop its fleece was white as snow"
+        let page = template.Render([| ("lambName",box "lambchop")|])
+        sc templateExpected page    
+
+        ()
+
+    [<Test>]
+    member x.Test024_Extends_Include_Combo() =
+        /// Proc (web) filesystem to expose status info
+        let grab page = 
+            match page with 
+                | "mary.html" -> "{%block person%}{%endblock%} had a little {%block animal%}{%endblock%} its fleece was white as snow"
+                | "lamb.html" -> "lamb name=lambchop"
+                | _ -> "file not found"
+        let template = Template("{%extends \"mary.html\" %}{%block person%}Mary{%endblock%}{%block animal%}{%include filename=\"lamb.html\"%}{%endblock animal%}",grab)
+        let templateExpected = "Mary had a little lamb name=lambchop its fleece was white as snow"
+        let page = template.Render([| ("lambName",box "lambchop")|])
+        sc templateExpected page    
+
+        ()
+
+    [<Test>]
+    member x.Test025_Extends_Include_VarInIncludeCombo() =
+         /// Proc (web) filesystem to expose status info
+        let grab page = 
+            match page with 
+                | "mary.html" -> "{%block person%}{%endblock%} had a little {%block animal%}{%endblock%} its fleece was white as snow"
+                | "lamb.html" -> "lamb name={{lambName}}"
+                | _ -> "file not found"
+        let template = Template("{%extends \"mary.html\" %}{%block person%}Mary{%endblock%}{%block animal%}{%include filename=\"lamb.html\"%}{%endblock animal%}",grab)
+        let templateExpected = "Mary had a little lamb name=lambchop its fleece was white as snow"
+        let page = template.Render([| ("lambName",box "lambchop")|])
+        sc templateExpected page    
+
+        ()
+
+    [<Test>]
     /// Recognize block statements correctly
     member x.Test040_Block() =
         let template = Template("{%block foo%} La de da da {%endblock%}",fun _ -> "")

@@ -1,5 +1,9 @@
 1.2.8
 ==================
+templates: BUG: includes with internal variables mixed with extends weren't expanded properly
+
+1.2.8
+==================
 server: BUG empty multipart form parts where triggering assertions incorrectly
 
 1.2.7
