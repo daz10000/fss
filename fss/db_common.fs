@@ -109,12 +109,12 @@ module Common =
           let takeInternal() = 
             let c = pool.Take()
             let z = System.Threading.Thread.CurrentThread.ManagedThreadId
-            if opts.logConnUse then log(sprintf "take %d %d" z (c.GetHashCode()))
+            if opts.logConnUse then log(sprintf "took thread=%d conn=%d (postfree=%d)" z (c.GetHashCode()) pool.FreeCount) 
             c
             
           let release x = 
             let z = System.Threading.Thread.CurrentThread.ManagedThreadId
-            if opts.logConnUse then sprintf "release %d %d" z (x.GetHashCode()) |> log
+            if opts.logConnUse then sprintf "release thread=%d conn=%d (prefree=%d)" z (x.GetHashCode()) pool.FreeCount |> log
             pool.Release x
           
           /// Set a filename for logging output

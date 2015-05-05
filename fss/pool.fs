@@ -16,7 +16,7 @@ module Pool =
         let ewh = new EventWaitHandle(false,EventResetMode.AutoReset)
         do
             ()
-
+        member x.FreeCount with get() = freeCount
         member x.Take() = 
             let take1() =
                 if freeCount = 0 then 
