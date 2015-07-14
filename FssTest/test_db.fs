@@ -1,12 +1,13 @@
 ﻿module test_db
 open NUnit.Framework
 
-open Fss.Data.Postgres
+//open Fss.Data.Postgres
+open Fss.Data.MySql
 open System.IO
 open System
 
 let createT1SQL = """
-create table Test1 (
+create table test1 (
     id integer NOT NULL,
     age   integer NOT NULL,
     first	varchar(100) NOT NULL,
@@ -14,7 +15,7 @@ create table Test1 (
     rate   float NOT NULL
 )"""
 
-type Test1 = { id : int ; age : int ; first : string ; last : string ; rate : float}
+type test1 = { id : int ; age : int ; first : string ; last : string ; rate : float}
 
 let t1a = { id = 1 ; age = 30 ; first = "fred" ; last = "flintstone" ; rate = 1.2}
 let t1b = { id = 2 ; age = 245 ; first = "wilma" ; last = "flintstone" ; rate = 1.0}
@@ -22,7 +23,7 @@ let t1c = { id = 100 ; age = 32 ; first = "Barney" ; last = "rubble" ; rate = 0.
 let t1d = { id = 1000 ; age = 3 ; first = "pebbles" ; last = "flintstone" ; rate = 1.9}
 
 let createT2SQL = """
-create table Test2 (
+create table test2 (
     id serial,
     age   integer  NOT NULL,
     first	varchar(100) NOT NULL,
@@ -32,7 +33,7 @@ create table Test2 (
 
 
 let createT3SQL = """
-create table Test3 (
+create table test3 (
     id serial,
     age   integer NOT NULL,
     first	varchar(100) NOT NULL,
@@ -40,13 +41,13 @@ create table Test3 (
     rate   float NOT NULL
 )"""
 
-type Test3 = { id : int ; age : int ; first : string ; last : string option ; rate : float}
+type Test3 = { id : uint64 ; age : int ; first : string ; last : string option ; rate : float}
 
-let t3a = { id = 1 ; age = 30 ; first = "fred" ; last = Some "flintstone" ; rate = 1.2}
-let t3b = { id = -1 ; age = 4 ; first = "dino" ; last = None ; rate = 1.2}
+let t3a = { id = 1UL ; age = 30 ; first = "fred" ; last = Some "flintstone" ; rate = 1.2}
+let t3b = { id = 2UL ; age = 4 ; first = "dino" ; last = None ; rate = 1.2}
 
 let createT4SQL = """
-create table Test4 (
+create table test4 (
     id serial,
     age   integer,
     first	varchar(100),
@@ -56,16 +57,16 @@ create table Test4 (
     constraint pk_t4 primary key(id)
 )"""
 
-type Test4 = { id : int ; age : int option ; first : string option ; last : string option; rate : float option ; happy : bool option}
+type Test4 = { id : uint64 ; age : int option ; first : string option ; last : string option; rate : single option ; happy : bool option}
 
-let t4a = { id = -1 ; age = Some(40) ; first = Some "wilma" ; last = Some "flintstone" ; rate = Some 1.256 ; happy = Some true}
-let t4b = { id = -1 ; age = None ; first = None ; last = None ; rate = None ; happy = None}
+let t4a = { id = 1UL ; age = Some(40) ; first = Some "wilma" ; last = Some "flintstone" ; rate = Some 1.256f ; happy = Some true}
+let t4b = { id = 2UL ; age = None ; first = None ; last = None ; rate = None ; happy = None}
 
 let getConnString() =
-    if not (File.Exists("connection.txt")) then
-        failwithf "ERROR: expected connection.txt file with connstring"
+    if not (File.Exists("connection_mysql.txt")) then
+        failwithf "ERROR: expected connection_mysql.txt file with connstring"
     else 
-        System.IO.File.ReadAllText("connection.txt")
+        System.IO.File.ReadAllText("connection_mysql.txt")
 
 // reusable primitives for testing
 let gc() = new DynamicSqlConnection(getConnString())
@@ -90,7 +91,7 @@ type TestPGDbBasic() = class
 
     [<Test>]
     member x.Test001ConnectionDotTxtPresent() =
-        Assert.IsTrue(File.Exists("connection.txt"))        
+        Assert.IsTrue(File.Exists("connection_mysql.txt"))        
 
     [<Test>]
     member x.Test002GetConnString() =
@@ -134,7 +135,7 @@ type TestPGDbBasic() = class
         use conn = gc()
         setupT2 conn
         conn.InsertOne(t1a,"test2",ignoredColumns=["id" ; "rate"])
-        Assert.GreaterOrEqual(conn.ExecuteScalar "select rate from test2 where first = 'fred'" :?> float,998.9)
+        Assert.GreaterOrEqual(conn.ExecuteScalar "select rate from test2 where first = 'fred'" :?> single,998.9)
 
     /// Insert a record that contains nullable fields which are defined
     [<Test>]
@@ -353,20 +354,21 @@ type TestTransactions() = class
         Assert.IsTrue(conn.ExecuteScalar "SELECT COUNT(*) FROM test1" :?> int64 = 0L)
 
 
-        let results : Test1 [] = trans.Query "select * from test1"  |> Array.ofSeq
+        let results : test1 [] = trans.Query "select * from test1"  |> Array.ofSeq
         Assert.IsTrue(results.Length=3)
         Assert.IsTrue(trans.ExecuteScalar "SELECT COUNT(*) FROM test1" :?> int64 = 3L)
 
         trans2.Commit()
 
         // the conn only sees 1 result, because only trans2 has been committed
-        let results2: Test1 [] = conn.Query "select * from test1"  |> Array.ofSeq
+        let results2: test1 [] = conn.Query "select * from test1"  |> Array.ofSeq
         Assert.IsTrue(results2.Length=1)
         Assert.IsTrue(conn.ExecuteScalar "SELECT COUNT(*) FROM test1" :?> int64 = 1L)
         // trans see's 4, because READCOMMIT allows us to see the commit
         // from trans2 as well as our own.
-        Assert.IsTrue(trans.ExecuteScalar "SELECT COUNT(*) FROM test1" :?> int64 = 4L)
+        
         trans.Commit()
+        Assert.IsTrue(trans.ExecuteScalar "SELECT COUNT(*) FROM test1" :?> int64 = 4L)
         // everyone should see 4 now.
         Assert.IsTrue(conn.ExecuteScalar "SELECT COUNT(*) FROM test1" :?> int64 = 4L)
         cleanTable()
