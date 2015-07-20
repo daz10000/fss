@@ -89,7 +89,14 @@ module Common =
 
     /// SqlConnection wrapper that allows creating stored 
     /// procedure calls using the dynamic access operator
-    type DynamicSqlConnection<'Conn,'Parameter when 'Parameter :> DbParameter and 'Parameter:(new:unit->'Parameter) and 'Conn :> DbConnection and 'Conn:(new:unit->'Conn) and 'Conn:equality>(connStr:string,poolSize:int) =
+    type ISqlConnection =
+        
+        abstract member Query : sql:string -> seq<'T>
+        abstract member InsertMany : items:seq<'T> * ?table:string * ?ignoredColumns:seq<string> -> 'R []
+        abstract member InsertOne : item:'T * ?table:string * ?ignoredColumns:seq<string> -> 'R
+        abstract member ExecuteScalar : sql:string -> obj
+
+    and DynamicSqlConnection<'Conn,'Parameter when 'Parameter :> DbParameter and 'Parameter:(new:unit->'Parameter) and 'Conn :> DbConnection and 'Conn:(new:unit->'Conn) and 'Conn:equality>(connStr:string,poolSize:int) =
           let pool = new Pool<DbConnection>(poolSize,fun _ -> 
                                                 let c = new 'Conn()
                                                 c.ConnectionString <- connStr
@@ -130,6 +137,25 @@ module Common =
           member x.LogConnUse with get() = opts.logConnUse and set(v) = opts.logConnUse <- v  
           member x.LogQueries with get() = opts.logQueries and set(v) = opts.logQueries <- v  
           member x.LogLongerThan with get() = opts.logLongerThan  and set(v) = opts.logLongerThan <- v  
+
+          interface ISqlConnection with
+              member x.Query<'T>(sql) : seq<'T> =
+                  x.Query(sql)
+              member x.InsertMany<'T,'R>(items, table, ignoredColumns) =
+                 match table,ignoredColumns with
+                 | None,None -> x.InsertMany<'T,'R>(items)
+                 | Some(ta),None -> x.InsertMany<'T,'R>(items,table=ta)
+                 | None,Some(cols) -> x.InsertMany<'T,'R>(items,ignoredColumns=cols)
+                 | Some(ta),Some(cols) -> x.InsertMany<'T,'R>(items,table=ta,ignoredColumns=cols)
+              member x.InsertOne<'T,'R>(items, table, ignoredColumns) =
+                 match table,ignoredColumns with
+                 | None,None -> x.InsertOne<'T,'R>(items)
+                 | Some(ta),None -> x.InsertOne<'T,'R>(items,table=ta)
+                 | None,Some(cols) -> x.InsertOne<'T,'R>(items,ignoredColumns=cols)
+                 | Some(ta),Some(cols) -> x.InsertOne<'T,'R>(items,table=ta,ignoredColumns=cols)
+              member x.ExecuteScalar(sql) =
+                 x.ExecuteScalar(sql) 
+
                                                     
           member x.InsertMany<'T,'R> (items : 'T seq,?table:string,?transProvided:DynamicSqlTransaction<'Parameter,'Conn>,?ignoredColumns:string seq) =
             // Determine table name from item to be inserted
@@ -260,7 +286,7 @@ module Common =
                                                                         else
                                                                             vals.[i].Value <- f.GetValue(item,null))
                                             // Finally execute insert stmt and capture return value
-                                            yield (comm2.ExecuteScalar() :?> 'R )
+                                            yield (comm2 .ExecuteScalar() :?> 'R )
                                     } |> Array.ofSeq
 
                         if transProvided.IsNone  then
@@ -336,6 +362,12 @@ module Common =
                     (command :> IDisposable).Dispose()
             } 
 
+            (*
+          interface ISqlConnection with
+            member x.Query<'T>(sql:string) : seq<'T> =
+                x.Query(sql)
+                *)
+            
           member x.ExecuteScalar(sql:string) =
             use comm = x.Command sql
             comm.ExecuteScalar()
@@ -395,7 +427,25 @@ module Common =
         member x.Rollback() = trans.Rollback()
 
         member x.Commit() = trans.Commit()
-
+        
+        interface ISqlConnection with
+          member x.Query<'T>(sql) : seq<'T> =
+              x.Query(sql)
+          member x.InsertMany<'T,'R>(items, table, ignoredColumns) =
+             match table,ignoredColumns with
+             | None,None -> x.InsertMany<'T,'R>(items)
+             | Some(ta),None -> x.InsertMany<'T,'R>(items,table=ta)
+             | None,Some(cols) -> x.InsertMany<'T,'R>(items,ignoredColumns=cols)
+             | Some(ta),Some(cols) -> x.InsertMany<'T,'R>(items,table=ta,ignoredColumns=cols)
+          member x.InsertOne<'T,'R>(items, table, ignoredColumns) =
+             match table,ignoredColumns with
+             | None,None -> x.InsertOne<'T,'R>(items)
+             | Some(ta),None -> x.InsertOne<'T,'R>(items,table=ta)
+             | None,Some(cols) -> x.InsertOne<'T,'R>(items,ignoredColumns=cols)
+             | Some(ta),Some(cols) -> x.InsertOne<'T,'R>(items,table=ta,ignoredColumns=cols)
+          member x.ExecuteScalar(sql) =
+             x.ExecuteScalar(sql) 
+       
         member x.Query<'T>(sql:string) : seq<'T> =
             conn.Query(sql,transProvided=x)
 

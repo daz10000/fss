@@ -9,6 +9,7 @@ open Npgsql
 open System.Data
 
 module Postgres =
+    type ISqlConnection = Fss.Data.Common.ISqlConnection
     type DynamicSqlConnection = Fss.Data.Common.DynamicSqlConnection<NpgsqlConnection,NpgsqlParameter>
     type DynamicSqlTransaction = Fss.Data.Common.DynamicSqlTransaction<NpgsqlParameter,NpgsqlConnection>
 
