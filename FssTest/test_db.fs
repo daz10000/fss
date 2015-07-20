@@ -62,10 +62,10 @@ let t4a = { id = -1 ; age = Some(40) ; first = Some "wilma" ; last = Some "flint
 let t4b = { id = -1 ; age = None ; first = None ; last = None ; rate = None ; happy = None}
 
 let getConnString() =
-    if not (File.Exists("connection.txt")) then
-        failwithf "ERROR: expected connection.txt file with connstring"
+    if not (File.Exists("connection_postgres.txt")) then
+        failwithf "ERROR: expected connection_postgres.txt file with connstring"
     else 
-        System.IO.File.ReadAllText("connection.txt")
+        System.IO.File.ReadAllText("connection_postgres.txt")
 
 // reusable primitives for testing
 let gc() = new DynamicSqlConnection(getConnString())
@@ -90,7 +90,7 @@ type TestPGDbBasic() = class
 
     [<Test>]
     member x.Test001ConnectionDotTxtPresent() =
-        Assert.IsTrue(File.Exists("connection.txt"))        
+        Assert.IsTrue(File.Exists("connection_postgres.txt"))        
 
     [<Test>]
     member x.Test002GetConnString() =
@@ -377,4 +377,3 @@ type TestTransactions() = class
             drop "test1" conn
             (conn :> IDisposable).Dispose()
 end
-
