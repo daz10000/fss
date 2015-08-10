@@ -188,7 +188,7 @@ module Server =
                 lockThreadTracker()
                 threadTracker.Add(t) |> ignore
                 unlockThreadTracker()
-                sprintf "  tracking thread %s" t.Name |> log 2
+                sprintf "  tracking thread %s\n" t.Name  |> log 2
                 t.Start()
                 sprintf "fssmain: post async child fork\n" |> log 1
                 stdout.Flush()
@@ -555,7 +555,7 @@ module Server =
                             printfn "fss%d UD:%s" ur.handleId resp.Text
                             resp
         let start() =
-            this.Log 2 "Started my dispatcher"
+            this.Log 2 "Started my dispatcher\n"
             try
                 this.run()
             with 
