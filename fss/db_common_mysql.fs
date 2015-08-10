@@ -154,6 +154,7 @@ module Common_mysql =
             command?tablename <- table
             use r = command.ExecuteReader()
             /// db columns
+            // flag_LiangMi
             let cols =
                     seq { while r.Read() do
                             //yield { cname = r?column_name; ctype = r?data_type ; cpos = r?ordinal_position ; cNotNull =r?is_nullable}
@@ -185,11 +186,11 @@ module Common_mysql =
             // Determine which if any columns are a primary key that we could return
             // flag_LiangMi
             use comm3 = x.Command "SELECT constraint_name FROM 
-                            information_schema.table_constraints
-                            WHERE 
-                                constraint_schema = 'p' AND
-                                table_name = ?tablename
-                                "
+                                   information_schema.table_constraints
+                                   WHERE 
+                                   constraint_schema = 'p' AND
+                                   table_name = ?tablename
+                                  "
             comm3?tablename <- table
 
             // Get columns involved in the primary key if any
@@ -223,7 +224,7 @@ module Common_mysql =
                         let sql = sprintf "insert into %s(%s) values(%s) %s"  
                                     table 
                                     (String.Join(",",colNames|> Array.map(fun x -> x.ToLower()))) 
-                                    (String.Join(",",[| for i in 1..fields.Length  -> sprintf "?p%d"i |]))
+                                    (String.Join(",",[| for i in 1..fields.Length  -> sprintf "?p%d"i |]))// flag_LiangMi
                                     returningClause
                             
                         /// Transaction to wrap the insertion into    
@@ -277,10 +278,6 @@ module Common_mysql =
                                                                         else
                                                                             vals.[i].Value <- f.GetValue(item,null))
                                             // Finally execute insert stmt and capture return value
-                                            // flag_LiangMi
-                                            //comm2.ExecuteScalar() |> ignore
-                                            //use comm5 = x.Command "SELECT LAST_INSERT_ID()"
-                                            //yield (comm5.ExecuteScalar() :?> 'R )
 
                                             yield (comm2.ExecuteScalar() :?> 'R )
                                     } |> Array.ofSeq
@@ -345,7 +342,7 @@ module Common_mysql =
                                     | :? string as x -> box (Some(x))
                                     | :? int64 as x -> box (Some(x))
                                     | :? float as x -> box (Some(x))
-                                    | :? single as x -> box (Some(x))
+                                    | :? single as x -> box (Some(x))// flag_LiangMi
                                     | :? bool as x -> box (Some(x))
                                     | :? int32 as x -> box (Some(x))
                                     | :? DateTime as x -> box (Some(x))
