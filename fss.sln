@@ -10,8 +10,6 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = ".nuget", ".nuget", "{410A56
 		.nuget\NuGet.targets = .nuget\NuGet.targets
 	EndProjectSection
 EndProject
-Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "fss", "fss\fss.fsproj", "{4ADBC4F8-FFA1-4EF9-A773-85EF425CC07C}"
-EndProject
 Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "FssExample", "FssExample\FssExample.fsproj", "{EA1BECB3-6D59-4467-9EC5-6BF965369DED}"
 EndProject
 Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "Playground", "Playground\Playground.fsproj", "{5B6065EE-990D-45FC-A68B-41D18F613438}"
@@ -26,6 +24,8 @@ Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "Fss-MsSql", "Fss-MsSql\Fss-
 EndProject
 Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "Fss-MySql", "Fss-MySql\Fss-MySql.fsproj", "{3FE73D7C-144C-4BE5-937D-EEE1A4A91A2C}"
 EndProject
+Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "fss", "fss\fss.fsproj", "{507F216B-75E6-44DD-95D5-B13475DA0D4D}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -36,16 +36,6 @@ Global
 		Release|x86 = Release|x86
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
-		{4ADBC4F8-FFA1-4EF9-A773-85EF425CC07C}.Debug|Any CPU.ActiveCfg = Debug|x86
-		{4ADBC4F8-FFA1-4EF9-A773-85EF425CC07C}.Debug|Mixed Platforms.ActiveCfg = Debug|x86
-		{4ADBC4F8-FFA1-4EF9-A773-85EF425CC07C}.Debug|Mixed Platforms.Build.0 = Debug|x86
-		{4ADBC4F8-FFA1-4EF9-A773-85EF425CC07C}.Debug|x86.ActiveCfg = Debug|x86
-		{4ADBC4F8-FFA1-4EF9-A773-85EF425CC07C}.Debug|x86.Build.0 = Debug|x86
-		{4ADBC4F8-FFA1-4EF9-A773-85EF425CC07C}.Release|Any CPU.ActiveCfg = Release|x86
-		{4ADBC4F8-FFA1-4EF9-A773-85EF425CC07C}.Release|Mixed Platforms.ActiveCfg = Release|x86
-		{4ADBC4F8-FFA1-4EF9-A773-85EF425CC07C}.Release|Mixed Platforms.Build.0 = Release|x86
-		{4ADBC4F8-FFA1-4EF9-A773-85EF425CC07C}.Release|x86.ActiveCfg = Release|x86
-		{4ADBC4F8-FFA1-4EF9-A773-85EF425CC07C}.Release|x86.Build.0 = Release|x86
 		{EA1BECB3-6D59-4467-9EC5-6BF965369DED}.Debug|Any CPU.ActiveCfg = Debug|x86
 		{EA1BECB3-6D59-4467-9EC5-6BF965369DED}.Debug|Mixed Platforms.ActiveCfg = Debug|x86
 		{EA1BECB3-6D59-4467-9EC5-6BF965369DED}.Debug|Mixed Platforms.Build.0 = Debug|x86
@@ -119,6 +109,16 @@ Global
 		{3FE73D7C-144C-4BE5-937D-EEE1A4A91A2C}.Release|Mixed Platforms.Build.0 = Release|Any CPU
 		{3FE73D7C-144C-4BE5-937D-EEE1A4A91A2C}.Release|x86.ActiveCfg = Release|Any CPU
 		{3FE73D7C-144C-4BE5-937D-EEE1A4A91A2C}.Release|x86.Build.0 = Release|Any CPU
+		{507F216B-75E6-44DD-95D5-B13475DA0D4D}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{507F216B-75E6-44DD-95D5-B13475DA0D4D}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{507F216B-75E6-44DD-95D5-B13475DA0D4D}.Debug|Mixed Platforms.ActiveCfg = Debug|Any CPU
+		{507F216B-75E6-44DD-95D5-B13475DA0D4D}.Debug|Mixed Platforms.Build.0 = Debug|Any CPU
+		{507F216B-75E6-44DD-95D5-B13475DA0D4D}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{507F216B-75E6-44DD-95D5-B13475DA0D4D}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{507F216B-75E6-44DD-95D5-B13475DA0D4D}.Release|Any CPU.Build.0 = Release|Any CPU
+		{507F216B-75E6-44DD-95D5-B13475DA0D4D}.Release|Mixed Platforms.ActiveCfg = Release|Any CPU
+		{507F216B-75E6-44DD-95D5-B13475DA0D4D}.Release|Mixed Platforms.Build.0 = Release|Any CPU
+		{507F216B-75E6-44DD-95D5-B13475DA0D4D}.Release|x86.ActiveCfg = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

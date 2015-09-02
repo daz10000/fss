@@ -1,4 +1,9 @@
-1.2.8
+1.3.0
+==================
+freql: fss-mysql implementation
+freql: decimal null support
+
+1.2.9
 ==================
 templates: BUG: includes with internal variables mixed with extends weren't expanded properly
 
