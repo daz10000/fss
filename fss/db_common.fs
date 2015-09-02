@@ -351,6 +351,7 @@ module Common =
                                     | :? float as x -> box (Some(x))
                                     | :? bool as x -> box (Some(x))
                                     | :? int32 as x -> box (Some(x))
+                                    | :? decimal as x -> box (Some(x))
                                     | :? DateTime as x -> box (Some(x))
                                     | _ as x -> failwithf "ERROR: unsupported nullable dbtype %s" (x.GetType().Name)
                                 else
