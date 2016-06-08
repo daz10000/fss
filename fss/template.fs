@@ -235,6 +235,7 @@ module Template =
             | LOGIC of string
             | ENDFOR
             | ELSE
+            | ELSEIF of Expression
             | ENDIF
             | IFSTART of Expression
             | FORSTART of string*Expression // For var name, iterable var name
@@ -277,6 +278,7 @@ module Template =
                         | ELSE -> yield sprintf "Else\n"
                         | ENDFOR -> yield sprintf "Endfor\n"
                         | IFSTART(s) -> yield sprintf "IfStart %s\n" (ppExpr s)
+                        | ELSEIF(s) -> yield sprintf "Elseif %s\n" (ppExpr s)
                         | ENDIF -> yield sprintf "Endif\n"
                         | RAW -> yield sprintf "Raw\n"
                         | ENDRAW -> yield  sprintf "EndRaw"
@@ -336,10 +338,12 @@ module Template =
                                             | _ as x -> failwithf "ERROR: bad for loop format %A" x
                             | x when x.StartsWith("if") -> 
                                         match (List.ofSeq x.[3..]) with
-                                                    //| Comparison(c,[]) -> IFSTART(c)
                                                     | BoolExpr(c,[]) -> IFSTART(c) // boolean expression like if x
                                                     | _ as x -> failwithf "ERROR: parsing if expression, unparseable expression encountered %A" x
-                                        //IFSTART(c)
+                            | x when x.StartsWith("elseif") -> 
+                                        match (List.ofSeq x.[3..]) with
+                                                    | BoolExpr(c,[]) -> ELSEIF(c) // boolean expression like if x
+                                                    | _ as x -> failwithf "ERROR: parsing elseif expression, unparseable expression encountered %A" x
                             | _ as x -> UNKNOWNLOGIC(x)
 
 
@@ -857,6 +861,8 @@ module Template =
                                     match elseBlock with
                                         | None -> () // No else statement
                                         | Some(c) -> expandParts  locals blocks c
+                            | ELSEIF(cond) ->
+                                failwithf "FIXFIX: unimplemented elseif"
                             | BLOCK(name,body) ->   
                                 match blocks.TryFind name with
                                     | None -> expandParts locals blocks body // Use existing block body since it hasn't been replaced
