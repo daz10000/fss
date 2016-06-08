@@ -744,6 +744,39 @@ type Boolean() = class
         let page = template.Render([| ("x",box "hi") |])
         sc templateExpected page
 
+    [<Test>]
+    member x.Test016ElseIf() =
+        let template = Template("""{% if 9<=1%}1{%elseif 2>1%}3{%endif%}""")
+        let templateExpected = "2"
+        let page = template.Render([| |])
+        sc templateExpected page
+    [<Test>]
+    member x.Test017ElseIf() =
+        let template = Template("""{% if 9<=1%}1{%elseif 2>3%}3{%endif%}""")
+        let templateExpected = "3"
+        let page = template.Render([| |])
+        sc templateExpected page
+    [<Test>]
+    member x.Test018ElseIf() =
+        let template = Template("""{% if 9<=11%}1{%elseif 2>1%}3{%endif%}""")
+        let templateExpected = "1"
+        let page = template.Render([| |])
+        sc templateExpected page
+
+    [<Test>]
+    member x.Test019ElseIf() =
+        let template = Template("""{% if 9<=1%}1{%elseif 2>4%}3{%elseif 2>1%}4{%else%}5{%endif%}""")
+        let templateExpected = "4"
+        let page = template.Render([| |])
+        sc templateExpected page
+
+    [<Test>]
+    member x.Test020ElseIf() =
+        let template = Template("""{% if 9<=1%}1{%elseif 2>4%}3{%elseif 2>5%}4{%else%}5{%endif%}""")
+        let templateExpected = "5"
+        let page = template.Render([| |])
+        sc templateExpected page
+
 end
 
 [<TestFixture>]
