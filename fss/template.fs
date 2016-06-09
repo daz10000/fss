@@ -229,8 +229,12 @@ module Template =
             aux tl
         | _ -> None
 
+    type IfParts=  { expression : Expression ; trueTemplate :TemplatePart list; elsePart:ElseOrElseIf option } 
+    and ElseOrElseIf =
+        | PLAINELSE of TemplatePart list
+        | IFELSE of IfParts
     /// Components of template language
-    type TemplatePart =
+    and TemplatePart =
             | CURLYBLOCK of Expression
             | LOGIC of string
             | ENDFOR
@@ -250,7 +254,7 @@ module Template =
             | RAW 
             | ENDRAW
             | FOR of string*Expression*TemplatePart list
-            | IF of Expression*TemplatePart list*TemplatePart list option
+            | IF of IfParts
             | EXPANDED of string
 
     /// Pretty print template part lists
@@ -286,12 +290,19 @@ module Template =
                         | FOR(fv,fi,contents) -> 
                             yield sprintf "FOR: %s in %s\n" (fv.Trim()) (ppExpr fi)
                             yield ( pp (indent+"fff>") contents )
-                        | IF(f,contents,elseContent) -> 
-                            yield (sprintf "IF: %s" (ppExpr f))
-                            yield (pp (indent+"iii>") contents)
-                            match elseContent with
-                                | None -> ()
-                                | Some(c) ->  yield (pp (indent+"eee>") c)
+                        | IF(ifData) -> 
+                            yield (sprintf "IF: %s" (ppExpr ifData.expression))
+                            yield (pp (indent+"iii>") ifData.trueTemplate)
+                            match ifData.elsePart with
+                                | None ->
+                                    ()
+                                    
+                                | Some(PLAINELSE(pe)) ->
+                                        yield (pp (indent+"eee>") pe)
+                                | Some(IFELSE(eif)) ->
+                                        yield (pp (indent+"eee>") ([IF(eif)]))
+
+                            
                         | EXPANDED(x) -> yield (sprintf "EXPANDED: %s" x)
 
                     })
@@ -432,12 +443,15 @@ module Template =
             else
                  failwithf "ERROR processing template BLOCK %s doesn't match endblock %s" name 
                         (match name2 with | Some(x)->x | None -> "none")
-        | IFSTART(f)::ParsedSections(body,ENDIF::tl) -> Some(IF(f,body,None),tl) // Gather up IF/ENDIF blocks
-        | IFSTART(f)::ENDIF::tl -> Some(IF(f,[],None),tl) // Gather up IF/ENDIF blocks empty body
-        | IFSTART(f)::ParsedSections(body,ELSE::ParsedSections(body2,ENDIF::tl)) -> Some(IF(f,body,Some(body2)),tl) // Gather up IF/ENDIF blocks
-        | IFSTART(f)::ELSE::ParsedSections(body2,ENDIF::tl) -> Some(IF(f,[],Some(body2)),tl) // Gather up IF/ENDIF blocks
-        | IFSTART(f)::ELSE::ParsedSections(body2,ENDIF::tl) -> Some(IF(f,[],Some(body2)),tl) // Gather up IF/ENDIF blocks
-        | IFSTART(f)::ELSE::ENDIF::tl -> Some(IF(f,[],Some([])),tl) // Gather up IF/ENDIF blocks
+        | IFSTART(f)::ParsedSections(body,ENDIF::tl) -> Some(IF({expression=f;trueTemplate=body;elsePart=None}),tl) // Gather up IF/ENDIF blocks
+        | IFSTART(f)::ENDIF::tl -> Some(IF({expression=f;trueTemplate=[];elsePart=None}),tl) // Gather up IF/ENDIF blocks empty body
+        | IFSTART(f)::ParsedSections(body,ELSE::ParsedSections(body2,ENDIF::tl)) -> 
+                    Some(IF({expression=f;trueTemplate=body;elsePart=Some(PLAINELSE(body2))}),tl) // Gather up IF/ENDIF blocks
+        | IFSTART(f)::ELSE::ParsedSections(body2,ENDIF::tl) -> 
+                    Some(IF({expression=f;trueTemplate=[];elsePart=Some(PLAINELSE(body2))}),tl) // Gather up IF/ENDIF blocks
+        //| IFSTART(f)::ELSE::ParsedSections(body2,ENDIF::tl) -> 
+        //            Some(IF({expression=f;trueTemplate=[];elsePart=Some(PLAINELSE(body2))}),tl) // Gather up IF/ENDIF blocks
+        | IFSTART(f)::ELSE::ENDIF::tl -> Some(IF({expression=f;trueTemplate=[];elsePart=Some(PLAINELSE([]))}),tl) // Gather up IF/ENDIF blocks
         | CURLYBLOCK(e)::tl -> Some(CURLYBLOCK(e),tl)
         | EXTENDSBUNDLED(subs,body):: tl -> Some(EXTENDSBUNDLED(subs,body),tl)
         | _  as x -> None
@@ -854,13 +868,14 @@ module Template =
             and expandPart (locals:Map<string,Expression>) (blocks:Map<string,TemplatePart list>) (part:TemplatePart) =
                         match part with
                             | TEXT(t) -> sb.Append(t) |> ignore
-                            | IF(expression,ifBlock,elseBlock) ->
-                                if isTrue expression (VarFetcher(ve,locals)) then
-                                    expandParts locals blocks ifBlock
+                            | IF(ifData) ->
+                                if isTrue ifData.expression (VarFetcher(ve,locals)) then
+                                    expandParts locals blocks ifData.trueTemplate
                                 else
-                                    match elseBlock with
+                                    match ifData.elsePart with
                                         | None -> () // No else statement
-                                        | Some(c) -> expandParts  locals blocks c
+                                        | Some(PLAINELSE pe) -> expandParts  locals blocks pe
+                                        | Some(IFELSE ifE) -> expandParts  locals blocks ([IF(ifE)])
                             | ELSEIF(cond) ->
                                 failwithf "FIXFIX: unimplemented elseif"
                             | BLOCK(name,body) ->   
