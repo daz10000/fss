@@ -1,7 +1,8 @@
 1.3.1
 ==================
-freql: int16 support
+freql: int16,decimal support
 templates: expression legal in for loop iter RHS value
+templates: elseif implementation
 
 1.3.0
 ==================

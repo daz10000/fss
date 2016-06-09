@@ -743,42 +743,117 @@ type Boolean() = class
         let templateExpected = ""
         let page = template.Render([| ("x",box "hi") |])
         sc templateExpected page
+end
 
+
+[<TestFixture>]
+type ElseIf() = class  
     [<Test>]
-    member x.Test016ElseIf() =
+    member x.Test016ElseIf2() =
         let template = Template("""{% if 9<=1%}1{%elseif 2>1%}3{%endif%}""")
-        let templateExpected = "2"
-        let page = template.Render([| |])
-        sc templateExpected page
-    [<Test>]
-    member x.Test017ElseIf() =
-        let template = Template("""{% if 9<=1%}1{%elseif 2>3%}3{%endif%}""")
         let templateExpected = "3"
         let page = template.Render([| |])
         sc templateExpected page
     [<Test>]
-    member x.Test018ElseIf() =
+    member x.Test017ElseIfNone() =
+        let template = Template("""{% if 9<=1%}1{%elseif 2>3%}3{%endif%}""")
+        let templateExpected = ""
+        let page = template.Render([| |])
+        sc templateExpected page
+    [<Test>]
+    member x.Test017ElseIf3() =
+        let template = Template("""{% if 9<=1%}1{%elseif 2>1%}3{%endif%}""")
+        let templateExpected = "3"
+        let page = template.Render([| |])
+        sc templateExpected page
+    [<Test>]
+    member x.Test018ElseIf1() =
         let template = Template("""{% if 9<=11%}1{%elseif 2>1%}3{%endif%}""")
         let templateExpected = "1"
         let page = template.Render([| |])
         sc templateExpected page
 
     [<Test>]
-    member x.Test019ElseIf() =
+    member x.Test019ElseIf4() =
         let template = Template("""{% if 9<=1%}1{%elseif 2>4%}3{%elseif 2>1%}4{%else%}5{%endif%}""")
         let templateExpected = "4"
         let page = template.Render([| |])
         sc templateExpected page
 
     [<Test>]
-    member x.Test020ElseIf() =
+    member x.Test020ElseIf5() =
         let template = Template("""{% if 9<=1%}1{%elseif 2>4%}3{%elseif 2>5%}4{%else%}5{%endif%}""")
         let templateExpected = "5"
         let page = template.Render([| |])
         sc templateExpected page
 
+    [<Test>]
+    member x.Test021ElseIfEmpty0() =
+        let template = Template("""{% if 9<=1%}{%elseif 4>2%}3{%endif%}""")
+        let templateExpected = "3"
+        let page = template.Render([| |])
+        sc templateExpected page
+    [<Test>]
+    member x.Test021ElseIfEmpty1() =
+        let template = Template("""{% if 9<=1%}{%elseif 2>4%}3{%elseif 2>5%}4{%else%}5{%endif%}""")
+        let templateExpected = "5"
+        let page = template.Render([| |])
+        sc templateExpected page
+    [<Test>]
+    member x.Test021ElseIfEmpty2() =
+        let template = Template("""{% if 9<=1%}{%elseif 2>4%}3{%elseif 2>5%}{%else%}5{%endif%}""")
+        let templateExpected = "5"
+        let page = template.Render([| |])
+        sc templateExpected page
+    [<Test>]
+    member x.Test021ElseIfEmpty3() =
+        let template = Template("""{% if 9<=1%}{%elseif 2>4%}3{%elseif 2>5%}{%else%}{%endif%}""")
+        let templateExpected = ""
+        let page = template.Render([| |])
+        sc templateExpected page
+    [<Test>]
+    member x.Test021ElseIfEmptyAll() =
+        let template = Template("""{% if 9<=1%}{%elseif 2>4%}{%elseif 2>5%}{%else%}{%endif%}""")
+        let templateExpected = ""
+        let page = template.Render([| |])
+        sc templateExpected page
+    [<Test>]
+    member x.Test022Nested1() =
+        let template = Template("""{% if 9<=1%}{%elseif 2>1%}{%if 1==1%}1{%else%}0{%endif%}{%elseif 2>5%}{%else%}{%endif%}""")
+        let templateExpected = "1"
+        let page = template.Render([| |])
+        sc templateExpected page
+    [<Test>]
+    member x.Test022Nested2() =
+        let template = Template("""{% if 9<=1%}{%elseif 2>1%}{%if 1==0%}1{%else%}0{%endif%}{%elseif 2>5%}{%else%}{%endif%}""")
+        let templateExpected = "0"
+        let page = template.Render([| |])
+        sc templateExpected page
+
 end
 
+[<TestFixture>]
+type TestParseError() = class
+    [<Test>]
+    member x.missingEndFor1() =
+        try
+            let _ = Template("{% for x in range(1,10)%}whatever")
+            ()
+        with _ as exc ->
+            let expected = "ERROR: parse error, likely unbalanced elements in template, parsed\n for x in range(1,10)\nwhatever\n"
+            sc expected exc.Message
+
+    [<Test>]
+    member x.ifNonSequiter1() =
+        try
+            let template = Template("{% if 1==1 %}{%endfor%}")
+            ()
+        with _ as exn ->
+            let expected = "ERROR: parsing tail of IF block, unparseable: Endfor\n"
+            sc expected exn.Message
+end
+
+  
 [<TestFixture>]
 type TestIfParsing() = class   
     [<Test>]

@@ -28,6 +28,10 @@ module Template =
                             yield '_'
                         } |> Set.ofSeq
 
+    let parseError where (what:char list) =
+        let s = new String(Array.ofList what)
+        sprintf "ERROR: %s, encountered unexpected %s" where (s.Substring(0,min 50 s.Length))
+
     /// Components of mathematical expressions
     type   Expression =
             | VARIABLE of string
@@ -264,7 +268,7 @@ module Template =
                 for part in parts do
                     stdout.Write(indent)
                     match part with 
-                        | TEXT(b) -> yield sprintf "text: %s\n" b
+                        | TEXT(b) -> yield sprintf "%s\n" b
                         | CURLYBLOCK(v) -> yield sprintf "Var: %s\n" (ppExpr v)
                         | LOGIC(v) -> yield sprintf "Logic: %s\n" v
                         | EXTENDS(file) -> yield sprintf "Extends: %s\n" file
@@ -272,8 +276,8 @@ module Template =
                                     yield sprintf "ExtendsBunded:\n" 
                                     yield (pp (indent+"111>") l1)
                                     yield (pp (indent+"222>") l2)
-                        | INCLUDE(file) -> yield sprintf "Include: %s\n" file
-                        | FORSTART(fv,fi) -> yield sprintf "For: %s in %s\n" fv (ppExpr fi)
+                        | INCLUDE(file) -> yield sprintf "include %s\n" file
+                        | FORSTART(fv,fi) -> yield sprintf "for %s in %s\n" fv (ppExpr fi)
                         | ENDBLOCK(name) -> yield sprintf "Endblock %s\n" (match name with | Some(x) -> x | None -> "none")
                         | BLOCKSTART(name) -> yield sprintf "Startblock %s\n" name
                         | BLOCK(name,contents) ->
@@ -323,7 +327,6 @@ module Template =
                             | "raw" -> RAW
                             | "endraw" -> ENDRAW
                             | "endif" -> ENDIF
-                            | "else" -> ELSE
                             | x when x.StartsWith("block") -> BLOCKSTART(x.[5..].Trim()) // startblock
                             | x when x.StartsWith("endblock") -> ENDBLOCK(Some(x.[8..].Trim())) // named endblock
                             | x when x.StartsWith("extends") -> 
@@ -346,15 +349,16 @@ module Template =
                                                     match forVar with
                                                         | VARIABLE(v) -> FORSTART(v,targetVar)
                                                         | _ as x -> failwithf "ERROR: for loops must take form for x in y where x is a variable"
-                                            | _ as x -> failwithf "ERROR: bad for loop format %A" x
+                                            | _ as x -> parseError "bad for loop format" x |> failwith
                             | x when x.StartsWith("if") -> 
                                         match (List.ofSeq x.[3..]) with
-                                                    | BoolExpr(c,[]) -> IFSTART(c) // boolean expression like if x
-                                                    | _ as x -> failwithf "ERROR: parsing if expression, unparseable expression encountered %A" x
+                                                    | Ws(BoolExpr(c,[])) -> IFSTART(c) // boolean expression like if x
+                                                    | _ as x -> parseError "parsing if expression" x |> failwith
                             | x when x.StartsWith("elseif") -> 
-                                        match (List.ofSeq x.[3..]) with
-                                                    | BoolExpr(c,[]) -> ELSEIF(c) // boolean expression like if x
-                                                    | _ as x -> failwithf "ERROR: parsing elseif expression, unparseable expression encountered %A" x
+                                        match (List.ofSeq x.[6..]) with
+                                                    | Ws(BoolExpr(c,[])) -> ELSEIF(c) // boolean expression like if x
+                                                    | _ as x -> parseError "parsing elseif expression" x |> failwith
+                            | "else" -> ELSE
                             | _ as x -> UNKNOWNLOGIC(x)
 
 
@@ -443,19 +447,38 @@ module Template =
             else
                  failwithf "ERROR processing template BLOCK %s doesn't match endblock %s" name 
                         (match name2 with | Some(x)->x | None -> "none")
-        | IFSTART(f)::ParsedSections(body,ENDIF::tl) -> Some(IF({expression=f;trueTemplate=body;elsePart=None}),tl) // Gather up IF/ENDIF blocks
-        | IFSTART(f)::ENDIF::tl -> Some(IF({expression=f;trueTemplate=[];elsePart=None}),tl) // Gather up IF/ENDIF blocks empty body
-        | IFSTART(f)::ParsedSections(body,ELSE::ParsedSections(body2,ENDIF::tl)) -> 
-                    Some(IF({expression=f;trueTemplate=body;elsePart=Some(PLAINELSE(body2))}),tl) // Gather up IF/ENDIF blocks
-        | IFSTART(f)::ELSE::ParsedSections(body2,ENDIF::tl) -> 
-                    Some(IF({expression=f;trueTemplate=[];elsePart=Some(PLAINELSE(body2))}),tl) // Gather up IF/ENDIF blocks
-        //| IFSTART(f)::ELSE::ParsedSections(body2,ENDIF::tl) -> 
-        //            Some(IF({expression=f;trueTemplate=[];elsePart=Some(PLAINELSE(body2))}),tl) // Gather up IF/ENDIF blocks
-        | IFSTART(f)::ELSE::ENDIF::tl -> Some(IF({expression=f;trueTemplate=[];elsePart=Some(PLAINELSE([]))}),tl) // Gather up IF/ENDIF blocks
+        | IFSTART(f)::tl -> // Beginning of IF then else logic.  The first IF is a special case that occurs once
+            match tl with
+                | IfBody f (ifData,tl) -> Some(ifData,tl)
         | CURLYBLOCK(e)::tl -> Some(CURLYBLOCK(e),tl)
         | EXTENDSBUNDLED(subs,body):: tl -> Some(EXTENDSBUNDLED(subs,body),tl)
         | _  as x -> None
-        
+    /// Wrapper to handle case of IF ELSE or IF ELSEIF  with empty body
+    and (|MaybeParsedSection|) = function
+        | ParsedSections(sections,tl) -> sections,tl
+        | _ as x -> [],x
+    /// ALl the logic after the initial IF statement,  i.e. body of if and subsequent sections like else
+         
+    and (|IfEnd|) cond1 b tl = 
+        match tl with
+        | ENDIF::tl ->  // Simple END - all done,  wrap up this block as a simple IF/IFELSE ... END
+            {expression=cond1;trueTemplate=b;elsePart=None},tl // Gather up IF/ENDIF blocks empty body
+        | ELSEIF(cond2)::tl2 -> // Else if - the parsing will continue, parse recursively then build if / else type
+            match tl2 with
+                | IfBody cond2 (IF(ifData),tl3) ->
+                    {expression=cond1;trueTemplate=b;elsePart=Some(IFELSE(ifData))},tl3 // Gather up IF/ENDIF blocks
+                | _ as x -> failwithf "ERROR: processing if block, unexpected completion of elseif: %s" (pp "" tl)
+        | ELSE::MaybeParsedSection(body2,ENDIF::tl2) -> // simple else, we can wrap things up at this level
+                {expression=cond1;trueTemplate=b;elsePart=Some(PLAINELSE(body2))},tl2 // Gather up IF/ENDIF blocks
+        | _ as x -> failwithf "ERROR: parsing tail of IF block, unparseable: %s" (pp "" tl)
+            
+    and (|IfBody|) f tl = 
+        match tl with
+        | MaybeParsedSection(body,tl2) ->
+            match tl2 with
+                | IfEnd f body (ifEnd,tl3) ->
+                    IF(ifEnd),tl3
+
     and (|ParsedSections|_|) = function
                 | ParsedSection(p,ParsedSections(p2,rem)) -> Some(p::p2,rem)
                 | ParsedSection(p,rem) -> Some([p],rem)
@@ -464,7 +487,7 @@ module Template =
 
     and (|Parsed|) = function
             | ParsedSections(p,[]) -> p
-            | _ as p -> failwithf "ERROR: parse error, likely unbalanced elements in template, got to %A" p
+            | _ as p -> failwithf "ERROR: parse error, likely unbalanced elements in template, parsed\n %s" (pp "" p)
 
     // -------------------------------------------------------------------------------------------------
 
@@ -876,8 +899,7 @@ module Template =
                                         | None -> () // No else statement
                                         | Some(PLAINELSE pe) -> expandParts  locals blocks pe
                                         | Some(IFELSE ifE) -> expandParts  locals blocks ([IF(ifE)])
-                            | ELSEIF(cond) ->
-                                failwithf "FIXFIX: unimplemented elseif"
+
                             | BLOCK(name,body) ->   
                                 match blocks.TryFind name with
                                     | None -> expandParts locals blocks body // Use existing block body since it hasn't been replaced
@@ -918,7 +940,7 @@ module Template =
                                 // FIXFIX - this should now be an expression, need to evaluate????
                                 let vf = VarFetcher(ve,locals) 
                                 calc vf e |> ppExpr |> sb.Append |> ignore
-                            | IFSTART(_)  | BLOCKSTART(_) | ENDBLOCK(_) | ENDFOR | ENDIF | ENDRAW | FORSTART(_) | LOGIC(_) | ELSE as x -> 
+                            | IFSTART(_)  | BLOCKSTART(_) | ENDBLOCK(_) | ENDFOR | ENDIF | ENDRAW | FORSTART(_) | LOGIC(_) | ELSE | ELSEIF _ as x -> 
                                 failwithf "Internal error: Unexpected %A element that should have been consolidated" x
                             | UNKNOWNLOGIC(u) -> 
                                 failwithf "Unknown logic element %A encountered in expansion" u
