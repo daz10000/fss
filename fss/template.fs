@@ -298,7 +298,7 @@ module Template =
     let rec (|ForIter|_|) = function
                 | Atom(fv,remainder) ->
                     let rec aux = function
-                                        | 'i'::'n'::' '::Atom(fi,remainder2) -> Some(fv,fi)
+                                        | 'i'::'n'::' '::Expr(fi,remainder2) -> Some(fv,fi)
                                         | ' '::tl -> aux tl
                                         | _ as x -> failwithf "ERROR: unexpected near %s" (new String(Array.ofList x))
                     aux remainder
@@ -873,8 +873,9 @@ module Template =
                             | INCLUDE(file) -> sb.Append(fetcher file) |> ignore  // debatable whether this should be here, since we should have expanded away earlier.
                             | EXTENDS(file) -> failwithf "ERROR: unimpemented extends for file %s" file // FIXFIX
                             | FOR(fv,expr,parts) ->
+                                let vf = VarFetcher(ve,locals) 
                                 let arr = 
-                                    match expr with
+                                    match calc vf expr with
                                         | VARIABLE(name) -> 
                                             match (match (lookupLocals locals name) with | Some(s) ->s | None -> ve.Get(name) ) (* ve.Get(name) *) with
                                                 | ARRAYCONST(expArr) -> expArr
