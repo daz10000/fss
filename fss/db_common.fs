@@ -14,6 +14,12 @@ module Common =
     open Fss.Pool // used for database handle pooling
     
 
+    /// Represents the 
+    type Customization<'Parameter when 'Parameter :> DbParameter 
+                                    and 'Parameter:(new:unit->'Parameter)  > =
+        abstract member makeEnum: string->string->'Parameter
+   
+
     type ConnOpts = {  mutable logfile : StreamWriter option ; mutable logfileName : string option ; mutable logQueries : bool;
                             mutable logLongerThan : float ; mutable logConnUse : bool }
 
@@ -85,7 +91,7 @@ module Common =
    
 
     /// Details of one table column for dynamic record filling
-    type ColDetail = { cname : string ; ctype : string ; cpos : int16 ; cNotNull : bool}
+    type ColDetail = { typType : char ; cname : string ; ctype : string ; cpos : int16 ; cNotNull : bool}
 
     /// SqlConnection wrapper that allows creating stored 
     /// procedure calls using the dynamic access operator
@@ -96,7 +102,17 @@ module Common =
         abstract member InsertOne : item:'T * ?table:string * ?ignoredColumns:seq<string> -> 'R
         abstract member ExecuteScalar : sql:string -> obj
 
-    and DynamicSqlConnection<'Conn,'Parameter when 'Parameter :> DbParameter and 'Parameter:(new:unit->'Parameter) and 'Conn :> DbConnection and 'Conn:(new:unit->'Conn) and 'Conn:equality>(connStr:string,poolSize:int) =
+    and DynamicSqlConnection<'Conn,'Parameter,'Customizer when 'Parameter :> DbParameter 
+                                and 'Parameter:(new:unit->'Parameter) 
+                                and 'Conn :> DbConnection 
+                                and 'Conn:(new:unit->'Conn) 
+                                and 'Conn:equality
+                                and 'Customizer :> Customization<'Parameter>
+                                and 'Customizer:(new:unit -> 'Customizer)
+                                >(connStr:string,poolSize:int)  =
+          /// This class provides any functions we will need to handle
+          /// db flavor specific customization
+          let customizer = new 'Customizer()
           let pool = new Pool<DbConnection>(poolSize,fun _ -> 
                                                 let c = new 'Conn()
                                                 c.ConnectionString <- connStr
@@ -157,7 +173,7 @@ module Common =
                  x.ExecuteScalar(sql) 
 
                                                     
-          member x.InsertMany<'T,'R> (items : 'T seq,?table:string,?transProvided:DynamicSqlTransaction<'Parameter,'Conn>,?ignoredColumns:string seq) =
+          member x.InsertMany<'T,'R> (items : 'T seq,?table:string,?transProvided:DynamicSqlTransaction<'Parameter,'Conn,'Customizer>,?ignoredColumns:string seq) =
             // Determine table name from item to be inserted
             let table = match table with
                             | Some(x) -> x.ToLower()
@@ -170,7 +186,7 @@ module Common =
                 | None -> Set.empty
 
             // Inspect table definition.
-            use command : DynamicSqlCommand<'Parameter> = x.Command "select a.attname as attname,t.typname as tname,attnum,attnotnull from 
+            use command : DynamicSqlCommand<'Parameter> = x.Command "select t.typtype,a.attname as attname,t.typname as tname,attnum,attnotnull from 
                                                             pg_class c JOIN pg_attribute a ON c.oid = a.attrelid 
                                                             JOIN pg_type t ON t.oid = a.atttypid WHERE
                                                             c.relname = :tablename AND
@@ -181,7 +197,7 @@ module Common =
             /// db columns
             let cols =
                     seq { while r.Read() do
-                            yield { cname = r?attname; ctype = r?tname ; cpos = r?attnum ; cNotNull =r?attnotnull}
+                            yield { typType = r?typtype ; cname = r?attname; ctype = r?tname ; cpos = r?attnum ; cNotNull =r?attnotnull}
                     } |> Array.ofSeq
 
             if cols.Length = 0 then
@@ -236,55 +252,60 @@ module Common =
                                     returningClause
                             
                         /// Transaction to wrap the insertion into    
-                        let trans : DynamicSqlTransaction<'Parameter,'Conn> = 
+                        let trans : DynamicSqlTransaction<'Parameter,'Conn,'Customizer> = 
                                     match transProvided with
                                         | None -> x.StartTrans()  // they didn't give us one, make it
                                         | Some t -> t
 
                         use comm2 : DynamicSqlCommand<_> = trans.cc sql
-                        // let vals = fields |> Array.mapi (fun i f -> NpgsqlParameter(sprintf "p%d" (i+1),f.GetValue(item,null)))
-
-                        (*
-                        let vals = [| for i in 1..fields.Length ->
-                                            comm2.Parameters.Add(sprintf "p%d" i,null) |]
-                        *)
-                        
+                       
+                        /// Named parameters matching each required field
                         let vals = fields |> Array.mapi (fun i f ->  
-                                                            let p = new 'Parameter() //:> DbParameter
-                                                            p.ParameterName <- sprintf "p%d" (i+1)
-                                                            p
+                                                            let pName =sprintf "p%d" (i+1)
+                                                            if cols.[i].typType = 'e' then
+                                                                // Enum type
+                                                                let p = customizer.makeEnum pName ""
+                                                                p
+                                                            else
+                                                                let p = new 'Parameter() //:> DbParameter
+                                                                p.ParameterName <- pName
+                                                                p
                                                           )
 
                         comm2.Parameters.AddRange(vals)
                         
 
                         /// Are any of the fields option types / and nullable in database
-                        let nullOption = fields |> Array.mapi (fun i f ->
-                                                                let pt = f.PropertyType
-                                                                let isOption = pt.IsGenericType &&  pt.GetGenericTypeDefinition() = genericOptionType
-                                                                let isNotNull = (cols |> Array.find (fun c -> c.cname = f.Name.ToLower())).cNotNull
-                                                                match isOption,isNotNull with
-                                                                    | true,false -> true
-                                                                    | true,true -> failwithf "ERROR: field %s is option but not nullable" f.Name
-                                                                    | false,true -> false
-                                                                    | false,false -> failwithf "ERROR:field %s is not option but is nullable" f.Name
-                                                              )
+                        let nullOption = 
+                            fields 
+                            |> Array.mapi (fun i f ->
+                                            let pt = f.PropertyType
+                                            let isOption = pt.IsGenericType &&  pt.GetGenericTypeDefinition() = genericOptionType
+                                            let isNotNull = (cols |> Array.find (fun c -> c.cname = f.Name.ToLower())).cNotNull
+                                            match isOption,isNotNull with
+                                                | true,false -> true
+                                                | true,true -> failwithf "ERROR: field %s is option but not nullable in db" f.Name
+                                                | false,true -> false
+                                                | false,false -> failwithf "ERROR:field %s is not option but is nullable in db" f.Name
+                                            )
                         /// Sequence of return values from serially processing each item in items
                         let ret = seq {
                                         for item in items do
                                             //Process the field definitions and poke values into the dbparameter array vals
-                                            fields |> Array.iteri (fun i f -> 
-                                                                        if nullOption.[i] then
-                                                                            // Field can be null and will be defined as an option on the F# record
-                                                                            // side so extract differently
-                                                                            let v1 = f.GetValue(item,null)
-                                                                            vals.[i].Value <- (
-                                                                                    if v1=null then null else
-                                                                                        let t2 = f.PropertyType.GetProperty("Value")
-                                                                                        t2.GetValue(v1,null)
-                                                                                        )
-                                                                        else
-                                                                            vals.[i].Value <- f.GetValue(item,null))
+                                            fields |> 
+                                                Array.iteri 
+                                                    (fun i f -> 
+                                                        if nullOption.[i] then
+                                                            // Field can be null and will be defined as an option on the F# record
+                                                            // side so extract differently
+                                                            let v1 = f.GetValue(item,null)
+                                                            vals.[i].Value <- (
+                                                                    if v1=null then box DBNull.Value else
+                                                                        let t2 = f.PropertyType.GetProperty("Value")
+                                                                        t2.GetValue(v1,null)
+                                                                        )
+                                                        else
+                                                            vals.[i].Value <- f.GetValue(item,null))
                                             // Finally execute insert stmt and capture return value
                                             yield (comm2 .ExecuteScalar() :?> 'R )
                                     } |> Array.ofSeq
@@ -295,7 +316,11 @@ module Common =
                             (trans :> IDisposable).Dispose()
                         ret
 
-          member x.InsertOne<'T,'R> (item : 'T,?table:string,?transProvided:DynamicSqlTransaction<'Parameter,'Conn>,?ignoredColumns:string seq) = 
+          member x.InsertOne<'T,'R> (
+                                    item : 'T,
+                                    ?table:string,
+                                    ?transProvided:DynamicSqlTransaction<'Parameter,'Conn,'Customizer>,
+                                    ?ignoredColumns:string seq) = 
             match table,transProvided,ignoredColumns with
             | None,None,None -> x.InsertMany<'T,'R>([item]).[0]
             | Some(t),None,None -> x.InsertMany<'T,'R>([item],table=t).[0]
@@ -306,7 +331,7 @@ module Common =
             | None,Some(t),Some(cols) -> x.InsertMany<'T,'R>([item],transProvided=t,ignoredColumns=cols).[0]
             | Some(ta),Some(tr),Some(cols) -> x.InsertMany<'T,'R>([item],table=ta,transProvided=tr,ignoredColumns=cols).[0]
 
-          member x.Query<'T>(sql:string,?transProvided:DynamicSqlTransaction<'Parameter,'Conn>) : seq<'T> =
+          member x.Query<'T>(sql:string,?transProvided:DynamicSqlTransaction<'Parameter,'Conn,'Customizer>) : seq<'T> =
             
             let command : DynamicSqlCommand<'Parameter> = 
                 match transProvided with
@@ -374,10 +399,10 @@ module Common =
             use comm = x.Command sql
             comm.ExecuteScalar()
 
-          new(connStr:string) = new DynamicSqlConnection<'Conn,'Parameter>(connStr,10)
+          new(connStr:string) = new DynamicSqlConnection<'Conn,'Parameter,'Customizer>(connStr,10)
           member private x.Pool = pool
           /// Creates command that calls the specified stored procedure
-          static member (?) (conn:DynamicSqlConnection<'Conn,'Parameter>, name) = 
+          static member (?) (conn:DynamicSqlConnection<'Conn,'Parameter,'Customizer>, name) = 
             let connection = conn.Take() 
             use command =  connection.CreateCommand() 
             command.CommandText <- name 
@@ -395,7 +420,7 @@ module Common =
           member x.StartTrans() = 
             //let conn = x.Take() // reserve a connection that will be shared across the transaction
             //new DynamicSqlTransaction<'Parameter>(conn,(fun () -> x.Release(conn)),x.Opts,x.Log)
-            new DynamicSqlTransaction<'Parameter,'Conn>(x,x.Opts,x.Log)
+            new DynamicSqlTransaction<'Parameter,'Conn,'Customizer>(x,x.Opts,x.Log)
 
           interface IDisposable with
             member x.Dispose() = 
@@ -409,11 +434,13 @@ module Common =
     /// connection and transcation set correctly
     //and DynamicSqlTransaction<'Parameter when 'Parameter :> DbParameter and 'Parameter:(new:unit->'Parameter)>(conn:DbConnection,dispose:unit->unit,opts:ConnOpts,log:string->unit) =
     and DynamicSqlTransaction<'Parameter,
-                              'Conn when 'Parameter :> DbParameter 
+                              'Conn,'Customizer when 'Parameter :> DbParameter 
                                     and 'Parameter:(new:unit->'Parameter)  
                                     and 'Conn :> DbConnection 
                                     and 'Conn:(new:unit->'Conn) 
-                                    and 'Conn:equality>(conn:DynamicSqlConnection<'Conn,'Parameter>,
+                                    and 'Customizer:(new:unit -> 'Customizer)
+                                    and 'Customizer :> Customization<'Parameter>
+                                    and 'Conn:equality>(conn:DynamicSqlConnection<'Conn,'Parameter,'Customizer>,
                                                         opts:ConnOpts,
                                                         log:string->unit) =
         let baseConn :DbConnection = conn.Take()

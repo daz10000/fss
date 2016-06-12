@@ -56,10 +56,38 @@ create table Test4 (
     constraint pk_t4 primary key(id)
 )"""
 
+/// rarer types
+let createT5SQL = """
+create table Test5 (
+    a	        int2 not null,
+    b           decimal not null
+)"""
+
+
+// requires enum1
+let createT6SQL = """
+create table Test6 (
+    id              int,
+    first	        varchar(100)  not null,
+    temperment      mood not null,
+    constraint pk_t6 primary key(id)
+)"""
+
+
+let createMoodEnum = "CREATE TYPE mood AS ENUM ('sad', 'ok', 'happy')"
+let dropMoodEnum = "drop type if exists mood "
+
 type Test4 = { id : int ; age : int option ; first : string option ; last : string option; rate : float option ; happy : bool option}
+type Test5 = { a : int16 ; b : decimal}
+type Test6 = { id : int ; first : string ; temperment : string}
 
 let t4a = { id = -1 ; age = Some(40) ; first = Some "wilma" ; last = Some "flintstone" ; rate = Some 1.256 ; happy = Some true}
 let t4b = { id = -1 ; age = None ; first = None ; last = None ; rate = None ; happy = None}
+let t5a = { a = 15s ; b = 1.2M}
+
+type Temperment = Happy | Sad | Ok
+let t6a = { id =1 ; first = "wilma" ; temperment = "happy"}
+let t6b = { id =2 ; first = "fred" ; temperment = "sad"}
 
 let getConnString() =
     if not (File.Exists("connection_postgres.txt")) then
@@ -76,12 +104,18 @@ let createT1 (conn:DynamicSqlConnection) = conn.ExecuteScalar(createT1SQL) |> ig
 let createT2 (conn:DynamicSqlConnection) = conn.ExecuteScalar(createT2SQL) |> ignore
 let createT3 (conn:DynamicSqlConnection) = conn.ExecuteScalar(createT3SQL) |> ignore
 let createT4 (conn:DynamicSqlConnection) = conn.ExecuteScalar(createT4SQL) |> ignore
-
+let createT5 (conn:DynamicSqlConnection) = conn.ExecuteScalar(createT5SQL) |> ignore
+let createT6 (conn:DynamicSqlConnection) = conn.ExecuteScalar(createT6SQL) |> ignore
+let createEnum1 (conn:DynamicSqlConnection) = conn.ExecuteScalar(createMoodEnum) |> ignore
+let dropEnum1 (conn:DynamicSqlConnection) = conn.ExecuteScalar(dropMoodEnum) |> ignore
 
 let setupT1 (conn:DynamicSqlConnection) = drop "test1" conn ; createT1 conn
 let setupT2 (conn:DynamicSqlConnection) = drop "test2" conn ; createT2 conn
 let setupT3 (conn:DynamicSqlConnection) = drop "test3" conn ; createT3 conn
 let setupT4 (conn:DynamicSqlConnection) = drop "test4" conn ; createT4 conn
+let setupT5 (conn:DynamicSqlConnection) = drop "test5" conn ; createT5 conn
+let setupT6 (conn:DynamicSqlConnection) = drop "test6" conn ; createT6 conn
+let setupE1 (conn:DynamicSqlConnection) = dropEnum1 conn ; createEnum1 conn
 
 
 [<TestFixture>]
@@ -128,6 +162,15 @@ type TestPGDbBasic() = class
         Assert.IsTrue(conn.ExecuteScalar "select count(*) from test1" :?> int64 = 1L) |> ignore
         ()
 
+    [<Test>]
+    member x.Test008SingleSimpleInsertWithCheckOddTypes() =
+        use conn = gc()
+        setupT5 conn
+        conn.InsertOne(t5a)
+        Assert.IsTrue(conn.ExecuteScalar "select count(*) from test5" :?> int64 = 1L) |> ignore
+        ()
+
+
     /// Test serial and default fields are provided by db
     [<Test>]
     member x.Test010SingleSerialInsertWithCheck() =
@@ -172,7 +215,7 @@ type TestPGDbBasic() = class
         use conn = gc()
         setupT4 conn
         conn.InsertMany ([ t4a ; t4b ],ignoredColumns=["id"]) |> ignore
-        let results = conn.Query "select * from test4 order by id asc"  |> Array.ofSeq
+        let results : Test4 [] = conn.Query "select * from test4 order by id asc"  |> Array.ofSeq
         let wilma = results.[0]
         let original = {t4a with id = wilma.id}
         let matches = wilma = original
@@ -181,7 +224,6 @@ type TestPGDbBasic() = class
         let original2 = {t4b with id = results.[1].id}
         let matches2 = original2 = results.[1]
         Assert.IsTrue(matches2)
-
 
     [<Test>]
     member x.Test050InsertOneLogged() =
@@ -192,6 +234,96 @@ type TestPGDbBasic() = class
         conn.InsertOne<Test4,int>(t4a,ignoredColumns=["id"]) |> ignore
        
 end
+
+[<TestFixture>]
+type TestEnums() = class
+    let conn = gc()
+    do
+        try
+            dropEnum1 conn
+        with _ ->
+            ()
+
+        drop "test6" conn
+        dropEnum1 conn
+
+    [<Test>]
+    member x.Test001Enum1() =
+        // can we create an enum
+        setupE1 conn
+    
+    [<Test>]
+    member x.Test002TableWithEnum() =
+        setupE1 conn
+        createT6 conn
+        drop "test6" conn
+        dropEnum1 conn
+
+    [<Test>]
+    member x.Test003Insert() =
+        setupE1 conn
+        createT6 conn
+
+        let ids : int [] = conn.InsertMany [|  t6a ; t6b |] 
+
+        drop "test6" conn
+        dropEnum1 conn
+
+    [<Test>]
+    member x.Test003InsertAndQuery() =
+        setupE1 conn
+        createT6 conn
+
+        let ids : int [] = conn.InsertMany [|  t6a ; t6b |] 
+
+        let mood :string = sprintf "select temperment::text from test6 where id = %d" (ids.[0]) |> conn.ExecuteScalar :?> string
+
+        Assert.AreEqual (mood, "happy")
+        drop "test6" conn
+        dropEnum1 conn
+
+
+    [<Test>]
+    member x.Test005EnumByOperator() =
+        setupE1 conn
+        createT6 conn
+
+        let ids : int [] = conn.InsertMany [|  t6a ; t6b |] 
+
+        use comm = conn.Command "select * from test6 where first='wilma'"
+        use reader = comm.ExecuteReader()
+        reader.Read()|> ignore
+        let id : int = reader?id
+        let y : string  = reader?temperment
+        Assert.AreEqual(y,"happy")
+
+    [<Test>]
+    member x.Test004Query() =
+        setupE1 conn
+        createT6 conn
+
+        let ids : int [] = conn.InsertMany [|  t6a ; t6b |] 
+
+
+        let records : Test6[] = conn.Query "select * from test6 order by id asc" |> Array.ofSeq
+
+        Assert.AreEqual(records.Length,2)
+        Assert.AreEqual("wilma",records.[0].first)
+        Assert.AreEqual("fred",records.[1].first)
+        Assert.AreEqual("happy",records.[0].temperment)
+        Assert.AreEqual("sad",records.[1].temperment)
+
+        drop "test6" conn
+        dropEnum1 conn
+        
+    interface IDisposable with
+        member x.Dispose() =
+            dropEnum1 conn
+            (conn :> IDisposable).Dispose()
+
+end
+
+
 
 [<TestFixture>]
 type TestTransactions() = class
@@ -351,7 +483,6 @@ type TestTransactions() = class
         trans2.InsertOne(t1a) |> ignore
         // confirm that the transaction is isolated
         Assert.IsTrue(conn.ExecuteScalar "SELECT COUNT(*) FROM test1" :?> int64 = 0L)
-
 
         let results : Test1 [] = trans.Query "select * from test1"  |> Array.ofSeq
         Assert.IsTrue(results.Length=3)

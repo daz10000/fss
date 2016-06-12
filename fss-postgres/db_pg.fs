@@ -8,8 +8,17 @@ open System.IO
 open Npgsql
 open System.Data
 
-module Postgres =
+module Postgres = 
+
+    type PgCustomizations() =  class
+        interface Fss.Data.Common.Customization<NpgsqlParameter> with
+            member x.makeEnum name v =
+                let p = Npgsql.NpgsqlParameter(name,v)
+                p.NpgsqlDbType<-NpgsqlTypes.NpgsqlDbType.Unknown
+                p
+    end
+
     type ISqlConnection = Fss.Data.Common.ISqlConnection
-    type DynamicSqlConnection = Fss.Data.Common.DynamicSqlConnection<NpgsqlConnection,NpgsqlParameter>
-    type DynamicSqlTransaction = Fss.Data.Common.DynamicSqlTransaction<NpgsqlParameter,NpgsqlConnection>
+    type DynamicSqlConnection = Fss.Data.Common.DynamicSqlConnection<NpgsqlConnection,NpgsqlParameter,PgCustomizations>
+    type DynamicSqlTransaction = Fss.Data.Common.DynamicSqlTransaction<NpgsqlParameter,NpgsqlConnection,PgCustomizations>
 

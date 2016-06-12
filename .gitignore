@@ -20,5 +20,6 @@
 /packages/Newtonsoft.Json*
 /packages/Mono.Security*
 /packages/MySql.Data*
-/fss.suo
+*.suo
 /fss/*.swp
+*.nuspec~
