@@ -96,7 +96,7 @@ let getConnString() =
         System.IO.File.ReadAllText("connection_postgres.txt")
 
 // reusable primitives for testing
-let gc() = new DynamicSqlConnection(getConnString())
+let gc() = new DynamicSqlConnection(getConnString(),4)
 let drop table (conn:DynamicSqlConnection)  = table |> sprintf "drop table if exists %s" 
                                                 |> conn.ExecuteScalar |> ignore
 
@@ -238,9 +238,23 @@ end
 [<TestFixture>]
 type TestEnums() = class
     let conn = gc()
+
+    /// setup enum and table
+    let setupET() =
+        drop "test6" conn
+        dropEnum1 conn
+        setupE1 conn
+        createT6 conn
+        conn.Reload()
+    /// drop enum and table
+    let dropET() =
+        drop "test6" conn
+        dropEnum1 conn
+
     do
         try
             dropEnum1 conn
+            ()
         with _ ->
             ()
 
@@ -250,24 +264,22 @@ type TestEnums() = class
     [<Test>]
     member x.Test001Enum1() =
         // can we create an enum
+        drop "test6" conn // just in case this is still here and dependent
         setupE1 conn
-    
-    [<Test>]
-    member x.Test002TableWithEnum() =
-        setupE1 conn
-        createT6 conn
-        drop "test6" conn
-        dropEnum1 conn
+        dropET()
 
     [<Test>]
-    member x.Test003Insert() =
-        setupE1 conn
-        createT6 conn
+    member x.Test002TableWithEnum() =
+        setupET()
+        dropET()
+
+    [<Test>]
+    member x.Test003Insert()=
+        setupET()
 
         let ids : int [] = conn.InsertMany [|  t6a ; t6b |] 
 
-        drop "test6" conn
-        dropEnum1 conn
+        dropET()
 
     [<Test>]
     member x.Test003InsertAndQuery() =
@@ -282,11 +294,22 @@ type TestEnums() = class
         drop "test6" conn
         dropEnum1 conn
 
+    [<Test>]
+    member x.Playground() =
+        setupET()
 
+        let ids : int [] = conn.InsertMany [|  t6a ; t6b |] 
+
+        use conn2 = gc()
+        use comm = conn2.Command "select * from test6"
+        use reader = comm.ExecuteReader()
+        while reader.Read() do
+            let x : int32  = reader?id
+            let y : string  = reader?temperment
+            printfn "%d %s" x y
     [<Test>]
     member x.Test005EnumByOperator() =
-        setupE1 conn
-        createT6 conn
+        setupET()
 
         let ids : int [] = conn.InsertMany [|  t6a ; t6b |] 
 
@@ -299,8 +322,7 @@ type TestEnums() = class
 
     [<Test>]
     member x.Test004Query() =
-        setupE1 conn
-        createT6 conn
+        setupET()
 
         let ids : int [] = conn.InsertMany [|  t6a ; t6b |] 
 
@@ -318,6 +340,7 @@ type TestEnums() = class
         
     interface IDisposable with
         member x.Dispose() =
+            drop "test6" conn
             dropEnum1 conn
             (conn :> IDisposable).Dispose()
 

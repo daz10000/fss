@@ -74,6 +74,11 @@
     <Content Include="packages.config" />
   </ItemGroup>
   <ItemGroup>
+    <ProjectReference Include="..\fss\fss.fsproj">
+      <Name>fss</Name>
+      <Project>{507f216b-75e6-44dd-95d5-b13475da0d4d}</Project>
+      <Private>True</Private>
+    </ProjectReference>
     <Reference Include="FSharp.Core, Version=4.3.1.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a" />
     <Reference Include="mscorlib" />
     <Reference Include="MySql.Data">
@@ -104,11 +109,6 @@
     <ProjectReference Include="..\fss-postgres\fss-postgres.fsproj">
       <Name>fss-postgres</Name>
       <Project>{02149e9b-bce3-4989-a21b-299dc8c7586f}</Project>
-      <Private>True</Private>
-    </ProjectReference>
-    <ProjectReference Include="..\fss\fss.fsproj">
-      <Name>fss</Name>
-      <Project>{4adbc4f8-ffa1-4ef9-a773-85ef425cc07c}</Project>
       <Private>True</Private>
     </ProjectReference>
   </ItemGroup>

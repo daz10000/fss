@@ -11,11 +11,15 @@ open System.Data
 module Postgres = 
 
     type PgCustomizations() =  class
-        interface Fss.Data.Common.Customization<NpgsqlParameter> with
+        interface Fss.Data.Common.Customization<NpgsqlParameter,NpgsqlConnection> with
             member x.makeEnum name v =
                 let p = Npgsql.NpgsqlParameter(name,v)
                 p.NpgsqlDbType<-NpgsqlTypes.NpgsqlDbType.Unknown
                 p
+            member x.reloadTypes (conn:NpgsqlConnection) =
+                conn.ReloadTypes()
+                
+                
     end
 
     type ISqlConnection = Fss.Data.Common.ISqlConnection

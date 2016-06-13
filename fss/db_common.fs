@@ -15,9 +15,13 @@ module Common =
     
 
     /// Represents the 
-    type Customization<'Parameter when 'Parameter :> DbParameter 
-                                    and 'Parameter:(new:unit->'Parameter)  > =
+    type Customization<'Parameter,'Conn when 'Parameter :> DbParameter 
+                                    and 'Parameter:(new:unit->'Parameter)  
+                                    and 'Conn :> DbConnection 
+                                
+                                    > =
         abstract member makeEnum: string->string->'Parameter
+        abstract member reloadTypes:'Conn->unit
    
 
     type ConnOpts = {  mutable logfile : StreamWriter option ; mutable logfileName : string option ; mutable logQueries : bool;
@@ -107,7 +111,7 @@ module Common =
                                 and 'Conn :> DbConnection 
                                 and 'Conn:(new:unit->'Conn) 
                                 and 'Conn:equality
-                                and 'Customizer :> Customization<'Parameter>
+                                and 'Customizer :> Customization<'Parameter,'Conn>
                                 and 'Customizer:(new:unit -> 'Customizer)
                                 >(connStr:string,poolSize:int)  =
           /// This class provides any functions we will need to handle
@@ -153,6 +157,11 @@ module Common =
           member x.LogConnUse with get() = opts.logConnUse and set(v) = opts.logConnUse <- v  
           member x.LogQueries with get() = opts.logQueries and set(v) = opts.logQueries <- v  
           member x.LogLongerThan with get() = opts.logLongerThan  and set(v) = opts.logLongerThan <- v  
+
+          member x.Reload() =
+            // For each connection in the pool, run the customization provided function
+            // over it to reload any type information.
+            pool.Iter(fun conn -> customizer.reloadTypes (conn:?>'Conn) )
 
           interface ISqlConnection with
               member x.Query<'T>(sql) : seq<'T> =
@@ -439,7 +448,7 @@ module Common =
                                     and 'Conn :> DbConnection 
                                     and 'Conn:(new:unit->'Conn) 
                                     and 'Customizer:(new:unit -> 'Customizer)
-                                    and 'Customizer :> Customization<'Parameter>
+                                    and 'Customizer :> Customization<'Parameter,'Conn>
                                     and 'Conn:equality>(conn:DynamicSqlConnection<'Conn,'Parameter,'Customizer>,
                                                         opts:ConnOpts,
                                                         log:string->unit) =

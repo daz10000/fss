@@ -55,6 +55,10 @@ module Pool =
                     find ((i+1)%size) (steps+1)
             lock l1 (fun () -> find ((last+1)%size) 0)
         
+        /// Apply function f to every pool member (without locking first)
+        member x.Iter(f : 'T -> unit ) =
+            for z in x.Pool do
+                f(z)
         member private x.Pool = pool   
         interface IDisposable with
             member x.Dispose() = 
