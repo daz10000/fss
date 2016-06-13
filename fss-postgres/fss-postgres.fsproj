@@ -59,9 +59,7 @@
     <Error Condition="!Exists('$(SolutionDir)\.nuget\NuGet.targets')" Text="$([System.String]::Format('$(ErrorText)', '$(SolutionDir)\.nuget\NuGet.targets'))" />
   </Target>
   <ItemGroup>
-    <Compile Include="..\fss\version.fs">
-      <Link>version.fs</Link>
-    </Compile>
+    <Compile Include="version.fs" />
     <Compile Include="AssemblyInfo.fs" />
     <Compile Include="..\fss\pool.fs">
       <Link>pool.fs</Link>
