@@ -5,5 +5,5 @@ Hack to get nuget working with F# in VS2013 Community edition
 
 
 # publishing
-nuget push fss.1.3.1.0.nupkg -Source https://www.nuget.org/packages/fss
+'c:/bin/nuget.exe' push fss_postgres.1.4.0.0-alpha.nupkg  <apikey> -Source https://www.nuget.org/api/v2/package
 

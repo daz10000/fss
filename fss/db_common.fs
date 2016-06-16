@@ -13,6 +13,19 @@ module Common =
     open System
     open Fss.Pool // used for database handle pooling
     
+    
+
+    /// Details of one table column for dynamic record filling
+    type ColDetail = { 
+                        typType : char
+                        isEnum : bool
+                        cname : string
+                        ctype : string
+                        cpos : int16
+                        cNotNull : bool
+                        relName : string
+                        isPK    : bool
+                     }
 
     /// Represents the 
     type Customization<'Parameter,'Conn when 'Parameter :> DbParameter 
@@ -22,6 +35,7 @@ module Common =
                                     > =
         abstract member makeEnum: string->string->'Parameter
         abstract member reloadTypes:'Conn->unit
+        abstract member loadColDetail:'Conn->Map<string,ColDetail []>
    
 
     type ConnOpts = {  mutable logfile : StreamWriter option ; mutable logfileName : string option ; mutable logQueries : bool;
@@ -94,9 +108,6 @@ module Common =
 
    
 
-    /// Details of one table column for dynamic record filling
-    type ColDetail = { typType : char ; cname : string ; ctype : string ; cpos : int16 ; cNotNull : bool}
-
     /// SqlConnection wrapper that allows creating stored 
     /// procedure calls using the dynamic access operator
     type ISqlConnection =
@@ -128,6 +139,14 @@ module Common =
           let opts : ConnOpts =  {logfile = None ; logfileName = None ; logQueries = false;  logLongerThan = 999999.0 ; 
                                     logConnUse = false }
         
+          let fetchColData() =
+            let conn = pool.Take()
+            let data = customizer.loadColDetail (conn :?> 'Conn)
+            pool.Release conn
+            data
+          /// Table specific meta data
+          let mutable colMetadata : Map<string,ColDetail []> = fetchColData()
+            
           let log (msg:string) =
             match opts.logfile with
                 | None -> ()
@@ -162,6 +181,7 @@ module Common =
             // For each connection in the pool, run the customization provided function
             // over it to reload any type information.
             pool.Iter(fun conn -> customizer.reloadTypes (conn:?>'Conn) )
+            colMetadata <- fetchColData()
 
           interface ISqlConnection with
               member x.Query<'T>(sql) : seq<'T> =
@@ -194,136 +214,139 @@ module Common =
                 | Some(cols) -> cols |> Seq.map (fun c -> c.ToLower()) |> Set.ofSeq
                 | None -> Set.empty
 
-            // Inspect table definition.
-            use command : DynamicSqlCommand<'Parameter> = x.Command "select t.typtype,a.attname as attname,t.typname as tname,attnum,attnotnull from 
-                                                            pg_class c JOIN pg_attribute a ON c.oid = a.attrelid 
-                                                            JOIN pg_type t ON t.oid = a.atttypid WHERE
-                                                            c.relname = :tablename AND
-                                                            a.attnum > 0"
+//            // Inspect table definition.
+//            use command : DynamicSqlCommand<'Parameter> = x.Command "select t.typtype,a.attname as attname,t.typname as tname,attnum,attnotnull from 
+//                                                            pg_class c JOIN pg_attribute a ON c.oid = a.attrelid 
+//                                                            JOIN pg_type t ON t.oid = a.atttypid WHERE
+//                                                            c.relname = :tablename AND
+//                                                            a.attnum > 0"
+//
+//            command?tablename <- table
+//            use r = command.ExecuteReader()
+//            /// db columns
+//            let cols =
+//                    seq { while r.Read() do
+//                            yield { typType = r?typtype ; cname = r?attname; ctype = r?tname ; cpos = r?attnum ; cNotNull =r?attnotnull}
+//                    } |> Array.ofSeq
 
-            command?tablename <- table
-            use r = command.ExecuteReader()
-            /// db columns
-            let cols =
-                    seq { while r.Read() do
-                            yield { typType = r?typtype ; cname = r?attname; ctype = r?tname ; cpos = r?attnum ; cNotNull =r?attnotnull}
-                    } |> Array.ofSeq
-
-            if cols.Length = 0 then
-                // They probably misnamed the table request
-                use comm4 = x.Command "select count(*) from pg_class where relname = :tablename"
-                comm4?tablename <- table
-                let count = comm4.ExecuteScalar() :?> int64
-                if count = 0L then
-                    failwithf "ERROR: no such table '%s'" table
+            match colMetadata.TryFind table with
+                | None ->
+//                    // They probably misnamed the table request
+//                    use comm4 = x.Command "select count(*) from pg_class where relname = :tablename"
+//                    comm4?tablename <- table
+//                    let count = comm4.ExecuteScalar() :?> int64
+//                    if count = 0L then
+                      failwithf "ERROR: no such table '%s'" table
+                | Some(cols) ->
                                         
-            // Determine which if any columns are a primary key that we could return
-            use comm3 = x.Command "select conkey from 
-                            pg_constraint c JOIN pg_class cl ON c.conrelid = cl.oid 
-                            WHERE 
-                                contype = 'p' AND
-                                relname = :tablename
-                                "
-            comm3?tablename <- table
+//                    // Determine which if any columns are a primary key that we could return
+//                    use comm3 = x.Command "select conkey from 
+//                                    pg_constraint c JOIN pg_class cl ON c.conrelid = cl.oid 
+//                                    WHERE 
+//                                        contype = 'p' AND
+//                                        relname = :tablename
+//                                        "
+//                    comm3?tablename <- table
+//
+//                    // Get columns involved in the primary key if any
+//                    let pKey = comm3.ExecuteScalar() :?> int16 array
 
-            // Get columns involved in the primary key if any
-            let pKey = comm3.ExecuteScalar() :?> int16 array
+                    /// db column names
+                    let dbColNames = cols |> Array.map (fun z -> z.cname ) |> Set.ofSeq
+                    // Determine which columns were mentioned in the item being inserted.  May
+                    // be a subset of the available column names, but can't include non columns.
+                    // Filtering out also the columns we do not want to insert in the database, as 
+                    // specified in ignoredColumns
+                    let fields = 
+                        typeof<'T>.UnderlyingSystemType.GetProperties()
+                        |> Array.filter (fun z -> not (ignoredColumns.Contains(z.Name.ToLower())))
+                    /// colnames from records
+                    let colNames = fields |> Array.map (fun z -> z.Name)
+                    match colNames |> Array.tryFind (fun z-> not  (dbColNames.Contains(z.ToLower()))) with
+                            | Some(problem) -> 
+                                failwithf "ERROR: record field '%s' does not match a table column in %s [%s]" problem table (String.Join(",",dbColNames))
+                            | None -> // clear to proceed
+                                let pkCols = cols |> Array.choose (fun c -> if c.isPK then Some c.cname else None)
 
-            /// db column names
-            let dbColNames = cols |> Array.map (fun z -> z.cname ) |> Set.ofSeq
-            // Determine which columns were mentioned in the item being inserted.  May
-            // be a subset of the available column names, but can't include non columns.
-            // Filtering out also the columns we do not want to insert in the database, as 
-            // specified in ignoredColumns
-            let fields = 
-                typeof<'T>.UnderlyingSystemType.GetProperties()
-                |> Array.filter (fun z -> not (ignoredColumns.Contains(z.Name.ToLower())))
-            /// colnames from records
-            let colNames = fields |> Array.map (fun z -> z.Name)
-            match colNames |> Array.tryFind (fun z-> not  (dbColNames.Contains(z.ToLower()))) with
-                    | Some(problem) -> 
-                        failwithf "ERROR: record field '%s' does not match a table column in %s [%s]" problem table (String.Join(",",dbColNames))
-                    | None -> // clear to proceed
+                                let returningClause = match pkCols with
+                                                        | [||] -> "" // no primary key
+                                                        | [| x |] -> sprintf "returning %s" x
+                                                        | _ -> "" // multi column key not supported
 
-                        let returningClause = match pKey with
-                                                | [||] -> "" // no primary key
-                                                | [| x |] -> sprintf "returning %s" ((cols |> Array.find (fun z -> z.cpos = x) ).cname)
-                                                | _ -> "" // multi column key not supported
-
-                        // Create SQL statement  e.g. something like t his
-                        // insert into test (username,host,port,usessl,password,nextuid,uidvalidity,checkcert) values 
-                        //                                    (:username,:host,:port,:usessl,:password,:nextuid,
-                        //                                       :uidvalidity,:checkcert) returning id"
-                        let sql = sprintf "insert into %s(%s) values(%s) %s"  
-                                    table 
-                                    (String.Join(",",colNames|> Array.map(fun x -> x.ToLower()))) 
-                                    (String.Join(",",[| for i in 1..fields.Length  -> sprintf ":p%d"i |]))
-                                    returningClause
+                                // Create SQL statement  e.g. something like t his
+                                // insert into test (username,host,port,usessl,password,nextuid,uidvalidity,checkcert) values 
+                                //                                    (:username,:host,:port,:usessl,:password,:nextuid,
+                                //                                       :uidvalidity,:checkcert) returning id"
+                                let sql = sprintf "insert into %s(%s) values(%s) %s"  
+                                            table 
+                                            (String.Join(",",colNames|> Array.map(fun x -> x.ToLower()))) 
+                                            (String.Join(",",[| for i in 1..fields.Length  -> sprintf ":p%d"i |]))
+                                            returningClause
                             
-                        /// Transaction to wrap the insertion into    
-                        let trans : DynamicSqlTransaction<'Parameter,'Conn,'Customizer> = 
-                                    match transProvided with
-                                        | None -> x.StartTrans()  // they didn't give us one, make it
-                                        | Some t -> t
+                                /// Transaction to wrap the insertion into    
+                                let trans : DynamicSqlTransaction<'Parameter,'Conn,'Customizer> = 
+                                            match transProvided with
+                                                | None -> x.StartTrans()  // they didn't give us one, make it
+                                                | Some t -> t
 
-                        use comm2 : DynamicSqlCommand<_> = trans.cc sql
+                                use comm2 : DynamicSqlCommand<_> = trans.cc sql
                        
-                        /// Named parameters matching each required field
-                        let vals = fields |> Array.mapi (fun i f ->  
-                                                            let pName =sprintf "p%d" (i+1)
-                                                            if cols.[i].typType = 'e' then
-                                                                // Enum type
-                                                                let p = customizer.makeEnum pName ""
-                                                                p
-                                                            else
-                                                                let p = new 'Parameter() //:> DbParameter
-                                                                p.ParameterName <- pName
-                                                                p
-                                                          )
+                                /// Named parameters matching each required field
+                                let vals = fields |> Array.mapi (fun i f ->  
+                                                                    let pName =sprintf "p%d" (i+1)
+                                                                    if cols.[i].typType = 'e' then
+                                                                        // Enum type
+                                                                        let p = customizer.makeEnum pName ""
+                                                                        p
+                                                                    else
+                                                                        let p = new 'Parameter() //:> DbParameter
+                                                                        p.ParameterName <- pName
+                                                                        p
+                                                                    )
 
-                        comm2.Parameters.AddRange(vals)
+                                comm2.Parameters.AddRange(vals)
                         
 
-                        /// Are any of the fields option types / and nullable in database
-                        let nullOption = 
-                            fields 
-                            |> Array.mapi (fun i f ->
-                                            let pt = f.PropertyType
-                                            let isOption = pt.IsGenericType &&  pt.GetGenericTypeDefinition() = genericOptionType
-                                            let isNotNull = (cols |> Array.find (fun c -> c.cname = f.Name.ToLower())).cNotNull
-                                            match isOption,isNotNull with
-                                                | true,false -> true
-                                                | true,true -> failwithf "ERROR: field %s is option but not nullable in db" f.Name
-                                                | false,true -> false
-                                                | false,false -> failwithf "ERROR:field %s is not option but is nullable in db" f.Name
-                                            )
-                        /// Sequence of return values from serially processing each item in items
-                        let ret = seq {
-                                        for item in items do
-                                            //Process the field definitions and poke values into the dbparameter array vals
-                                            fields |> 
-                                                Array.iteri 
-                                                    (fun i f -> 
-                                                        if nullOption.[i] then
-                                                            // Field can be null and will be defined as an option on the F# record
-                                                            // side so extract differently
-                                                            let v1 = f.GetValue(item,null)
-                                                            vals.[i].Value <- (
-                                                                    if v1=null then box DBNull.Value else
-                                                                        let t2 = f.PropertyType.GetProperty("Value")
-                                                                        t2.GetValue(v1,null)
-                                                                        )
-                                                        else
-                                                            vals.[i].Value <- f.GetValue(item,null))
-                                            // Finally execute insert stmt and capture return value
-                                            yield (comm2 .ExecuteScalar() :?> 'R )
-                                    } |> Array.ofSeq
+                                /// Are any of the fields option types / and nullable in database
+                                let nullOption = 
+                                    fields 
+                                    |> Array.mapi (fun i f ->
+                                                    let pt = f.PropertyType
+                                                    let isOption = pt.IsGenericType &&  pt.GetGenericTypeDefinition() = genericOptionType
+                                                    let isNotNull = (cols |> Array.find (fun c -> c.cname = f.Name.ToLower())).cNotNull
+                                                    match isOption,isNotNull with
+                                                        | true,false -> true
+                                                        | true,true -> failwithf "ERROR: field %s is option but not nullable in db" f.Name
+                                                        | false,true -> false
+                                                        | false,false -> failwithf "ERROR:field %s is not option but is nullable in db" f.Name
+                                                    )
+                                /// Sequence of return values from serially processing each item in items
+                                let ret = seq {
+                                                for item in items do
+                                                    //Process the field definitions and poke values into the dbparameter array vals
+                                                    fields |> 
+                                                        Array.iteri 
+                                                            (fun i f -> 
+                                                                if nullOption.[i] then
+                                                                    // Field can be null and will be defined as an option on the F# record
+                                                                    // side so extract differently
+                                                                    let v1 = f.GetValue(item,null)
+                                                                    vals.[i].Value <- (
+                                                                            if v1=null then box DBNull.Value else
+                                                                                let t2 = f.PropertyType.GetProperty("Value")
+                                                                                t2.GetValue(v1,null)
+                                                                                )
+                                                                else
+                                                                    vals.[i].Value <- f.GetValue(item,null))
+                                                    // Finally execute insert stmt and capture return value
+                                                    yield (comm2 .ExecuteScalar() :?> 'R )
+                                            } |> Array.ofSeq
 
-                        if transProvided.IsNone  then
-                            // We made our own transaction, commit and dispose
-                            trans.Commit()
-                            (trans :> IDisposable).Dispose()
-                        ret
+                                if transProvided.IsNone  then
+                                    // We made our own transaction, commit and dispose
+                                    trans.Commit()
+                                    (trans :> IDisposable).Dispose()
+                                ret
 
           member x.InsertOne<'T,'R> (
                                     item : 'T,
@@ -398,12 +421,7 @@ module Common =
                     (command :> IDisposable).Dispose()
             } 
 
-            (*
-          interface ISqlConnection with
-            member x.Query<'T>(sql:string) : seq<'T> =
-                x.Query(sql)
-                *)
-            
+          
           member x.ExecuteScalar(sql:string) =
             use comm = x.Command sql
             comm.ExecuteScalar()

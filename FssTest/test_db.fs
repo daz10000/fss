@@ -151,6 +151,7 @@ type TestPGDbBasic() = class
     member x.Test006SingleSimpleInsert() =
         use conn = gc()
         setupT1 conn
+        conn.Reload()
         conn.InsertOne(t1a) 
         ()
 
@@ -158,6 +159,7 @@ type TestPGDbBasic() = class
     member x.Test007SingleSimpleInsertWithCheck() =
         use conn = gc()
         setupT1 conn
+        conn.Reload()
         conn.InsertOne(t1a)
         Assert.IsTrue(conn.ExecuteScalar "select count(*) from test1" :?> int64 = 1L) |> ignore
         ()
@@ -166,6 +168,7 @@ type TestPGDbBasic() = class
     member x.Test008SingleSimpleInsertWithCheckOddTypes() =
         use conn = gc()
         setupT5 conn
+        
         conn.InsertOne(t5a)
         Assert.IsTrue(conn.ExecuteScalar "select count(*) from test5" :?> int64 = 1L) |> ignore
         ()
