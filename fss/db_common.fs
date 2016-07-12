@@ -13,8 +13,6 @@ module Common =
     open System
     open Fss.Pool // used for database handle pooling
     
-    
-
     /// Details of one table column for dynamic record filling
     type ColDetail = { 
                         typType : char
@@ -33,10 +31,12 @@ module Common =
                                     and 'Conn :> DbConnection 
                                 
                                     > =
-        abstract member makeEnum: string->string->'Parameter
+        //abstract member makeEnum: string->string->'Parameter
         abstract member reloadTypes:'Conn->unit
         abstract member loadColDetail:'Conn->Map<string,ColDetail []>
-   
+        abstract member reopenConnection:'Conn->unit
+        abstract member registerEnum<'Enum when 'Enum:(new:unit->'Enum) and 'Enum:struct and 'Enum :> System.ValueType> : unit->unit
+    
 
     type ConnOpts = {  mutable logfile : StreamWriter option ; mutable logfileName : string option ; mutable logQueries : bool;
                             mutable logLongerThan : float ; mutable logConnUse : bool }
@@ -54,9 +54,23 @@ module Common =
       member x.Read() = reader.Read()
       // Read the specified column and casts it to the specified type
       static member (?) (dr:DynamicSqlDataReader<'Reader>, name:string) : 'R = 
-        match dr.Reader.[name] with
-            | :? DBNull -> unbox null // support for nullable types
-            | _ -> unbox (dr.Reader.[name])
+        let t = typedefof<'R>
+        if t.IsGenericType && t.GetGenericTypeDefinition() = typedefof<option<_>> then
+            match dr.Reader.[name] with // support for nullable types as an option
+                | :? DBNull -> unbox None 
+                | :? string as x -> unbox (Some(x))
+                | :? int64 as x -> unbox (Some(x))
+                | :? float as x -> unbox (Some(x))
+                | :? bool as x -> unbox (Some(x))
+                | :? int32 as x -> unbox (Some(x))
+                | :? int16 as x -> unbox (Some(x))
+                | :? decimal as x -> unbox (Some(x))
+                | :? DateTime as x -> unbox (Some(x))
+                | _ as x -> failwithf "ERROR: unsupported nullable dbtype %s" (x.GetType().Name)
+        else
+            match dr.Reader.[name] with
+                | :? DBNull -> unbox null // support for nullable types
+                | _ -> unbox (dr.Reader.[name])
 
       interface IDisposable with
         member x.Dispose() = reader.Dispose()
@@ -68,10 +82,12 @@ module Common =
       member x.GetConnHash() = cmd.GetHashCode()
       // Adds parameter with the specified name and value
       static member (?<-) (cmd:DynamicSqlCommand<'Parameter>, name:string, value) = 
-        //cmd.Command.Parameters.Add("@"+name,box value) |> ignore
+        let optionType = typedefof<option<_>>
         let p = new 'Parameter() 
         p.ParameterName <- "@"+name
-        p.Value <- box value
+
+        let bv = box value
+        p.Value <- if bv = box null then box DBNull.Value else bv
         cmd.Command.Parameters.Add(p) |> ignore
       // Execute command and wrap returned SqlDataReader
       member x.ExecuteReader() =  
@@ -128,6 +144,13 @@ module Common =
           /// This class provides any functions we will need to handle
           /// db flavor specific customization
           let customizer = new 'Customizer()
+
+          /// Monitor and restore connection?
+          let mutable keepAlive = true
+
+          /// Inteval between tests that connections are alive
+          let mutable keepAliveInterval = 5000
+
           let pool = new Pool<DbConnection>(poolSize,fun _ -> 
                                                 let c = new 'Conn()
                                                 c.ConnectionString <- connStr
@@ -150,7 +173,7 @@ module Common =
           let log (msg:string) =
             match opts.logfile with
                 | None -> ()
-                | Some(f) -> lock opts.logfile ( fun _ -> f.Write(System.DateTime.Now.ToString("yyyyddMM HH:mm:ss.FFF")); f.Write("\t") ; f.WriteLine(msg) ; f.Flush())
+                | Some(f) -> lock opts.logfile ( fun _ -> f.Write(System.DateTime.Now.ToString("yyyyMMdd HH:mm:ss.FFF")); f.Write("\t") ; f.WriteLine(msg) ; f.Flush())
           
           let takeInternal() = 
             let c = pool.Take()
@@ -162,6 +185,28 @@ module Common =
             let z = System.Threading.Thread.CurrentThread.ManagedThreadId
             if opts.logConnUse then sprintf "release thread=%d conn=%d (prefree=%d)" z (x.GetHashCode()) pool.FreeCount |> log
             pool.Release x
+
+          let keepAliveThread() =
+            while true do
+                try
+                    let conn = takeInternal()
+                    use comm = conn.CreateCommand()
+                    comm.CommandText <- "select 1 as x"
+                    let result = comm.ExecuteScalar() :?> int32
+                    release conn
+                    ()
+                with _ as x ->
+                    pool.Iter(fun conn -> customizer.reopenConnection (conn:?>'Conn) )
+                    printfn "Keep alive exception %s" x.Message
+                
+                System.Threading.Thread.Sleep(keepAliveInterval)
+            ()
+
+          do
+            let x = fun () -> keepAliveThread()
+            let t = new System.Threading.Thread(x)
+            t.Start()
+            ()
           
           /// Set a filename for logging output
           member x.Logfile with  get() = opts.logfileName.Value and 
@@ -171,12 +216,16 @@ module Common =
 
           member x.Take() = takeInternal()
           member x.Release(z) = release z
+          member x.KeepAlive with get() = keepAlive and set(v) = keepAlive<-v
           member x.Opts with get() = opts
           member x.Log(msg:string) = log msg
           member x.LogConnUse with get() = opts.logConnUse and set(v) = opts.logConnUse <- v  
           member x.LogQueries with get() = opts.logQueries and set(v) = opts.logQueries <- v  
           member x.LogLongerThan with get() = opts.logLongerThan  and set(v) = opts.logLongerThan <- v  
 
+          member x.RegisterEnum<'Enum when 'Enum:(new:unit->'Enum) and 'Enum:struct and 'Enum :> System.ValueType>() =
+            customizer.registerEnum<'Enum>()
+          
           member x.Reload() =
             // For each connection in the pool, run the customization provided function
             // over it to reload any type information.
@@ -294,14 +343,14 @@ module Common =
                                 /// Named parameters matching each required field
                                 let vals = fields |> Array.mapi (fun i f ->  
                                                                     let pName =sprintf "p%d" (i+1)
-                                                                    if cols.[i].typType = 'e' then
-                                                                        // Enum type
-                                                                        let p = customizer.makeEnum pName ""
-                                                                        p
-                                                                    else
-                                                                        let p = new 'Parameter() //:> DbParameter
-                                                                        p.ParameterName <- pName
-                                                                        p
+//                                                                    if cols.[i].typType = 'e' then
+//                                                                        // Enum type
+//                                                                        let p = customizer.makeEnum pName ""
+//                                                                        p
+                                                                    //else
+                                                                    let p = new 'Parameter() //:> DbParameter
+                                                                    p.ParameterName <- pName
+                                                                    p
                                                                     )
 
                                 comm2.Parameters.AddRange(vals)

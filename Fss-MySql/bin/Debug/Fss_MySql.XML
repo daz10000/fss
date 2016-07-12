@@ -61,6 +61,11 @@
  Credit to Thomas Petricek for the original dynamic operator concept 
 </summary>
 </member>
+<member name="M:Fss.Pool.Pool`1.Iter(Microsoft.FSharp.Core.FSharpFunc{`0,Microsoft.FSharp.Core.Unit})">
+<summary>
+ Apply function f to every pool member (without locking first)
+</summary>
+</member>
 <member name="T:Fss.Pool.Pool`1">
 <summary>
  ---- pool implementation ----------------------------------------

@@ -2,15 +2,8 @@ C:\extproj\fss\fss-postgres\bin\Debug\fss_postgres.XML
 C:\extproj\fss\fss-postgres\bin\Debug\fss_postgres.dll
 C:\extproj\fss\fss-postgres\bin\Debug\fss_postgres.pdb
 C:\extproj\fss\fss-postgres\bin\Debug\FSharp.Core.dll
-C:\extproj\fss\fss-postgres\bin\Debug\Mono.Security.dll
 C:\extproj\fss\fss-postgres\bin\Debug\Npgsql.dll
 C:\extproj\fss\fss-postgres\bin\Debug\FSharp.Core.xml
 C:\extproj\fss\fss-postgres\bin\Debug\Npgsql.xml
-C:\extproj\fss\fss-postgres\bin\Debug\de\Npgsql.resources.dll
-C:\extproj\fss\fss-postgres\bin\Debug\es\Npgsql.resources.dll
-C:\extproj\fss\fss-postgres\bin\Debug\fi\Npgsql.resources.dll
-C:\extproj\fss\fss-postgres\bin\Debug\fr\Npgsql.resources.dll
-C:\extproj\fss\fss-postgres\bin\Debug\ja\Npgsql.resources.dll
-C:\extproj\fss\fss-postgres\bin\Debug\zh-CN\Npgsql.resources.dll
 C:\extproj\fss\fss-postgres\obj\Debug\fss_postgres.dll
 C:\extproj\fss\fss-postgres\obj\Debug\fss_postgres.pdb

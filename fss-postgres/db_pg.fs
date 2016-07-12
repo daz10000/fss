@@ -12,12 +12,18 @@ module Postgres =
 
     type PgCustomizations() =  class
         interface Fss.Data.Common.Customization<NpgsqlParameter,NpgsqlConnection> with
-            member x.makeEnum name v =
-                let p = Npgsql.NpgsqlParameter(name,v)
-                p.NpgsqlDbType<-NpgsqlTypes.NpgsqlDbType.Unknown
-                p
+//            member x.makeEnum name v =
+//                let p = Npgsql.NpgsqlParameter(name,v)
+//                p.NpgsqlDbType<-NpgsqlTypes.NpgsqlDbType.Unknown
+//                p
+            member x.registerEnum<'Enum when 'Enum:(new:unit->'Enum) and 'Enum:struct and 'Enum :> System.ValueType>() =
+                NpgsqlConnection.MapEnumGlobally<'Enum>()
+                ()
+
             member x.reloadTypes (conn:NpgsqlConnection) =
                 conn.ReloadTypes()
+            member x.reopenConnection(conn:NpgsqlConnection) = 
+                NpgsqlConnection.ClearPool(conn)
             member x.loadColDetail(conn:NpgsqlConnection) =
                
 

@@ -73,21 +73,42 @@ create table Test6 (
     constraint pk_t6 primary key(id)
 )"""
 
+let createT7SQL = """
+create table Test7 (
+    id serial,
+    age   integer, -- Like Test 3 but with nullable age
+    first	varchar(100) NOT NULL,
+    last   varchar(100),
+    rate   float NOT NULL
+)"""
+
+type Test7 = { id : int ; age : Nullable<int> ; first : string ; last : string option ; rate : float}
+
+let t7a = { id = 1 ; age = Nullable(30) ; first = "fred" ; last = Some "flintstone" ; rate = 1.2}
+let t7b = { id = -1 ; age = Nullable() ; first = "dino" ; last = None ; rate = 1.2}
+
+
+
+open NpgsqlTypes;
+
+type Mood =
+   | [<PgName("happy")>]happy =0
+   | [<PgName("good")>]good =1
+   | [<PgName("sad")>]sad = 2
 
 let createMoodEnum = "CREATE TYPE mood AS ENUM ('sad', 'ok', 'happy')"
 let dropMoodEnum = "drop type if exists mood "
 
 type Test4 = { id : int ; age : int option ; first : string option ; last : string option; rate : float option ; happy : bool option}
 type Test5 = { a : int16 ; b : decimal}
-type Test6 = { id : int ; first : string ; temperment : string}
+type Test6 = { id : int ; first : string ; temperment : Mood}
 
 let t4a = { id = -1 ; age = Some(40) ; first = Some "wilma" ; last = Some "flintstone" ; rate = Some 1.256 ; happy = Some true}
 let t4b = { id = -1 ; age = None ; first = None ; last = None ; rate = None ; happy = None}
 let t5a = { a = 15s ; b = 1.2M}
 
-type Temperment = Happy | Sad | Ok
-let t6a = { id =1 ; first = "wilma" ; temperment = "happy"}
-let t6b = { id =2 ; first = "fred" ; temperment = "sad"}
+let t6a = { id =1 ; first = "wilma" ; temperment = Mood.happy}
+let t6b = { id =2 ; first = "fred" ; temperment = Mood.sad}
 
 let getConnString() =
     if not (File.Exists("connection_postgres.txt")) then
@@ -106,6 +127,8 @@ let createT3 (conn:DynamicSqlConnection) = conn.ExecuteScalar(createT3SQL) |> ig
 let createT4 (conn:DynamicSqlConnection) = conn.ExecuteScalar(createT4SQL) |> ignore
 let createT5 (conn:DynamicSqlConnection) = conn.ExecuteScalar(createT5SQL) |> ignore
 let createT6 (conn:DynamicSqlConnection) = conn.ExecuteScalar(createT6SQL) |> ignore
+let createT7 (conn:DynamicSqlConnection) = conn.ExecuteScalar(createT7SQL) |> ignore
+
 let createEnum1 (conn:DynamicSqlConnection) = conn.ExecuteScalar(createMoodEnum) |> ignore
 let dropEnum1 (conn:DynamicSqlConnection) = conn.ExecuteScalar(dropMoodEnum) |> ignore
 
@@ -115,6 +138,7 @@ let setupT3 (conn:DynamicSqlConnection) = drop "test3" conn ; createT3 conn
 let setupT4 (conn:DynamicSqlConnection) = drop "test4" conn ; createT4 conn
 let setupT5 (conn:DynamicSqlConnection) = drop "test5" conn ; createT5 conn
 let setupT6 (conn:DynamicSqlConnection) = drop "test6" conn ; createT6 conn
+let setupT7 (conn:DynamicSqlConnection) = drop "test7" conn ; createT7 conn
 let setupE1 (conn:DynamicSqlConnection) = dropEnum1 conn ; createEnum1 conn
 
 
@@ -235,9 +259,71 @@ type TestPGDbBasic() = class
         conn.Logfile <- "dblog.txt"
         setupT4 conn
         conn.InsertOne<Test4,int>(t4a,ignoredColumns=["id"]) |> ignore
+
+    [<Test>]
+    member x.Test051QueryNullFieldWithOperatorArg1() =
+        use conn = gc()
+        setupT3 conn
+        conn.InsertMany([ t3a; t3b]) |>  ignore
+        use comm = conn.Command "select age from test3 where last = :name"
+        comm?name <- "flintstone"
+        let age:int = comm.ExecuteScalar() :?> int32
+        Assert.AreEqual(age,30)
+
+    [<Test>]
+    member x.Test051QueryNullFieldWithOperator2() =
+        use conn = gc()
+        setupT3 conn
+        conn.InsertMany([ t3a; t3b]) |>  ignore
+        use comm = conn.Command "select last from test3 where first = 'fred'"
+        use r = comm.ExecuteReader()
+        r.Read() |> ignore
+        let last : string option = r?last
+        Assert.AreEqual(last,Some "flintstone")
+
+    [<Test>]
+    member x.Test051QueryNullFieldWithOperator3() =
+        use conn = gc()
+        setupT3 conn
+        conn.InsertMany([ t3a; t3b]) |>  ignore
+        use comm = conn.Command "select last from test3 where first = 'dino'"
+        use r = comm.ExecuteReader()
+        r.Read() |> ignore
+        let last : string option = r?last
+        Assert.AreEqual(last,None)
        
+
+    [<Test>]
+    member x.Test052QueryNullFieldWithNullable1() =
+        use conn = gc()
+        setupT7 conn
+        do
+            use comm = conn.Command "insert into test7(age,first,last,rate) values (:age,'dino',null,1.0)"
+            comm?age<-Nullable(4)
+            comm.ExecuteNonQuery() |> ignore
+
+        do
+            use comm = conn.Command "select age from test7 where first = 'dino'"
+            let age = comm.ExecuteScalar() :?> int32
+            Assert.AreEqual(age,4)
+
+    [<Test>]
+    member x.Test052QueryNullFieldWithNullable2() =
+        use conn = gc()
+        setupT7 conn
+        do
+            use comm = conn.Command "insert into test7(age,first,last,rate) values (:age,'dino',null,1.0)"
+            comm?age<-Nullable()
+            comm.ExecuteNonQuery() |> ignore
+
+        do
+            use comm = conn.Command "select first from test7 where age is null"
+            let first = comm.ExecuteScalar() :?> string
+            Assert.AreEqual(first,"dino")
+
 end
 
+(*
 [<TestFixture>]
 type TestEnums() = class
     let conn = gc()
@@ -324,6 +410,21 @@ type TestEnums() = class
         Assert.AreEqual(y,"happy")
 
     [<Test>]
+    member x.Test005EnumByOperator2() =
+        setupET()
+        conn.RegisterEnum<Mood>()
+
+        let ids : int [] = conn.InsertMany [|  t6a ; t6b |] 
+
+        use comm = conn.Command "select * from test6 where temperment=:mood"
+        comm?mood<-Mood.happy
+        use reader = comm.ExecuteReader()
+        reader.Read()|> ignore
+        let id : int = reader?id
+        let y : string  = reader?first
+        Assert.AreEqual(y,"wilma")
+
+    [<Test>]
     member x.Test004Query() =
         setupET()
 
@@ -349,7 +450,7 @@ type TestEnums() = class
 
 end
 
-
+*)
 
 [<TestFixture>]
 type TestTransactions() = class

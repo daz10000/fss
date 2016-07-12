@@ -2,24 +2,45 @@
 <doc>
 <assembly><name>fss_postgres</name></assembly>
 <members>
-<member name="T:Fss.Data.Common.DynamicSqlTransaction`2">
+<member name="T:Fss.Data.Common.DynamicSqlTransaction`3">
 <summary>
  Sql Transaction wrapper that encapsulates an active database
  connection and hands of DynamicSqlCommand objects with the
  connection and transcation set correctly
 </summary>
 </member>
-<member name="P:Fss.Data.Common.DynamicSqlConnection`2.Logfile(System.String)">
+<member name="F:Fss.Data.Common.DynamicSqlConnection`3.colMetadata">
+<summary>
+ Table specific meta data
+</summary>
+</member>
+<member name="F:Fss.Data.Common.DynamicSqlConnection`3.keepAliveInterval">
+<summary>
+ Inteval between tests that connections are alive
+</summary>
+</member>
+<member name="F:Fss.Data.Common.DynamicSqlConnection`3.keepAlive">
+<summary>
+ Monitor and restore connection?
+</summary>
+</member>
+<member name="F:Fss.Data.Common.DynamicSqlConnection`3.customizer">
+<summary>
+ This class provides any functions we will need to handle
+ db flavor specific customization
+</summary>
+</member>
+<member name="P:Fss.Data.Common.DynamicSqlConnection`3.Logfile(System.String)">
 <summary>
  Set a filename for logging output
 </summary>
 </member>
-<member name="M:Fss.Data.Common.DynamicSqlConnection`2.op_Dynamic(Fss.Data.Common.DynamicSqlConnection{`0,`1},System.String)">
+<member name="M:Fss.Data.Common.DynamicSqlConnection`3.op_Dynamic(Fss.Data.Common.DynamicSqlConnection{`0,`1,`2},System.String)">
 <summary>
  Creates command that calls the specified stored procedure
 </summary>
 </member>
-<member name="P:Fss.Data.Common.DynamicSqlConnection`2.Logfile">
+<member name="P:Fss.Data.Common.DynamicSqlConnection`3.Logfile">
 <summary>
  Set a filename for logging output
 </summary>
@@ -28,11 +49,6 @@
 <summary>
  SqlConnection wrapper that allows creating stored 
  procedure calls using the dynamic access operator
-</summary>
-</member>
-<member name="T:Fss.Data.Common.ColDetail">
-<summary>
- Details of one table column for dynamic record filling
 </summary>
 </member>
 <member name="T:Fss.Data.Common.DynamicSqlCommand`1">
@@ -46,6 +62,16 @@
  SqlDataReader wrapper that provides access to columns 
  of the result-set using dynamic access operator
  See http://tomasp.net/blog/dynamic-sql.aspx for original idea.
+</summary>
+</member>
+<member name="T:Fss.Data.Common.Customization`2">
+<summary>
+ Represents the 
+</summary>
+</member>
+<member name="T:Fss.Data.Common.ColDetail">
+<summary>
+ Details of one table column for dynamic record filling
 </summary>
 </member>
 <member name="P:Fss.Data.Common.genericOptionType">
@@ -67,6 +93,11 @@
  can be omitted along with System.Data and NPgsql dependencies for a smaller compilation unit
  or used standalone from other Fss pieces.
  Credit to Thomas Petricek for the original dynamic operator concept 
+</summary>
+</member>
+<member name="M:Fss.Pool.Pool`1.Iter(Microsoft.FSharp.Core.FSharpFunc{`0,Microsoft.FSharp.Core.Unit})">
+<summary>
+ Apply function f to every pool member (without locking first)
 </summary>
 </member>
 <member name="T:Fss.Pool.Pool`1">

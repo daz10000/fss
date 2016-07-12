@@ -23,3 +23,4 @@
 *.suo
 /fss/*.swp
 *.nuspec~
+*.txt~

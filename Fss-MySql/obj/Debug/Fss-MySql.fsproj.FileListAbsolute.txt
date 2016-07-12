@@ -6,3 +6,5 @@ C:\extproj\fss\Fss-MySql\bin\Debug\Mono.Security.dll
 C:\extproj\fss\Fss-MySql\bin\Debug\MySql.Data.dll
 C:\extproj\fss\Fss-MySql\obj\Debug\Fss_MySql.dll
 C:\extproj\fss\Fss-MySql\obj\Debug\Fss_MySql.pdb
+C:\extproj\fss\Fss-MySql\bin\Debug\Newtonsoft.Json.dll
+C:\extproj\fss\Fss-MySql\bin\Debug\Newtonsoft.Json.xml
