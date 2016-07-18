@@ -1,0 +1,76 @@
+<?xml version="1.0" encoding="utf-8"?>
+<doc>
+<assembly><name>Fss_MySql</name></assembly>
+<members>
+<member name="T:Fss.Data.Common_mysql.DynamicSqlTransaction`2">
+<summary>
+ Sql Transaction wrapper that encapsulates an active database
+ connection and hands of DynamicSqlCommand objects with the
+ connection and transcation set correctly
+</summary>
+</member>
+<member name="P:Fss.Data.Common_mysql.DynamicSqlConnection`2.Logfile(System.String)">
+<summary>
+ Set a filename for logging output
+</summary>
+</member>
+<member name="M:Fss.Data.Common_mysql.DynamicSqlConnection`2.op_Dynamic(Fss.Data.Common_mysql.DynamicSqlConnection{`0,`1},System.String)">
+<summary>
+ Creates command that calls the specified stored procedure
+</summary>
+</member>
+<member name="P:Fss.Data.Common_mysql.DynamicSqlConnection`2.Logfile">
+<summary>
+ Set a filename for logging output
+</summary>
+</member>
+<member name="T:Fss.Data.Common_mysql.DynamicSqlConnection`2">
+<summary>
+ SqlConnection wrapper that allows creating stored 
+ procedure calls using the dynamic access operator
+</summary>
+</member>
+<member name="T:Fss.Data.Common_mysql.ColDetail">
+<summary>
+ Details of one table column for dynamic record filling
+</summary>
+</member>
+<member name="T:Fss.Data.Common_mysql.DynamicSqlCommand`1">
+<summary>
+ SqlCommand wrapper that allows setting properties of a
+ stored procedure using dynamic setter operator
+</summary>
+</member>
+<member name="T:Fss.Data.Common_mysql.DynamicSqlDataReader`1">
+<summary>
+ SqlDataReader wrapper that provides access to columns 
+ of the result-set using dynamic access operator
+ See http://tomasp.net/blog/dynamic-sql.aspx for original idea.
+</summary>
+</member>
+<member name="P:Fss.Data.Common_mysql.genericOptionType">
+<summary>
+ Used to detect Option fields that could be null
+</summary>
+</member>
+<member name="T:Fss.Data.Common_mysql">
+<summary>
+ Postgres database wrapper.  Independent of other Fss pieces,
+ can be omitted along with System.Data and NPgsql dependencies for a smaller compilation unit
+ or used standalone from other Fss pieces.
+ Credit to Thomas Petricek for the original dynamic operator concept 
+</summary>
+</member>
+<member name="M:Fss.Pool.Pool`1.Iter(Microsoft.FSharp.Core.FSharpFunc{`0,Microsoft.FSharp.Core.Unit})">
+<summary>
+ Apply function f to every pool member (without locking first)
+</summary>
+</member>
+<member name="T:Fss.Pool.Pool`1">
+<summary>
+ ---- pool implementation ----------------------------------------
+ manages a shared pool of resources, e.g. database handles
+</summary>
+</member>
+</members>
+</doc>

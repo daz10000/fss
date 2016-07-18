@@ -1,0 +1,9 @@
+C:\extproj\fss\fss-postgres\bin\Debug\fss_postgres.XML
+C:\extproj\fss\fss-postgres\bin\Debug\fss_postgres.dll
+C:\extproj\fss\fss-postgres\bin\Debug\fss_postgres.pdb
+C:\extproj\fss\fss-postgres\bin\Debug\FSharp.Core.dll
+C:\extproj\fss\fss-postgres\bin\Debug\Npgsql.dll
+C:\extproj\fss\fss-postgres\bin\Debug\FSharp.Core.xml
+C:\extproj\fss\fss-postgres\bin\Debug\Npgsql.xml
+C:\extproj\fss\fss-postgres\obj\Debug\fss_postgres.dll
+C:\extproj\fss\fss-postgres\obj\Debug\fss_postgres.pdb

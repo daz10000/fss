@@ -1,0 +1,21 @@
+type project
+owners
+    Darren Platt
+authors 
+    Darren Platt
+projectUrl
+    http://github.com/daz10000/fss
+iconUrl
+    https://raw.githubusercontent.com/daz10000/fss/master/docs/content/fss_logo.png
+licenseUrl
+    http://github.com/daz10000/fss/blob/master/LICENSE.txt
+requireLicenseAcceptance
+    false
+copyright
+    Copyright 2015,2016
+tags
+    F# mysql ORM database
+summary
+    F# ORM wrapper for mysql driver
+description
+    F# ORM wrapper for mysql driver
