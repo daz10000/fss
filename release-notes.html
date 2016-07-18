@@ -1,0 +1,240 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8"/>
+    <title>release-notes</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <meta name="description" content="F# Server"/>
+    <meta name="author" content="Darren Platt"/>
+
+    <script src="https://code.jquery.com/jquery-1.8.0.js"></script>
+    <script src="https://code.jquery.com/ui/1.8.23/jquery-ui.js"></script>
+    <script src="https://netdna.bootstrapcdn.com/twitter-bootstrap/2.2.1/js/bootstrap.min.js"></script>
+    <link href="https://netdna.bootstrapcdn.com/twitter-bootstrap/2.2.1/css/bootstrap-combined.min.css" rel="stylesheet"/>
+
+    <link type="text/css" rel="stylesheet" href="/fss/content/style.css" />
+    <script type="text/javascript" src="/fss/content/tips.js"></script>
+    <!-- HTML5 shim, for IE6-8 support of HTML5 elements -->
+    <!--[if lt IE 9]>
+      <script src="https://oss.maxcdn.com/html5shiv/3.7.2/html5shiv.min.js"></script>
+    <![endif]-->
+  </head>
+  <body>
+    <div class="container">
+      <div class="masthead">
+        <ul class="nav nav-pills pull-right">
+          <li><a href="http://fsharp.org">fsharp.org</a></li>
+          <li><a href="http://github.com/daz10000/fss">github page</a></li>
+        </ul>
+        <h3 class="muted"><a href="/fss/index.html">fss</a></h3>
+      </div>
+      <hr />
+      <div class="row">
+        <div class="span9" id="main">
+          
+<h3><a name="v1-4-0-July-17-2016" class="anchor" href="#v1-4-0-July-17-2016">v1.4.0 -- July 17 2016</a></h3>
+<ul>
+<li>freql: caching schema information at first load for postgres</li>
+<li>freql: better NULL/ Nullable support</li>
+</ul>
+<h3><a name="v1-3-1" class="anchor" href="#v1-3-1">v1.3.1</a></h3>
+<ul>
+<li>freql: int16,decimal support</li>
+<li>templates: expression legal in for loop iter RHS value</li>
+<li>templates: elseif implementation</li>
+</ul>
+<h3><a name="v1-3-0" class="anchor" href="#v1-3-0">v1.3.0</a></h3>
+<ul>
+<li>freql: fss-mysql implementation</li>
+<li>freql: decimal null support</li>
+</ul>
+<h3><a name="v1-2-9" class="anchor" href="#v1-2-9">v1.2.9</a></h3>
+<ul>
+<li>templates: BUG: includes with internal variables mixed with extends werenot expanded properly</li>
+</ul>
+<h3><a name="v1-2-8" class="anchor" href="#v1-2-8">v1.2.8</a></h3>
+<ul>
+<li>server: BUG empty multipart form parts where triggering assertions incorrectly</li>
+</ul>
+<h3><a name="v1-2-7" class="anchor" href="#v1-2-7">v1.2.7</a></h3>
+<ul>
+<li>server: BUG: rewrote multipart header parser to be tail recursive</li>
+</ul>
+<h3><a name="v1-2-6" class="anchor" href="#v1-2-6">v1.2.6</a></h3>
+<ul>
+<li>Freql:  methods added directly to transaction object to make it behave more like a connection</li>
+</ul>
+<h3><a name="v1-2-5" class="anchor" href="#v1-2-5">v1.2.5</a></h3>
+<ul>
+<li>Freql: premature release of transaction connection fixed</li>
+<li>Server: reexposed Fss.Server.version string</li>
+<li>templates:  if x.y case fixed and tested</li>
+</ul>
+<h3><a name="v1-2" class="anchor" href="#v1-2">v1.2</a></h3>
+<ul>
+<li>Freql:  bug in Query led to delayed connection pool release for incomplete seq  consumption</li>
+<li>templates: ENH - range expressions for for loops implemented</li>
+<li>templates: ENH - expressions allowed within double parenthesis substitution blocks</li>
+<li>templates: ENH - array indices implemented for expressions</li>
+<li>templates: ENH - <= and >= implemented</li>
+</ul>
+<h3><a name="v1-1-5" class="anchor" href="#v1-1-5">v1.1.5</a></h3>
+<ul>
+<li>templates: overhaul of operator precedence to implement boolean expressions correctly</li>
+<li>Freql:  handling nullable date fields implemented.</li>
+</ul>
+<h3><a name="v1-0-6" class="anchor" href="#v1-0-6">v1.0.6</a></h3>
+<ul>
+<li>templates: bug in double quoted string parsing fixed string  hello not recognized :(</li>
+<li>templates: != operator implemented for '{% if %}'</li>
+<li>test:  additional unit tests for string , != operations</li>
+<li>templates: == instead of = for equals comparison (for consistency with standard jinja2 docs)</li>
+<li>templates: single variable to if '{% if foo %}' will test whether variable is set or has a non false value ('""' and [||] considered false)</li>
+<li>fss: added support for 302, 303, 304, and 307 response codes and http303 redirect helper</li>
+<li>fss: added overridable preCheckFailed to UD and ability to modify url path within precheck</li>
+</ul>
+<h3><a name="v1-0-5" class="anchor" href="#v1-0-5">v1.0.5</a></h3>
+<ul>
+<li>Freql: Support for null fields in tables, mapped onto option fields in records</li>
+<li>templates: changed extends -&gt; include in jinja2 clone to correctly reflect jinja semantics</li>
+<li>templates: implemented jinja2 blocks</li>
+<li>templates: implemented jinja2 extend</li>
+<li>templates: fixed empty for/if blocks</li>
+<li>Added unit tests for pg_db.fs</li>
+<li>Added unit tests for template extends and blocks cases</li>
+</ul>
+<h3><a name="v1-0-2" class="anchor" href="#v1-0-2">v1.0.2</a></h3>
+<ul>
+<li>Bug fix for premature dbconnection returning to pool</li>
+</ul>
+<h3><a name="v1-0-1" class="anchor" href="#v1-0-1">v1.0.1</a></h3>
+<ul>
+<li>Added logging for queries (optionally conditional on runtime)</li>
+<li>Added logging for connection pool usage</li>
+<li>Killed bug due to premature release of db connection</li>
+<li>Added support for ignoredColumns argument to InsertMany for db supplied column values</li>
+</ul>
+<h3><a name="v1-0-0" class="anchor" href="#v1-0-0">v1.0.0</a></h3>
+<ul>
+<li>Added external transaction support to FreQL InsertMany</li>
+<li>Added error message for table not found on FreqInsert</li>
+<li>Added typed URL dispatch functions to catch errors at edit time</li>
+<li>Instead of box myFunc   , use  D0 myFunc  (or D1 myFunc if it takes 1 param etc, D2.. D7 are defined)</li>
+</ul>
+<h3><a name="v0-9-0" class="anchor" href="#v0-9-0">v0.9.0</a></h3>
+<ul>
+<li>Added FreQL - F# Record / SQL support under Fss.Data.Postgres</li>
+</ul>
+<h3><a name="v0-8-0" class="anchor" href="#v0-8-0">v0.8.0</a></h3>
+<ul>
+<li>Fixed bug with returning unicode text strings that was causing a discrepancy in content length and actual # of bytes.</li>
+<li>Added /index.html page to ease access to example cases.</li>
+</ul>
+<h3><a name="v0-7-1" class="anchor" href="#v0-7-1">v0.7.1</a></h3>
+<ul>
+<li>Added mutex around thread tracking to prevent concurrent thread addition during iteration for shutdown</li>
+</ul>
+<h3><a name="v0-7-0" class="anchor" href="#v0-7-0">v0.7.0</a></h3>
+<ul>
+<li>Cleaned up some critical network/streamwriter buffer flushing bugs that could under some circumstances create issues</li>
+</ul>
+<h3><a name="v0-6-4" class="anchor" href="#v0-6-4">v0.6.4</a></h3>
+<ul>
+<li>Added Stop() method to shut down server</li>
+</ul>
+<h3><a name="v0-6-3" class="anchor" href="#v0-6-3">v0.6.3</a></h3>
+<ul>
+<li>Recursive application of variable expansion for included header files</li>
+<li>Fixes to form argument parsing</li>
+</ul>
+<h3><a name="v0-6-0" class="anchor" href="#v0-6-0">v0.6.0</a></h3>
+<ul>
+<li>Added simple pooling system to help apps manage connection pools etc</li>
+</ul>
+<h3><a name="v0-5-8" class="anchor" href="#v0-5-8">v0.5.8</a></h3>
+<ul>
+<li>replaces error message with "none" for null values in template fields</li>
+</ul>
+<h3><a name="v0-5-7" class="anchor" href="#v0-5-7">v0.5.7</a></h3>
+<ul>
+<li>fix for post streams lingering on auth failure</li>
+<li>int64 ICONST64 template implementation</li>
+</ul>
+<h3><a name="v0-5-6" class="anchor" href="#v0-5-6">v0.5.6</a></h3>
+<ul>
+<li>'{% else %}' implemented</li>
+</ul>
+<h3><a name="v0-5-5" class="anchor" href="#v0-5-5">v0.5.5</a></h3>
+<ul>
+<li>not operator implemented</li>
+<li>template extensions working - see /template1 example in FssExample</li>
+</ul>
+<h3><a name="v0-5-4" class="anchor" href="#v0-5-4">v0.5.4</a></h3>
+<ul>
+<li>Bug fix for dot notation references in local variables</li>
+</ul>
+<h3><a name="v0-5-3" class="anchor" href="#v0-5-3">v0.5.3</a></h3>
+<ul>
+<li>Better logging for error reporting</li>
+<li>Fixes for single '{ and }' characters in templates</li>
+</ul>
+<h3><a name="v0-5-0" class="anchor" href="#v0-5-0">v0.5.0</a></h3>
+<ul>
+<li>Major clean up of template library, bug fixes and addition of many tests</li>
+</ul>
+<h3><a name="v0-4-5" class="anchor" href="#v0-4-5">v0.4.5</a></h3>
+<ul>
+<li>Added GET member and parsing of ? arguments after GET calls.</li>
+</ul>
+<h3><a name="v0-4-0" class="anchor" href="#v0-4-0">v0.4.0</a></h3>
+<ul>
+<li>Hook added to allow security/session implementations on top of Fss.UD</li>
+<li>Prototype JSON library included, allows deserialization,</li>
+<li>objects not implemented yet</li>
+<li>AddDispatcher method added to UD to allow later addition to the dispatch URLS</li>
+<li>Template system moved into Template module from Playground, basically working</li>
+</ul>
+<h3><a name="v0-3-0" class="anchor" href="#v0-3-0">v0.3.0</a></h3>
+<ul>
+<li>removed non tail recursive code in main dispatch loop</li>
+<li>extended experimental templating system to parse and handle for loops.  Not complete yet.</li>
+</ul>
+<h3><a name="v0-1-1" class="anchor" href="#v0-1-1">v0.1.1</a></h3>
+<ul>
+<li>added support for user addition of custom headers and a JPEGResponse type.  Added example imgDownload() method</li>
+</ul>
+<h3><a name="v0-1-0" class="anchor" href="#v0-1-0">v0.1.0</a></h3>
+<ul>
+<li>added ReadPostAsBytes() ReadPostAsString() methods to assist pulling back post data.</li>
+<li>added assertion example</li>
+</ul>
+<h3><a name="v0-0-0" class="anchor" href="#v0-0-0">v0.0.0</a></h3>
+<ul>
+<li>basic web server framework released</li>
+</ul>
+
+
+        </div>
+        <div class="span3">
+          <img src="/fss/img/logo.png" alt="F# Project" style="width:150px;margin:10px" />  
+          <ul class="nav nav-list" id="menu" style="margin-top: 20px;">
+            <li class="nav-header">fss</li>
+            <li><a href="/fss/index.html">Home page</a></li>
+            <li class="divider"></li>
+            <li><a href="http://nuget.org/packages/fss">Get Library via NuGet</a></li>
+            <li><a href="http://github.com/daz10000/fss">Source Code on GitHub</a></li>
+            <li><a href="/fss/license.html">License</a></li>
+            <li><a href="/fss/release-notes.html">Release Notes</a></li>
+            
+            <li class="nav-header">Getting started</li>
+            <li><a href="/fss/tutorial.html">Sample tutorial</a></li>
+
+            <li class="nav-header">Documentation</li>
+            <li><a href="/fss/reference/index.html">API Reference</a></li>
+          </ul>
+        </div>
+      </div>
+    </div>
+    <a href="http://github.com/daz10000/fss"><img style="position: absolute; top: 0; right: 0; border: 0;" src="https://s3.amazonaws.com/github/ribbons/forkme_right_gray_6d6d6d.png" alt="Fork me on GitHub"/></a>
+  </body>
+  </html>

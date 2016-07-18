@@ -1,0 +1,581 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8"/>
+    <title>DynamicSqlConnection<'Conn, 'Parameter, 'Customizer> - fss</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <meta name="description" content=""/>
+    <meta name="author" content="Darren Platt"/>
+
+    <script src="https://code.jquery.com/jquery-1.8.0.js"></script>
+    <script src="https://code.jquery.com/ui/1.8.23/jquery-ui.js"></script>
+    <script src="https://netdna.bootstrapcdn.com/twitter-bootstrap/2.2.1/js/bootstrap.min.js"></script>
+    <link href="https://netdna.bootstrapcdn.com/twitter-bootstrap/2.2.1/css/bootstrap-combined.min.css" rel="stylesheet"/>
+
+    <link type="text/css" rel="stylesheet" href="/fss/content/style.css" />
+    <script type="text/javascript" src="/fss/content/tips.js"></script>
+    <!-- HTML5 shim, for IE6-8 support of HTML5 elements -->
+    <!--[if lt IE 9]>
+      <script src="https://oss.maxcdn.com/html5shiv/3.7.2/html5shiv.min.js"></script>
+    <![endif]-->
+  </head>
+  <body>
+    <div class="container">
+      <div class="masthead">
+        <ul class="nav nav-pills pull-right">
+          <li><a href="http://fsharp.org">fsharp.org</a></li>
+          <li><a href="http://github.com/daz10000/fss">github page</a></li>
+        </ul>
+        <h3 class="muted"><a href="/fss/index.html">fss</a></h3>
+      </div>
+      <hr />
+      <div class="row">
+        <div class="span9" id="main">
+          
+
+
+
+<h1>DynamicSqlConnection<'Conn, 'Parameter, 'Customizer></h1>
+<p>
+  <span>Namespace: Fss.Data</span><br />
+  <span>Parent Module: <a href="fss-data-common.html">Common</a></span>
+</p>
+<div class="xmldoc">
+</div>
+  <h3>Constructors</h3>
+  <table class="table table-bordered member-list">
+    <thead>
+      <tr><td>Constructor</td><td>Description</td></tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td class="member-name">
+
+          <code onmouseout="hideTip(event, '307', 307)" onmouseover="showTip(event, '307', 307)">
+            new(connStr)
+          </code>
+          <div class="tip" id="307">
+            <strong>Signature:</strong> connStr:string -&gt; DynamicSqlConnection&lt;&#39;Conn,&#39;Parameter,&#39;Customizer&gt;<br />
+                      </div>
+        </td>
+        <td class="xmldoc">
+            <a href="http://github.com/daz10000/fss/tree/master/src/fss/db_common.fs#L472-472" class="github-link">
+              <img src="../content/img/github.png" class="normal" />
+              <img src="../content/img/github-blue.png" class="hover" />
+            </a>
+          
+              <p>CompiledName: <code>.ctor</code></p>
+        </td>
+      </tr>
+      <tr>
+        <td class="member-name">
+
+          <code onmouseout="hideTip(event, '308', 308)" onmouseover="showTip(event, '308', 308)">
+            new(connStr, poolSize)
+          </code>
+          <div class="tip" id="308">
+            <strong>Signature:</strong> (connStr:string * poolSize:int) -&gt; DynamicSqlConnection&lt;&#39;Conn,&#39;Parameter,&#39;Customizer&gt;<br />
+                      </div>
+        </td>
+        <td class="xmldoc">
+            <a href="http://github.com/daz10000/fss/tree/master/src/fss/db_common.fs#L135-135" class="github-link">
+              <img src="../content/img/github.png" class="normal" />
+              <img src="../content/img/github-blue.png" class="hover" />
+            </a>
+          
+              <p>CompiledName: <code>.ctor</code></p>
+        </td>
+      </tr>
+    </tbody>
+  </table>
+  <h3>Instance members</h3>
+  <table class="table table-bordered member-list">
+    <thead>
+      <tr><td>Instance member</td><td>Description</td></tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td class="member-name">
+
+          <code onmouseout="hideTip(event, '309', 309)" onmouseover="showTip(event, '309', 309)">
+            cc(comm)
+          </code>
+          <div class="tip" id="309">
+            <strong>Signature:</strong> comm:string -&gt; DynamicSqlCommand&lt;&#39;Parameter&gt;<br />
+                      </div>
+        </td>
+        <td class="xmldoc">
+            <a href="http://github.com/daz10000/fss/tree/master/src/fss/db_common.fs#L482-482" class="github-link">
+              <img src="../content/img/github.png" class="normal" />
+              <img src="../content/img/github-blue.png" class="hover" />
+            </a>
+          
+        </td>
+      </tr>
+      <tr>
+        <td class="member-name">
+
+          <code onmouseout="hideTip(event, '310', 310)" onmouseover="showTip(event, '310', 310)">
+            Command(commandText)
+          </code>
+          <div class="tip" id="310">
+            <strong>Signature:</strong> commandText:string -&gt; DynamicSqlCommand&lt;&#39;Parameter&gt;<br />
+                      </div>
+        </td>
+        <td class="xmldoc">
+            <a href="http://github.com/daz10000/fss/tree/master/src/fss/db_common.fs#L483-483" class="github-link">
+              <img src="../content/img/github.png" class="normal" />
+              <img src="../content/img/github-blue.png" class="hover" />
+            </a>
+          
+        </td>
+      </tr>
+      <tr>
+        <td class="member-name">
+
+          <code onmouseout="hideTip(event, '311', 311)" onmouseover="showTip(event, '311', 311)">
+            ExecuteScalar(sql)
+          </code>
+          <div class="tip" id="311">
+            <strong>Signature:</strong> sql:string -&gt; obj<br />
+                      </div>
+        </td>
+        <td class="xmldoc">
+            <a href="http://github.com/daz10000/fss/tree/master/src/fss/db_common.fs#L468-468" class="github-link">
+              <img src="../content/img/github.png" class="normal" />
+              <img src="../content/img/github-blue.png" class="hover" />
+            </a>
+          
+        </td>
+      </tr>
+      <tr>
+        <td class="member-name">
+
+          <code onmouseout="hideTip(event, '312', 312)" onmouseover="showTip(event, '312', 312)">
+            InsertMany(...)
+          </code>
+          <div class="tip" id="312">
+            <strong>Signature:</strong> (items:seq&lt;&#39;T&gt; * table:string option * transProvided:DynamicSqlTransaction&lt;&#39;Parameter,&#39;Conn,&#39;Customizer&gt; option * ignoredColumns:seq&lt;string&gt; option) -&gt; &#39;R []<br />
+                      </div>
+        </td>
+        <td class="xmldoc">
+            <a href="http://github.com/daz10000/fss/tree/master/src/fss/db_common.fs#L253-253" class="github-link">
+              <img src="../content/img/github.png" class="normal" />
+              <img src="../content/img/github-blue.png" class="hover" />
+            </a>
+          
+        </td>
+      </tr>
+      <tr>
+        <td class="member-name">
+
+          <code onmouseout="hideTip(event, '313', 313)" onmouseover="showTip(event, '313', 313)">
+            InsertOne(...)
+          </code>
+          <div class="tip" id="313">
+            <strong>Signature:</strong> (item:&#39;T * table:string option * transProvided:DynamicSqlTransaction&lt;&#39;Parameter,&#39;Conn,&#39;Customizer&gt; option * ignoredColumns:seq&lt;string&gt; option) -&gt; &#39;R<br />
+                      </div>
+        </td>
+        <td class="xmldoc">
+            <a href="http://github.com/daz10000/fss/tree/master/src/fss/db_common.fs#L394-394" class="github-link">
+              <img src="../content/img/github.png" class="normal" />
+              <img src="../content/img/github-blue.png" class="hover" />
+            </a>
+          
+        </td>
+      </tr>
+      <tr>
+        <td class="member-name">
+
+          <code onmouseout="hideTip(event, '314', 314)" onmouseover="showTip(event, '314', 314)">
+            KeepAlive()
+          </code>
+          <div class="tip" id="314">
+            <strong>Signature:</strong> unit -&gt; bool<br />
+                      </div>
+        </td>
+        <td class="xmldoc">
+            <a href="http://github.com/daz10000/fss/tree/master/src/fss/db_common.fs#L218-218" class="github-link">
+              <img src="../content/img/github.png" class="normal" />
+              <img src="../content/img/github-blue.png" class="hover" />
+            </a>
+          
+              <p>CompiledName: <code>set_KeepAlive</code></p>
+        </td>
+      </tr>
+      <tr>
+        <td class="member-name">
+
+          <code onmouseout="hideTip(event, '315', 315)" onmouseover="showTip(event, '315', 315)">
+            KeepAlive()
+          </code>
+          <div class="tip" id="315">
+            <strong>Signature:</strong> unit -&gt; unit<br />
+                      </div>
+        </td>
+        <td class="xmldoc">
+            <a href="http://github.com/daz10000/fss/tree/master/src/fss/db_common.fs#L218-218" class="github-link">
+              <img src="../content/img/github.png" class="normal" />
+              <img src="../content/img/github-blue.png" class="hover" />
+            </a>
+          
+              <p>CompiledName: <code>get_KeepAlive</code></p>
+        </td>
+      </tr>
+      <tr>
+        <td class="member-name">
+
+          <code onmouseout="hideTip(event, '316', 316)" onmouseover="showTip(event, '316', 316)">
+            Log(msg)
+          </code>
+          <div class="tip" id="316">
+            <strong>Signature:</strong> msg:string -&gt; unit<br />
+                      </div>
+        </td>
+        <td class="xmldoc">
+            <a href="http://github.com/daz10000/fss/tree/master/src/fss/db_common.fs#L220-220" class="github-link">
+              <img src="../content/img/github.png" class="normal" />
+              <img src="../content/img/github-blue.png" class="hover" />
+            </a>
+          
+        </td>
+      </tr>
+      <tr>
+        <td class="member-name">
+
+          <code onmouseout="hideTip(event, '317', 317)" onmouseover="showTip(event, '317', 317)">
+            LogConnUse()
+          </code>
+          <div class="tip" id="317">
+            <strong>Signature:</strong> unit -&gt; bool<br />
+                      </div>
+        </td>
+        <td class="xmldoc">
+            <a href="http://github.com/daz10000/fss/tree/master/src/fss/db_common.fs#L221-221" class="github-link">
+              <img src="../content/img/github.png" class="normal" />
+              <img src="../content/img/github-blue.png" class="hover" />
+            </a>
+          
+              <p>CompiledName: <code>set_LogConnUse</code></p>
+        </td>
+      </tr>
+      <tr>
+        <td class="member-name">
+
+          <code onmouseout="hideTip(event, '318', 318)" onmouseover="showTip(event, '318', 318)">
+            LogConnUse()
+          </code>
+          <div class="tip" id="318">
+            <strong>Signature:</strong> unit -&gt; unit<br />
+                      </div>
+        </td>
+        <td class="xmldoc">
+            <a href="http://github.com/daz10000/fss/tree/master/src/fss/db_common.fs#L221-221" class="github-link">
+              <img src="../content/img/github.png" class="normal" />
+              <img src="../content/img/github-blue.png" class="hover" />
+            </a>
+          
+              <p>CompiledName: <code>get_LogConnUse</code></p>
+        </td>
+      </tr>
+      <tr>
+        <td class="member-name">
+
+          <code onmouseout="hideTip(event, '319', 319)" onmouseover="showTip(event, '319', 319)">
+            Logfile()
+          </code>
+          <div class="tip" id="319">
+            <strong>Signature:</strong> unit -&gt; string<br />
+                      </div>
+        </td>
+        <td class="xmldoc">
+            <a href="http://github.com/daz10000/fss/tree/master/src/fss/db_common.fs#L212-212" class="github-link">
+              <img src="../content/img/github.png" class="normal" />
+              <img src="../content/img/github-blue.png" class="hover" />
+            </a>
+          <p>Set a filename for logging output</p>
+
+
+              <p>CompiledName: <code>set_Logfile</code></p>
+        </td>
+      </tr>
+      <tr>
+        <td class="member-name">
+
+          <code onmouseout="hideTip(event, '320', 320)" onmouseover="showTip(event, '320', 320)">
+            Logfile()
+          </code>
+          <div class="tip" id="320">
+            <strong>Signature:</strong> unit -&gt; unit<br />
+                      </div>
+        </td>
+        <td class="xmldoc">
+            <a href="http://github.com/daz10000/fss/tree/master/src/fss/db_common.fs#L211-211" class="github-link">
+              <img src="../content/img/github.png" class="normal" />
+              <img src="../content/img/github-blue.png" class="hover" />
+            </a>
+          <p>Set a filename for logging output</p>
+
+
+              <p>CompiledName: <code>get_Logfile</code></p>
+        </td>
+      </tr>
+      <tr>
+        <td class="member-name">
+
+          <code onmouseout="hideTip(event, '321', 321)" onmouseover="showTip(event, '321', 321)">
+            LogLongerThan()
+          </code>
+          <div class="tip" id="321">
+            <strong>Signature:</strong> unit -&gt; float<br />
+                      </div>
+        </td>
+        <td class="xmldoc">
+            <a href="http://github.com/daz10000/fss/tree/master/src/fss/db_common.fs#L223-223" class="github-link">
+              <img src="../content/img/github.png" class="normal" />
+              <img src="../content/img/github-blue.png" class="hover" />
+            </a>
+          
+              <p>CompiledName: <code>set_LogLongerThan</code></p>
+        </td>
+      </tr>
+      <tr>
+        <td class="member-name">
+
+          <code onmouseout="hideTip(event, '322', 322)" onmouseover="showTip(event, '322', 322)">
+            LogLongerThan()
+          </code>
+          <div class="tip" id="322">
+            <strong>Signature:</strong> unit -&gt; unit<br />
+                      </div>
+        </td>
+        <td class="xmldoc">
+            <a href="http://github.com/daz10000/fss/tree/master/src/fss/db_common.fs#L223-223" class="github-link">
+              <img src="../content/img/github.png" class="normal" />
+              <img src="../content/img/github-blue.png" class="hover" />
+            </a>
+          
+              <p>CompiledName: <code>get_LogLongerThan</code></p>
+        </td>
+      </tr>
+      <tr>
+        <td class="member-name">
+
+          <code onmouseout="hideTip(event, '323', 323)" onmouseover="showTip(event, '323', 323)">
+            LogQueries()
+          </code>
+          <div class="tip" id="323">
+            <strong>Signature:</strong> unit -&gt; bool<br />
+                      </div>
+        </td>
+        <td class="xmldoc">
+            <a href="http://github.com/daz10000/fss/tree/master/src/fss/db_common.fs#L222-222" class="github-link">
+              <img src="../content/img/github.png" class="normal" />
+              <img src="../content/img/github-blue.png" class="hover" />
+            </a>
+          
+              <p>CompiledName: <code>set_LogQueries</code></p>
+        </td>
+      </tr>
+      <tr>
+        <td class="member-name">
+
+          <code onmouseout="hideTip(event, '324', 324)" onmouseover="showTip(event, '324', 324)">
+            LogQueries()
+          </code>
+          <div class="tip" id="324">
+            <strong>Signature:</strong> unit -&gt; unit<br />
+                      </div>
+        </td>
+        <td class="xmldoc">
+            <a href="http://github.com/daz10000/fss/tree/master/src/fss/db_common.fs#L222-222" class="github-link">
+              <img src="../content/img/github.png" class="normal" />
+              <img src="../content/img/github-blue.png" class="hover" />
+            </a>
+          
+              <p>CompiledName: <code>get_LogQueries</code></p>
+        </td>
+      </tr>
+      <tr>
+        <td class="member-name">
+
+          <code onmouseout="hideTip(event, '325', 325)" onmouseover="showTip(event, '325', 325)">
+            Opts
+          </code>
+          <div class="tip" id="325">
+            <strong>Signature:</strong> ConnOpts<br />
+                      </div>
+        </td>
+        <td class="xmldoc">
+            <a href="http://github.com/daz10000/fss/tree/master/src/fss/db_common.fs#L219-219" class="github-link">
+              <img src="../content/img/github.png" class="normal" />
+              <img src="../content/img/github-blue.png" class="hover" />
+            </a>
+          
+              <p>CompiledName: <code>get_Opts</code></p>
+        </td>
+      </tr>
+      <tr>
+        <td class="member-name">
+
+          <code onmouseout="hideTip(event, '326', 326)" onmouseover="showTip(event, '326', 326)">
+            Query(sql, transProvided)
+          </code>
+          <div class="tip" id="326">
+            <strong>Signature:</strong> (sql:string * transProvided:DynamicSqlTransaction&lt;&#39;Parameter,&#39;Conn,&#39;Customizer&gt; option) -&gt; seq&lt;&#39;T&gt;<br />
+                      </div>
+        </td>
+        <td class="xmldoc">
+            <a href="http://github.com/daz10000/fss/tree/master/src/fss/db_common.fs#L409-409" class="github-link">
+              <img src="../content/img/github.png" class="normal" />
+              <img src="../content/img/github-blue.png" class="hover" />
+            </a>
+          
+        </td>
+      </tr>
+      <tr>
+        <td class="member-name">
+
+          <code onmouseout="hideTip(event, '327', 327)" onmouseover="showTip(event, '327', 327)">
+            RegisterEnum()
+          </code>
+          <div class="tip" id="327">
+            <strong>Signature:</strong> unit -&gt; unit<br />
+                      </div>
+        </td>
+        <td class="xmldoc">
+            <a href="http://github.com/daz10000/fss/tree/master/src/fss/db_common.fs#L225-225" class="github-link">
+              <img src="../content/img/github.png" class="normal" />
+              <img src="../content/img/github-blue.png" class="hover" />
+            </a>
+          
+        </td>
+      </tr>
+      <tr>
+        <td class="member-name">
+
+          <code onmouseout="hideTip(event, '328', 328)" onmouseover="showTip(event, '328', 328)">
+            Release(z)
+          </code>
+          <div class="tip" id="328">
+            <strong>Signature:</strong> z:&#39;?7893 -&gt; unit<br />
+                      </div>
+        </td>
+        <td class="xmldoc">
+            <a href="http://github.com/daz10000/fss/tree/master/src/fss/db_common.fs#L217-217" class="github-link">
+              <img src="../content/img/github.png" class="normal" />
+              <img src="../content/img/github-blue.png" class="hover" />
+            </a>
+          
+        </td>
+      </tr>
+      <tr>
+        <td class="member-name">
+
+          <code onmouseout="hideTip(event, '329', 329)" onmouseover="showTip(event, '329', 329)">
+            Reload()
+          </code>
+          <div class="tip" id="329">
+            <strong>Signature:</strong> unit -&gt; unit<br />
+                      </div>
+        </td>
+        <td class="xmldoc">
+            <a href="http://github.com/daz10000/fss/tree/master/src/fss/db_common.fs#L228-228" class="github-link">
+              <img src="../content/img/github.png" class="normal" />
+              <img src="../content/img/github-blue.png" class="hover" />
+            </a>
+          
+        </td>
+      </tr>
+      <tr>
+        <td class="member-name">
+
+          <code onmouseout="hideTip(event, '330', 330)" onmouseover="showTip(event, '330', 330)">
+            StartTrans()
+          </code>
+          <div class="tip" id="330">
+            <strong>Signature:</strong> unit -&gt; DynamicSqlTransaction&lt;&#39;Parameter,&#39;Conn,&#39;Customizer&gt;<br />
+                      </div>
+        </td>
+        <td class="xmldoc">
+            <a href="http://github.com/daz10000/fss/tree/master/src/fss/db_common.fs#L490-490" class="github-link">
+              <img src="../content/img/github.png" class="normal" />
+              <img src="../content/img/github-blue.png" class="hover" />
+            </a>
+          
+        </td>
+      </tr>
+      <tr>
+        <td class="member-name">
+
+          <code onmouseout="hideTip(event, '331', 331)" onmouseover="showTip(event, '331', 331)">
+            Take()
+          </code>
+          <div class="tip" id="331">
+            <strong>Signature:</strong> unit -&gt; DbConnection<br />
+                      </div>
+        </td>
+        <td class="xmldoc">
+            <a href="http://github.com/daz10000/fss/tree/master/src/fss/db_common.fs#L216-216" class="github-link">
+              <img src="../content/img/github.png" class="normal" />
+              <img src="../content/img/github-blue.png" class="hover" />
+            </a>
+          
+        </td>
+      </tr>
+    </tbody>
+  </table>
+  <h3>Static members</h3>
+  <table class="table table-bordered member-list">
+    <thead>
+      <tr><td>Static member</td><td>Description</td></tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td class="member-name">
+
+          <code onmouseout="hideTip(event, '332', 332)" onmouseover="showTip(event, '332', 332)">
+            ( ? )(conn, name)
+          </code>
+          <div class="tip" id="332">
+            <strong>Signature:</strong> (conn:DynamicSqlConnection&lt;&#39;Conn,&#39;Parameter,&#39;Customizer&gt; * name:string) -&gt; DynamicSqlCommand&lt;&#39;Parameter&gt;<br />
+                      </div>
+        </td>
+        <td class="xmldoc">
+            <a href="http://github.com/daz10000/fss/tree/master/src/fss/db_common.fs#L475-475" class="github-link">
+              <img src="../content/img/github.png" class="normal" />
+              <img src="../content/img/github-blue.png" class="hover" />
+            </a>
+          <p>Creates command that calls the specified stored procedure</p>
+
+
+              <p>CompiledName: <code>op_Dynamic</code></p>
+        </td>
+      </tr>
+    </tbody>
+  </table>
+
+        </div>
+        <div class="span3">
+          <img src="/fss/img/logo.png" alt="F# Project" style="width:150px;margin:10px" />  
+          <ul class="nav nav-list" id="menu" style="margin-top: 20px;">
+            <li class="nav-header">fss</li>
+            <li><a href="/fss/index.html">Home page</a></li>
+            <li class="divider"></li>
+            <li><a href="http://nuget.org/packages/fss">Get Library via NuGet</a></li>
+            <li><a href="http://github.com/daz10000/fss">Source Code on GitHub</a></li>
+            <li><a href="/fss/license.html">License</a></li>
+            <li><a href="/fss/release-notes.html">Release Notes</a></li>
+            
+            <li class="nav-header">Getting started</li>
+            <li><a href="/fss/tutorial.html">Sample tutorial</a></li>
+
+            <li class="nav-header">Documentation</li>
+            <li><a href="/fss/reference/index.html">API Reference</a></li>
+          </ul>
+        </div>
+      </div>
+    </div>
+    <a href="http://github.com/daz10000/fss"><img style="position: absolute; top: 0; right: 0; border: 0;" src="https://s3.amazonaws.com/github/ribbons/forkme_right_gray_6d6d6d.png" alt="Fork me on GitHub"/></a>
+  </body>
+  </html>

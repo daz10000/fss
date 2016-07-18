@@ -1,0 +1,583 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8"/>
+    <title>Expression - fss</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <meta name="description" content=""/>
+    <meta name="author" content="Darren Platt"/>
+
+    <script src="https://code.jquery.com/jquery-1.8.0.js"></script>
+    <script src="https://code.jquery.com/ui/1.8.23/jquery-ui.js"></script>
+    <script src="https://netdna.bootstrapcdn.com/twitter-bootstrap/2.2.1/js/bootstrap.min.js"></script>
+    <link href="https://netdna.bootstrapcdn.com/twitter-bootstrap/2.2.1/css/bootstrap-combined.min.css" rel="stylesheet"/>
+
+    <link type="text/css" rel="stylesheet" href="/fss/content/style.css" />
+    <script type="text/javascript" src="/fss/content/tips.js"></script>
+    <!-- HTML5 shim, for IE6-8 support of HTML5 elements -->
+    <!--[if lt IE 9]>
+      <script src="https://oss.maxcdn.com/html5shiv/3.7.2/html5shiv.min.js"></script>
+    <![endif]-->
+  </head>
+  <body>
+    <div class="container">
+      <div class="masthead">
+        <ul class="nav nav-pills pull-right">
+          <li><a href="http://fsharp.org">fsharp.org</a></li>
+          <li><a href="http://github.com/daz10000/fss">github page</a></li>
+        </ul>
+        <h3 class="muted"><a href="/fss/index.html">fss</a></h3>
+      </div>
+      <hr />
+      <div class="row">
+        <div class="span9" id="main">
+          
+
+
+
+<h1>Expression</h1>
+<p>
+  <span>Namespace: Fss</span><br />
+  <span>Parent Module: <a href="fss-template.html">Template</a></span>
+</p>
+<div class="xmldoc">
+<p>Components of mathematical expressions</p>
+
+</div>
+  <h3>Union Cases</h3>
+  <table class="table table-bordered member-list">
+    <thead>
+      <tr><td>Union Case</td><td>Description</td></tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td class="member-name">
+
+          <code onmouseout="hideTip(event, '148', 148)" onmouseover="showTip(event, '148', 148)">
+            ADD(Expression,Expression)
+          </code>
+          <div class="tip" id="148">
+            <strong>Signature:</strong> Expression * Expression<br />
+                      </div>
+        </td>
+        <td class="xmldoc">
+            <a href="http://github.com/daz10000/fss/tree/master/src/fss/template.fs#L39-39" class="github-link">
+              <img src="../content/img/github.png" class="normal" />
+              <img src="../content/img/github-blue.png" class="hover" />
+            </a>
+          
+        </td>
+      </tr>
+      <tr>
+        <td class="member-name">
+
+          <code onmouseout="hideTip(event, '149', 149)" onmouseover="showTip(event, '149', 149)">
+            AND(Expression,Expression)
+          </code>
+          <div class="tip" id="149">
+            <strong>Signature:</strong> Expression * Expression<br />
+                      </div>
+        </td>
+        <td class="xmldoc">
+            <a href="http://github.com/daz10000/fss/tree/master/src/fss/template.fs#L51-51" class="github-link">
+              <img src="../content/img/github.png" class="normal" />
+              <img src="../content/img/github-blue.png" class="hover" />
+            </a>
+          
+        </td>
+      </tr>
+      <tr>
+        <td class="member-name">
+
+          <code onmouseout="hideTip(event, '150', 150)" onmouseover="showTip(event, '150', 150)">
+            ARRAYCONST(Expression array)
+          </code>
+          <div class="tip" id="150">
+            <strong>Signature:</strong> Expression array<br />
+                      </div>
+        </td>
+        <td class="xmldoc">
+            <a href="http://github.com/daz10000/fss/tree/master/src/fss/template.fs#L59-59" class="github-link">
+              <img src="../content/img/github.png" class="normal" />
+              <img src="../content/img/github-blue.png" class="hover" />
+            </a>
+          
+        </td>
+      </tr>
+      <tr>
+        <td class="member-name">
+
+          <code onmouseout="hideTip(event, '151', 151)" onmouseover="showTip(event, '151', 151)">
+            BCONST(bool)
+          </code>
+          <div class="tip" id="151">
+            <strong>Signature:</strong> bool<br />
+                      </div>
+        </td>
+        <td class="xmldoc">
+            <a href="http://github.com/daz10000/fss/tree/master/src/fss/template.fs#L62-62" class="github-link">
+              <img src="../content/img/github.png" class="normal" />
+              <img src="../content/img/github-blue.png" class="hover" />
+            </a>
+          
+        </td>
+      </tr>
+      <tr>
+        <td class="member-name">
+
+          <code onmouseout="hideTip(event, '152', 152)" onmouseover="showTip(event, '152', 152)">
+            BOOLEXP(Expression)
+          </code>
+          <div class="tip" id="152">
+            <strong>Signature:</strong> Expression<br />
+                      </div>
+        </td>
+        <td class="xmldoc">
+            <a href="http://github.com/daz10000/fss/tree/master/src/fss/template.fs#L52-52" class="github-link">
+              <img src="../content/img/github.png" class="normal" />
+              <img src="../content/img/github-blue.png" class="hover" />
+            </a>
+          
+        </td>
+      </tr>
+      <tr>
+        <td class="member-name">
+
+          <code onmouseout="hideTip(event, '153', 153)" onmouseover="showTip(event, '153', 153)">
+            CLASS(Map&lt;string,Expression&gt;)
+          </code>
+          <div class="tip" id="153">
+            <strong>Signature:</strong> Map&lt;string,Expression&gt;<br />
+                      </div>
+        </td>
+        <td class="xmldoc">
+            <a href="http://github.com/daz10000/fss/tree/master/src/fss/template.fs#L63-63" class="github-link">
+              <img src="../content/img/github.png" class="normal" />
+              <img src="../content/img/github-blue.png" class="hover" />
+            </a>
+          
+        </td>
+      </tr>
+      <tr>
+        <td class="member-name">
+
+          <code onmouseout="hideTip(event, '154', 154)" onmouseover="showTip(event, '154', 154)">
+            CURLYEXP(Expression)
+          </code>
+          <div class="tip" id="154">
+            <strong>Signature:</strong> Expression<br />
+                      </div>
+        </td>
+        <td class="xmldoc">
+            <a href="http://github.com/daz10000/fss/tree/master/src/fss/template.fs#L38-38" class="github-link">
+              <img src="../content/img/github.png" class="normal" />
+              <img src="../content/img/github-blue.png" class="hover" />
+            </a>
+          
+        </td>
+      </tr>
+      <tr>
+        <td class="member-name">
+
+          <code onmouseout="hideTip(event, '155', 155)" onmouseover="showTip(event, '155', 155)">
+            DIVIDE(Expression,Expression)
+          </code>
+          <div class="tip" id="155">
+            <strong>Signature:</strong> Expression * Expression<br />
+                      </div>
+        </td>
+        <td class="xmldoc">
+            <a href="http://github.com/daz10000/fss/tree/master/src/fss/template.fs#L54-54" class="github-link">
+              <img src="../content/img/github.png" class="normal" />
+              <img src="../content/img/github-blue.png" class="hover" />
+            </a>
+          
+        </td>
+      </tr>
+      <tr>
+        <td class="member-name">
+
+          <code onmouseout="hideTip(event, '156', 156)" onmouseover="showTip(event, '156', 156)">
+            DOT(Expression,string)
+          </code>
+          <div class="tip" id="156">
+            <strong>Signature:</strong> Expression * string<br />
+                      </div>
+        </td>
+        <td class="xmldoc">
+            <a href="http://github.com/daz10000/fss/tree/master/src/fss/template.fs#L60-60" class="github-link">
+              <img src="../content/img/github.png" class="normal" />
+              <img src="../content/img/github-blue.png" class="hover" />
+            </a>
+          
+        </td>
+      </tr>
+      <tr>
+        <td class="member-name">
+
+          <code onmouseout="hideTip(event, '157', 157)" onmouseover="showTip(event, '157', 157)">
+            EQUALS(Expression,Expression)
+          </code>
+          <div class="tip" id="157">
+            <strong>Signature:</strong> Expression * Expression<br />
+                      </div>
+        </td>
+        <td class="xmldoc">
+            <a href="http://github.com/daz10000/fss/tree/master/src/fss/template.fs#L41-41" class="github-link">
+              <img src="../content/img/github.png" class="normal" />
+              <img src="../content/img/github-blue.png" class="hover" />
+            </a>
+          
+        </td>
+      </tr>
+      <tr>
+        <td class="member-name">
+
+          <code onmouseout="hideTip(event, '158', 158)" onmouseover="showTip(event, '158', 158)">
+            FCONST(float)
+          </code>
+          <div class="tip" id="158">
+            <strong>Signature:</strong> float<br />
+                      </div>
+        </td>
+        <td class="xmldoc">
+            <a href="http://github.com/daz10000/fss/tree/master/src/fss/template.fs#L55-55" class="github-link">
+              <img src="../content/img/github.png" class="normal" />
+              <img src="../content/img/github-blue.png" class="hover" />
+            </a>
+          
+        </td>
+      </tr>
+      <tr>
+        <td class="member-name">
+
+          <code onmouseout="hideTip(event, '159', 159)" onmouseover="showTip(event, '159', 159)">
+            GREATERTHAN(Expression,Expression)
+          </code>
+          <div class="tip" id="159">
+            <strong>Signature:</strong> Expression * Expression<br />
+                      </div>
+        </td>
+        <td class="xmldoc">
+            <a href="http://github.com/daz10000/fss/tree/master/src/fss/template.fs#L46-46" class="github-link">
+              <img src="../content/img/github.png" class="normal" />
+              <img src="../content/img/github-blue.png" class="hover" />
+            </a>
+          
+        </td>
+      </tr>
+      <tr>
+        <td class="member-name">
+
+          <code onmouseout="hideTip(event, '160', 160)" onmouseover="showTip(event, '160', 160)">
+            GREATERTHANOREQUALTO(...)
+          </code>
+          <div class="tip" id="160">
+            <strong>Signature:</strong> Expression * Expression<br />
+                      </div>
+        </td>
+        <td class="xmldoc">
+            <a href="http://github.com/daz10000/fss/tree/master/src/fss/template.fs#L45-45" class="github-link">
+              <img src="../content/img/github.png" class="normal" />
+              <img src="../content/img/github-blue.png" class="hover" />
+            </a>
+          
+        </td>
+      </tr>
+      <tr>
+        <td class="member-name">
+
+          <code onmouseout="hideTip(event, '161', 161)" onmouseover="showTip(event, '161', 161)">
+            ICONST(int)
+          </code>
+          <div class="tip" id="161">
+            <strong>Signature:</strong> int<br />
+                      </div>
+        </td>
+        <td class="xmldoc">
+            <a href="http://github.com/daz10000/fss/tree/master/src/fss/template.fs#L56-56" class="github-link">
+              <img src="../content/img/github.png" class="normal" />
+              <img src="../content/img/github-blue.png" class="hover" />
+            </a>
+          
+        </td>
+      </tr>
+      <tr>
+        <td class="member-name">
+
+          <code onmouseout="hideTip(event, '162', 162)" onmouseover="showTip(event, '162', 162)">
+            ICONST64(int64)
+          </code>
+          <div class="tip" id="162">
+            <strong>Signature:</strong> int64<br />
+                      </div>
+        </td>
+        <td class="xmldoc">
+            <a href="http://github.com/daz10000/fss/tree/master/src/fss/template.fs#L57-57" class="github-link">
+              <img src="../content/img/github.png" class="normal" />
+              <img src="../content/img/github-blue.png" class="hover" />
+            </a>
+          
+        </td>
+      </tr>
+      <tr>
+        <td class="member-name">
+
+          <code onmouseout="hideTip(event, '163', 163)" onmouseover="showTip(event, '163', 163)">
+            INDEX(Expression,Expression)
+          </code>
+          <div class="tip" id="163">
+            <strong>Signature:</strong> Expression * Expression<br />
+                      </div>
+        </td>
+        <td class="xmldoc">
+            <a href="http://github.com/daz10000/fss/tree/master/src/fss/template.fs#L61-61" class="github-link">
+              <img src="../content/img/github.png" class="normal" />
+              <img src="../content/img/github-blue.png" class="hover" />
+            </a>
+          
+        </td>
+      </tr>
+      <tr>
+        <td class="member-name">
+
+          <code onmouseout="hideTip(event, '164', 164)" onmouseover="showTip(event, '164', 164)">
+            LESSTHAN(Expression,Expression)
+          </code>
+          <div class="tip" id="164">
+            <strong>Signature:</strong> Expression * Expression<br />
+                      </div>
+        </td>
+        <td class="xmldoc">
+            <a href="http://github.com/daz10000/fss/tree/master/src/fss/template.fs#L43-43" class="github-link">
+              <img src="../content/img/github.png" class="normal" />
+              <img src="../content/img/github-blue.png" class="hover" />
+            </a>
+          
+        </td>
+      </tr>
+      <tr>
+        <td class="member-name">
+
+          <code onmouseout="hideTip(event, '165', 165)" onmouseover="showTip(event, '165', 165)">
+            LESSTHANOREQUALTO(Expression,Expression)
+          </code>
+          <div class="tip" id="165">
+            <strong>Signature:</strong> Expression * Expression<br />
+                      </div>
+        </td>
+        <td class="xmldoc">
+            <a href="http://github.com/daz10000/fss/tree/master/src/fss/template.fs#L44-44" class="github-link">
+              <img src="../content/img/github.png" class="normal" />
+              <img src="../content/img/github-blue.png" class="hover" />
+            </a>
+          
+        </td>
+      </tr>
+      <tr>
+        <td class="member-name">
+
+          <code onmouseout="hideTip(event, '166', 166)" onmouseover="showTip(event, '166', 166)">
+            MOD(Expression,Expression)
+          </code>
+          <div class="tip" id="166">
+            <strong>Signature:</strong> Expression * Expression<br />
+                      </div>
+        </td>
+        <td class="xmldoc">
+            <a href="http://github.com/daz10000/fss/tree/master/src/fss/template.fs#L48-48" class="github-link">
+              <img src="../content/img/github.png" class="normal" />
+              <img src="../content/img/github-blue.png" class="hover" />
+            </a>
+          
+        </td>
+      </tr>
+      <tr>
+        <td class="member-name">
+
+          <code onmouseout="hideTip(event, '167', 167)" onmouseover="showTip(event, '167', 167)">
+            MULT(Expression,Expression)
+          </code>
+          <div class="tip" id="167">
+            <strong>Signature:</strong> Expression * Expression<br />
+                      </div>
+        </td>
+        <td class="xmldoc">
+            <a href="http://github.com/daz10000/fss/tree/master/src/fss/template.fs#L47-47" class="github-link">
+              <img src="../content/img/github.png" class="normal" />
+              <img src="../content/img/github-blue.png" class="hover" />
+            </a>
+          
+        </td>
+      </tr>
+      <tr>
+        <td class="member-name">
+
+          <code onmouseout="hideTip(event, '168', 168)" onmouseover="showTip(event, '168', 168)">
+            NEGATE(Expression)
+          </code>
+          <div class="tip" id="168">
+            <strong>Signature:</strong> Expression<br />
+                      </div>
+        </td>
+        <td class="xmldoc">
+            <a href="http://github.com/daz10000/fss/tree/master/src/fss/template.fs#L49-49" class="github-link">
+              <img src="../content/img/github.png" class="normal" />
+              <img src="../content/img/github-blue.png" class="hover" />
+            </a>
+          
+        </td>
+      </tr>
+      <tr>
+        <td class="member-name">
+
+          <code onmouseout="hideTip(event, '169', 169)" onmouseover="showTip(event, '169', 169)">
+            NOT(Expression)
+          </code>
+          <div class="tip" id="169">
+            <strong>Signature:</strong> Expression<br />
+                      </div>
+        </td>
+        <td class="xmldoc">
+            <a href="http://github.com/daz10000/fss/tree/master/src/fss/template.fs#L50-50" class="github-link">
+              <img src="../content/img/github.png" class="normal" />
+              <img src="../content/img/github-blue.png" class="hover" />
+            </a>
+          
+        </td>
+      </tr>
+      <tr>
+        <td class="member-name">
+
+          <code onmouseout="hideTip(event, '170', 170)" onmouseover="showTip(event, '170', 170)">
+            NOTEQUAL(Expression,Expression)
+          </code>
+          <div class="tip" id="170">
+            <strong>Signature:</strong> Expression * Expression<br />
+                      </div>
+        </td>
+        <td class="xmldoc">
+            <a href="http://github.com/daz10000/fss/tree/master/src/fss/template.fs#L42-42" class="github-link">
+              <img src="../content/img/github.png" class="normal" />
+              <img src="../content/img/github-blue.png" class="hover" />
+            </a>
+          
+        </td>
+      </tr>
+      <tr>
+        <td class="member-name">
+
+          <code onmouseout="hideTip(event, '171', 171)" onmouseover="showTip(event, '171', 171)">
+            OR(Expression,Expression)
+          </code>
+          <div class="tip" id="171">
+            <strong>Signature:</strong> Expression * Expression<br />
+                      </div>
+        </td>
+        <td class="xmldoc">
+            <a href="http://github.com/daz10000/fss/tree/master/src/fss/template.fs#L53-53" class="github-link">
+              <img src="../content/img/github.png" class="normal" />
+              <img src="../content/img/github-blue.png" class="hover" />
+            </a>
+          
+        </td>
+      </tr>
+      <tr>
+        <td class="member-name">
+
+          <code onmouseout="hideTip(event, '172', 172)" onmouseover="showTip(event, '172', 172)">
+            RANGE(...)
+          </code>
+          <div class="tip" id="172">
+            <strong>Signature:</strong> Expression * Expression option * Expression<br />
+                      </div>
+        </td>
+        <td class="xmldoc">
+            <a href="http://github.com/daz10000/fss/tree/master/src/fss/template.fs#L64-64" class="github-link">
+              <img src="../content/img/github.png" class="normal" />
+              <img src="../content/img/github-blue.png" class="hover" />
+            </a>
+          
+        </td>
+      </tr>
+      <tr>
+        <td class="member-name">
+
+          <code onmouseout="hideTip(event, '173', 173)" onmouseover="showTip(event, '173', 173)">
+            SCONST(string)
+          </code>
+          <div class="tip" id="173">
+            <strong>Signature:</strong> string<br />
+                      </div>
+        </td>
+        <td class="xmldoc">
+            <a href="http://github.com/daz10000/fss/tree/master/src/fss/template.fs#L58-58" class="github-link">
+              <img src="../content/img/github.png" class="normal" />
+              <img src="../content/img/github-blue.png" class="hover" />
+            </a>
+          
+        </td>
+      </tr>
+      <tr>
+        <td class="member-name">
+
+          <code onmouseout="hideTip(event, '174', 174)" onmouseover="showTip(event, '174', 174)">
+            SUB(Expression,Expression)
+          </code>
+          <div class="tip" id="174">
+            <strong>Signature:</strong> Expression * Expression<br />
+                      </div>
+        </td>
+        <td class="xmldoc">
+            <a href="http://github.com/daz10000/fss/tree/master/src/fss/template.fs#L40-40" class="github-link">
+              <img src="../content/img/github.png" class="normal" />
+              <img src="../content/img/github-blue.png" class="hover" />
+            </a>
+          
+        </td>
+      </tr>
+      <tr>
+        <td class="member-name">
+
+          <code onmouseout="hideTip(event, '175', 175)" onmouseover="showTip(event, '175', 175)">
+            VARIABLE(string)
+          </code>
+          <div class="tip" id="175">
+            <strong>Signature:</strong> string<br />
+                      </div>
+        </td>
+        <td class="xmldoc">
+            <a href="http://github.com/daz10000/fss/tree/master/src/fss/template.fs#L37-37" class="github-link">
+              <img src="../content/img/github.png" class="normal" />
+              <img src="../content/img/github-blue.png" class="hover" />
+            </a>
+          
+        </td>
+      </tr>
+    </tbody>
+  </table>
+
+        </div>
+        <div class="span3">
+          <img src="/fss/img/logo.png" alt="F# Project" style="width:150px;margin:10px" />  
+          <ul class="nav nav-list" id="menu" style="margin-top: 20px;">
+            <li class="nav-header">fss</li>
+            <li><a href="/fss/index.html">Home page</a></li>
+            <li class="divider"></li>
+            <li><a href="http://nuget.org/packages/fss">Get Library via NuGet</a></li>
+            <li><a href="http://github.com/daz10000/fss">Source Code on GitHub</a></li>
+            <li><a href="/fss/license.html">License</a></li>
+            <li><a href="/fss/release-notes.html">Release Notes</a></li>
+            
+            <li class="nav-header">Getting started</li>
+            <li><a href="/fss/tutorial.html">Sample tutorial</a></li>
+
+            <li class="nav-header">Documentation</li>
+            <li><a href="/fss/reference/index.html">API Reference</a></li>
+          </ul>
+        </div>
+      </div>
+    </div>
+    <a href="http://github.com/daz10000/fss"><img style="position: absolute; top: 0; right: 0; border: 0;" src="https://s3.amazonaws.com/github/ribbons/forkme_right_gray_6d6d6d.png" alt="Fork me on GitHub"/></a>
+  </body>
+  </html>
