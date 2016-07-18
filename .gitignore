@@ -6,10 +6,10 @@
 /tests/fss.Test/obj/
 /src/Fss-MsSql/bin/
 /src/Fss-MsSql/obj/
-/src/fss_mysql/bin/
-/src/fss_mySql/obj/
-/src/fss_postgres/bin/
-/src/fss_postgres/obj/
+fss\src\fss_mysql/bin/
+fss\src\fss_mySql/obj/
+fss\src\fss_postgres\bin\
+fss\src\fss_postgres/obj/
 /fss/bin/
 /fss/obj/
 /Playground/bin

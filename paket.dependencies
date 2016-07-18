@@ -1,0 +1,30 @@
+source https://nuget.org/api/v2
+
+nuget FSharp.Core redirects: force
+nuget Mono.Security 3.2.3 framework: >= net452
+nuget MySql.Data framework: >= net40
+nuget Newtonsoft.Json 8.0.3 framework: >= net40
+nuget Npgsql 3.1.4
+nuget NuGet.CommandLine
+
+group Build
+  source https://nuget.org/api/v2
+  
+  nuget SourceLink.Fake
+  nuget FAKE
+  nuget FSharp.Formatting
+
+  nuget Mono.Security
+  nuget MySql.Data
+  nuget Newtonsoft.Json
+  nuget Npgsql
+
+  github fsharp/FAKE modules/Octokit/Octokit.fsx
+
+group Test
+  source https://nuget.org/api/v2
+  
+  nuget NUnit ~> 2
+  nuget NUnit.Runners ~> 2
+  nuget Npgsql
+  nuget MySql.Data
