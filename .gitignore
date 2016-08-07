@@ -10,6 +10,8 @@ fss\src\fss_mysql/bin/
 fss\src\fss_mySql/obj/
 fss\src\fss_postgres\bin\
 fss\src\fss_postgres/obj/
+src/fss_mysql/bin
+src/fss_mysql/obj
 /fss/bin/
 /fss/obj/
 /Playground/bin

@@ -6,6 +6,7 @@ nuget MySql.Data framework: >= net40
 nuget Newtonsoft.Json 8.0.3 framework: >= net40
 nuget Npgsql 3.1.4
 nuget NuGet.CommandLine
+nuget System.Data.SQLite
 
 group Build
   source https://nuget.org/api/v2
@@ -16,6 +17,7 @@ group Build
 
   nuget Mono.Security
   nuget MySql.Data
+  nuget System.Data.SQLite
   nuget Newtonsoft.Json
   nuget Npgsql
 
@@ -28,3 +30,4 @@ group Test
   nuget NUnit.Runners ~> 2
   nuget Npgsql
   nuget MySql.Data
+  nuget System.Data.SQLite

@@ -1,3 +1,7 @@
+### v1.4.1 -- Aug 7 2016
+* freql: support for sqlite added
+* freql: small cleanup issue in keepalive thread fixed
+
 ### v1.4.0 -- July 17 2016
 * freql: caching schema information at first load for postgres
 * freql: better NULL/ Nullable support

@@ -50,10 +50,6 @@
     </Otherwise>
   </Choose>
   <Import Project="$(FSharpTargetsPath)" Condition="Exists('$(FSharpTargetsPath)')" />
-  <UsingTask TaskName="CopyRuntimeDependencies" AssemblyFile="..\..\.paket\paket.exe" />
-  <Target Name="AfterBuild" Condition="Exists('..\..\.paket\paket.exe')">
-    <CopyRuntimeDependencies OutputPath="$(OutDir)" TargetFramework="$(TargetFrameworkIdentifier) - $(TargetFrameworkVersion)" ProjectsWithRuntimeLibs="Build#System.Diagnostics.Contracts;Build#System.Globalization.Extensions;Build#System.Net.NameResolution;Build#System.Net.NetworkInformation;Build#System.Net.Security;Build#System.Reflection.TypeExtensions;Build#System.Runtime.InteropServices.RuntimeInformation;Build#System.Security.Cryptography.Algorithms;Build#System.Security.Cryptography.Cng;Build#System.Security.Cryptography.Csp;Build#System.Security.Cryptography.Encoding;Build#System.Security.Cryptography.OpenSsl;Build#System.Security.Cryptography.X509Certificates;Build#System.Security.Principal.Windows;Build#System.Threading;Build#System.Threading.Overlapped" />
-  </Target>
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it.
        Other similar extension points exist, see Microsoft.Common.targets.
   <Target Name="BeforeBuild">

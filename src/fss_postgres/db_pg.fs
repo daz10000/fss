@@ -19,6 +19,8 @@ module Postgres =
             member x.registerEnum<'Enum when 'Enum:(new:unit->'Enum) and 'Enum:struct and 'Enum :> System.ValueType>() =
                 NpgsqlConnection.MapEnumGlobally<'Enum>()
                 ()
+            member x.sequenceMechanism() = Fss.Data.Common.RETURNS_CLAUSE
+            member x.needsKeepAlive() = true
 
             member x.reloadTypes (conn:NpgsqlConnection) =
                 conn.ReloadTypes()

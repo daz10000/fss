@@ -29,7 +29,7 @@ type TestPoolBasic() = class
     [<Test>]
     member x.Test1() =
         let rng = System.Random()
-
+        let test1Verbose = false
         let make (i:int) = new Token( [| "cat" ; "dog" ; "mouse" ; "bear" ; "giraffe" ; "amoeba" ; "snake" ; "elephant" ; "echindna" ; "kangaroo" |].[i])
 
         use p = new Pool<Token>(10,make)
@@ -61,7 +61,7 @@ type TestPoolBasic() = class
         
             doneSemaphore.Set() |> ignore
 
-            printfn "%-5d: exitting! active=%d" n !active
+            if test1Verbose then printfn "%-5d: exitting! active=%d" n !active
 
 
         for i in {1..nThreads} do
@@ -70,9 +70,9 @@ type TestPoolBasic() = class
 
         while !active > 0 do
             Thread.Sleep(1000)
-            printfn "exit count %d left" !active
+            if test1Verbose then printfn "exit count %d left" !active
 
         //Thread.Sleep(5000)
-        printf "done active=%d" !active
+        if test1Verbose then printf "done active=%d" !active
 
 end 

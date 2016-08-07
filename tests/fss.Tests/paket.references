@@ -1,4 +1,5 @@
 FSharp.Core
+System.Data.SQLite
 group Test
 NUnit
 NUnit.Runners

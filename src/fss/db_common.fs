@@ -24,7 +24,9 @@ module Common =
                         relName : string
                         isPK    : bool
                      }
-
+    type SequenceMechanism =
+            | RETURNS_CLAUSE
+            | SQL_STMT of string
     /// Represents the 
     type Customization<'Parameter,'Conn when 'Parameter :> DbParameter 
                                     and 'Parameter:(new:unit->'Parameter)  
@@ -36,6 +38,8 @@ module Common =
         abstract member loadColDetail:'Conn->Map<string,ColDetail []>
         abstract member reopenConnection:'Conn->unit
         abstract member registerEnum<'Enum when 'Enum:(new:unit->'Enum) and 'Enum:struct and 'Enum :> System.ValueType> : unit->unit
+        abstract member sequenceMechanism:unit->SequenceMechanism
+        abstract member needsKeepAlive:unit->bool
     
 
     type ConnOpts = {  mutable logfile : StreamWriter option ; mutable logfileName : string option ; mutable logQueries : bool;
@@ -145,8 +149,9 @@ module Common =
           let customizer = new 'Customizer()
 
           /// Monitor and restore connection?
-          let mutable keepAlive = true
-
+          let mutable keepAlive = customizer.needsKeepAlive()
+          /// flag when connection is disposed to ensure keep alive shuts down gracefully
+          let mutable hasDisposed = false 
           /// Inteval between tests that connections are alive
           let mutable keepAliveInterval = 5000
 
@@ -186,25 +191,26 @@ module Common =
             pool.Release x
 
           let keepAliveThread() =
-            while true do
+            while not hasDisposed do
                 try
                     let conn = takeInternal()
                     use comm = conn.CreateCommand()
                     comm.CommandText <- "select 1 as x"
-                    let _ = comm.ExecuteScalar() :?> int32
+                    comm.ExecuteScalar() |> ignore
                     release conn
                     ()
                 with _ as x ->
                     pool.Iter(fun conn -> customizer.reopenConnection (conn:?>'Conn) )
-                    printfn "Keep alive exception %s" x.Message
+                    printfn "Keep alive exception %s\n%s" x.Message x.StackTrace
                 
                 System.Threading.Thread.Sleep(keepAliveInterval)
             ()
 
           do
-            let x = fun () -> keepAliveThread()
-            let t = new System.Threading.Thread(x)
-            t.Start()
+            if keepAlive then
+                let x = fun () -> keepAliveThread()
+                let t = new System.Threading.Thread(x)
+                t.Start()
             ()
           
           /// Set a filename for logging output
@@ -212,7 +218,6 @@ module Common =
                                 set(fileName:string) = 
                                     opts.logfileName <- Some(fileName)
                                     opts.logfile<- Some(new StreamWriter(fileName))
-
           member x.Take() = takeInternal()
           member x.Release(z) = release z
           member x.KeepAlive with get() = keepAlive and set(v) = keepAlive<-v
@@ -262,43 +267,12 @@ module Common =
                 | Some(cols) -> cols |> Seq.map (fun c -> c.ToLower()) |> Set.ofSeq
                 | None -> Set.empty
 
-//            // Inspect table definition.
-//            use command : DynamicSqlCommand<'Parameter> = x.Command "select t.typtype,a.attname as attname,t.typname as tname,attnum,attnotnull from 
-//                                                            pg_class c JOIN pg_attribute a ON c.oid = a.attrelid 
-//                                                            JOIN pg_type t ON t.oid = a.atttypid WHERE
-//                                                            c.relname = :tablename AND
-//                                                            a.attnum > 0"
-//
-//            command?tablename <- table
-//            use r = command.ExecuteReader()
-//            /// db columns
-//            let cols =
-//                    seq { while r.Read() do
-//                            yield { typType = r?typtype ; cname = r?attname; ctype = r?tname ; cpos = r?attnum ; cNotNull =r?attnotnull}
-//                    } |> Array.ofSeq
-
             match colMetadata.TryFind table with
                 | None ->
 //                    // They probably misnamed the table request
-//                    use comm4 = x.Command "select count(*) from pg_class where relname = :tablename"
-//                    comm4?tablename <- table
-//                    let count = comm4.ExecuteScalar() :?> int64
-//                    if count = 0L then
                       failwithf "ERROR: no such table '%s'" table
                 | Some(cols) ->
                                         
-//                    // Determine which if any columns are a primary key that we could return
-//                    use comm3 = x.Command "select conkey from 
-//                                    pg_constraint c JOIN pg_class cl ON c.conrelid = cl.oid 
-//                                    WHERE 
-//                                        contype = 'p' AND
-//                                        relname = :tablename
-//                                        "
-//                    comm3?tablename <- table
-//
-//                    // Get columns involved in the primary key if any
-//                    let pKey = comm3.ExecuteScalar() :?> int16 array
-
                     /// db column names
                     let dbColNames = cols |> Array.map (fun z -> z.cname ) |> Set.ofSeq
                     // Determine which columns were mentioned in the item being inserted.  May
@@ -316,10 +290,14 @@ module Common =
                             | None -> // clear to proceed
                                 let pkCols = cols |> Array.choose (fun c -> if c.isPK then Some c.cname else None)
 
-                                let returningClause = match pkCols with
-                                                        | [||] -> "" // no primary key
-                                                        | [| x |] -> sprintf "returning %s" x
-                                                        | _ -> "" // multi column key not supported
+                                let seqMechanism = customizer.sequenceMechanism()
+                                let returningClause = match seqMechanism with
+                                                        | RETURNS_CLAUSE ->
+                                                            match pkCols with
+                                                                | [||] -> "" // no primary key
+                                                                | [| x |] -> sprintf "returning %s" x
+                                                                | _ -> "" // multi column key not supported
+                                                        | _ -> "" // nothing needed here if we don't use the returns pattern
 
                                 // Create SQL statement  e.g. something like t his
                                 // insert into test (username,host,port,usessl,password,nextuid,uidvalidity,checkcert) values 
@@ -381,8 +359,16 @@ module Common =
                                                                                 )
                                                                 else
                                                                     vals.[i].Value <- f.GetValue(item,null))
-                                                    // Finally execute insert stmt and capture return value
-                                                    yield (comm2 .ExecuteScalar() :?> 'R )
+                                                    match seqMechanism with
+                                                        | RETURNS_CLAUSE ->
+                                                            // Finally execute insert stmt and capture return value
+                                                            yield (comm2 .ExecuteScalar() :?> 'R )
+                                                        | SQL_STMT(seqRetrievalSQL) ->
+                                                            //let rowsInserted = comm2.ExecuteNonQuery() :?> int64 
+                                                            //assert (rowsInserted = 1L)
+                                                            comm2.ExecuteNonQuery() |> ignore
+                                                            use comm3 : DynamicSqlCommand<_> = trans.cc seqRetrievalSQL
+                                                            yield (comm3.ExecuteScalar() :?> 'R)
                                             } |> Array.ofSeq
 
                                 if transProvided.IsNone  then
@@ -496,6 +482,7 @@ module Common =
             member x.Dispose() = 
                 // Need to explicitly dispose of the pool as we couldn't instantiate with with the use statement.
                 // This involves first casting to an IDisposable class instance)
+                hasDisposed<-true
                 (x.Pool :> IDisposable).Dispose()
 
 

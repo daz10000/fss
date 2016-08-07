@@ -53,10 +53,33 @@
     </Otherwise>
   </Choose>
   <Import Project="$(FSharpTargetsPath)" />
-  <UsingTask TaskName="CopyRuntimeDependencies" AssemblyFile="..\..\.paket\paket.exe" />
-  <Target Name="AfterBuild" Condition="Exists('..\..\.paket\paket.exe')">
-    <CopyRuntimeDependencies OutputPath="$(OutDir)" TargetFramework="$(TargetFrameworkIdentifier) - $(TargetFrameworkVersion)" ProjectsWithRuntimeLibs="Test#System.Diagnostics.Contracts;Test#System.Globalization.Extensions;Test#System.Net.NameResolution;Test#System.Net.NetworkInformation;Test#System.Net.Security;Test#System.Reflection.TypeExtensions;Test#System.Runtime.InteropServices.RuntimeInformation;Test#System.Security.Cryptography.Algorithms;Test#System.Security.Cryptography.Cng;Test#System.Security.Cryptography.Csp;Test#System.Security.Cryptography.Encoding;Test#System.Security.Cryptography.OpenSsl;Test#System.Security.Cryptography.X509Certificates;Test#System.Security.Principal.Windows;Test#System.Threading;Test#System.Threading.Overlapped" />
-  </Target>
+  <Choose>
+    <When Condition="$(TargetFrameworkIdentifier) == '.NETFramework' And $(TargetFrameworkVersion) == 'v2.0'">
+      <PropertyGroup>
+        <__paket__System_Data_SQLite_Core_targets>net20\System.Data.SQLite.Core</__paket__System_Data_SQLite_Core_targets>
+      </PropertyGroup>
+    </When>
+    <When Condition="$(TargetFrameworkIdentifier) == '.NETFramework' And $(TargetFrameworkVersion) == 'v4.0'">
+      <PropertyGroup>
+        <__paket__System_Data_SQLite_Core_targets>net40\System.Data.SQLite.Core</__paket__System_Data_SQLite_Core_targets>
+      </PropertyGroup>
+    </When>
+    <When Condition="$(TargetFrameworkIdentifier) == '.NETFramework' And $(TargetFrameworkVersion) == 'v4.5'">
+      <PropertyGroup>
+        <__paket__System_Data_SQLite_Core_targets>net45\System.Data.SQLite.Core</__paket__System_Data_SQLite_Core_targets>
+      </PropertyGroup>
+    </When>
+    <When Condition="$(TargetFrameworkIdentifier) == '.NETFramework' And $(TargetFrameworkVersion) == 'v4.5.1'">
+      <PropertyGroup>
+        <__paket__System_Data_SQLite_Core_targets>net451\System.Data.SQLite.Core</__paket__System_Data_SQLite_Core_targets>
+      </PropertyGroup>
+    </When>
+    <When Condition="$(TargetFrameworkIdentifier) == '.NETFramework' And ($(TargetFrameworkVersion) == 'v4.6' Or $(TargetFrameworkVersion) == 'v4.6.1' Or $(TargetFrameworkVersion) == 'v4.6.2' Or $(TargetFrameworkVersion) == 'v4.6.3')">
+      <PropertyGroup>
+        <__paket__System_Data_SQLite_Core_targets>net46\System.Data.SQLite.Core</__paket__System_Data_SQLite_Core_targets>
+      </PropertyGroup>
+    </When>
+  </Choose>
   <Import Project="$(SolutionDir)\.nuget\NuGet.targets" Condition="Exists('$(SolutionDir)\.nuget\NuGet.targets')" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
        Other similar extension points exist, see Microsoft.Common.targets.
@@ -72,11 +95,22 @@
     <Compile Include="testPool.fs" />
     <Compile Include="testServer.fs" />
     <Compile Include="test_db.fs" />
+    <Compile Include="test_db_sqlite.fs" />
     <Compile Include="test_db_mysql.fs" />
     <None Include="paket.references" />
     <Content Include="App.config" />
   </ItemGroup>
   <ItemGroup>
+    <ProjectReference Include="..\..\src\fss_mysql\fss_mysql.fsproj">
+      <Name>fss_mysql</Name>
+      <Project>{edd107f0-29c8-4558-8a3f-c41be1cdab83}</Project>
+      <Private>True</Private>
+    </ProjectReference>
+    <ProjectReference Include="..\..\src\fss_sqlite\fss_sqlite.fsproj">
+      <Name>fss_sqlite</Name>
+      <Project>{f742c381-f7c2-4aae-acfa-b6d600eb817a}</Project>
+      <Private>True</Private>
+    </ProjectReference>
     <Reference Include="FSharp.Core, Version=4.4.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
       <Private>True</Private>
     </Reference>
@@ -101,6 +135,174 @@
       <Private>True</Private>
     </ProjectReference>
   </ItemGroup>
+  <Choose>
+    <When Condition="$(TargetFrameworkIdentifier) == '.NETFramework' And $(TargetFrameworkVersion) == 'v4.0'">
+      <ItemGroup>
+        <Reference Include="EntityFramework.SqlServer">
+          <HintPath>..\..\packages\EntityFramework\lib\net40\EntityFramework.SqlServer.dll</HintPath>
+          <Private>True</Private>
+          <Paket>True</Paket>
+        </Reference>
+        <Reference Include="EntityFramework">
+          <HintPath>..\..\packages\EntityFramework\lib\net40\EntityFramework.dll</HintPath>
+          <Private>True</Private>
+          <Paket>True</Paket>
+        </Reference>
+        <Reference Include="System.ComponentModel.DataAnnotations">
+          <Paket>True</Paket>
+        </Reference>
+      </ItemGroup>
+    </When>
+    <When Condition="$(TargetFrameworkIdentifier) == '.NETFramework' And ($(TargetFrameworkVersion) == 'v4.5' Or $(TargetFrameworkVersion) == 'v4.5.1' Or $(TargetFrameworkVersion) == 'v4.6' Or $(TargetFrameworkVersion) == 'v4.6.1' Or $(TargetFrameworkVersion) == 'v4.6.2' Or $(TargetFrameworkVersion) == 'v4.6.3')">
+      <ItemGroup>
+        <Reference Include="EntityFramework.SqlServer">
+          <HintPath>..\..\packages\EntityFramework\lib\net45\EntityFramework.SqlServer.dll</HintPath>
+          <Private>True</Private>
+          <Paket>True</Paket>
+        </Reference>
+        <Reference Include="EntityFramework">
+          <HintPath>..\..\packages\EntityFramework\lib\net45\EntityFramework.dll</HintPath>
+          <Private>True</Private>
+          <Paket>True</Paket>
+        </Reference>
+        <Reference Include="System.ComponentModel.DataAnnotations">
+          <Paket>True</Paket>
+        </Reference>
+      </ItemGroup>
+    </When>
+  </Choose>
+  <Choose>
+    <When Condition="$(TargetFrameworkIdentifier) == '.NETFramework' And $(TargetFrameworkVersion) == 'v2.0'">
+      <ItemGroup>
+        <Reference Include="System.Data.SQLite">
+          <HintPath>..\..\packages\System.Data.SQLite.Core\lib\net20\System.Data.SQLite.dll</HintPath>
+          <Private>True</Private>
+          <Paket>True</Paket>
+        </Reference>
+      </ItemGroup>
+    </When>
+    <When Condition="$(TargetFrameworkIdentifier) == '.NETFramework' And $(TargetFrameworkVersion) == 'v4.0'">
+      <ItemGroup>
+        <Reference Include="System.Data.SQLite">
+          <HintPath>..\..\packages\System.Data.SQLite.Core\lib\net40\System.Data.SQLite.dll</HintPath>
+          <Private>True</Private>
+          <Paket>True</Paket>
+        </Reference>
+      </ItemGroup>
+    </When>
+    <When Condition="$(TargetFrameworkIdentifier) == '.NETFramework' And $(TargetFrameworkVersion) == 'v4.5'">
+      <ItemGroup>
+        <Reference Include="System.Data.SQLite">
+          <HintPath>..\..\packages\System.Data.SQLite.Core\lib\net45\System.Data.SQLite.dll</HintPath>
+          <Private>True</Private>
+          <Paket>True</Paket>
+        </Reference>
+      </ItemGroup>
+    </When>
+    <When Condition="$(TargetFrameworkIdentifier) == '.NETFramework' And $(TargetFrameworkVersion) == 'v4.5.1'">
+      <ItemGroup>
+        <Reference Include="System.Data.SQLite">
+          <HintPath>..\..\packages\System.Data.SQLite.Core\lib\net451\System.Data.SQLite.dll</HintPath>
+          <Private>True</Private>
+          <Paket>True</Paket>
+        </Reference>
+      </ItemGroup>
+    </When>
+    <When Condition="$(TargetFrameworkIdentifier) == '.NETFramework' And ($(TargetFrameworkVersion) == 'v4.6' Or $(TargetFrameworkVersion) == 'v4.6.1' Or $(TargetFrameworkVersion) == 'v4.6.2' Or $(TargetFrameworkVersion) == 'v4.6.3')">
+      <ItemGroup>
+        <Reference Include="System.Data.SQLite">
+          <HintPath>..\..\packages\System.Data.SQLite.Core\lib\net46\System.Data.SQLite.dll</HintPath>
+          <Private>True</Private>
+          <Paket>True</Paket>
+        </Reference>
+      </ItemGroup>
+    </When>
+  </Choose>
+  <Choose>
+    <When Condition="$(TargetFrameworkIdentifier) == '.NETFramework' And $(TargetFrameworkVersion) == 'v4.0'">
+      <ItemGroup>
+        <Reference Include="System.Data.SQLite.EF6">
+          <HintPath>..\..\packages\System.Data.SQLite.EF6\lib\net40\System.Data.SQLite.EF6.dll</HintPath>
+          <Private>True</Private>
+          <Paket>True</Paket>
+        </Reference>
+      </ItemGroup>
+    </When>
+    <When Condition="$(TargetFrameworkIdentifier) == '.NETFramework' And $(TargetFrameworkVersion) == 'v4.5'">
+      <ItemGroup>
+        <Reference Include="System.Data.SQLite.EF6">
+          <HintPath>..\..\packages\System.Data.SQLite.EF6\lib\net45\System.Data.SQLite.EF6.dll</HintPath>
+          <Private>True</Private>
+          <Paket>True</Paket>
+        </Reference>
+      </ItemGroup>
+    </When>
+    <When Condition="$(TargetFrameworkIdentifier) == '.NETFramework' And $(TargetFrameworkVersion) == 'v4.5.1'">
+      <ItemGroup>
+        <Reference Include="System.Data.SQLite.EF6">
+          <HintPath>..\..\packages\System.Data.SQLite.EF6\lib\net451\System.Data.SQLite.EF6.dll</HintPath>
+          <Private>True</Private>
+          <Paket>True</Paket>
+        </Reference>
+      </ItemGroup>
+    </When>
+    <When Condition="$(TargetFrameworkIdentifier) == '.NETFramework' And ($(TargetFrameworkVersion) == 'v4.6' Or $(TargetFrameworkVersion) == 'v4.6.1' Or $(TargetFrameworkVersion) == 'v4.6.2' Or $(TargetFrameworkVersion) == 'v4.6.3')">
+      <ItemGroup>
+        <Reference Include="System.Data.SQLite.EF6">
+          <HintPath>..\..\packages\System.Data.SQLite.EF6\lib\net46\System.Data.SQLite.EF6.dll</HintPath>
+          <Private>True</Private>
+          <Paket>True</Paket>
+        </Reference>
+      </ItemGroup>
+    </When>
+  </Choose>
+  <Choose>
+    <When Condition="$(TargetFrameworkIdentifier) == '.NETFramework' And $(TargetFrameworkVersion) == 'v2.0'">
+      <ItemGroup>
+        <Reference Include="System.Data.SQLite.Linq">
+          <HintPath>..\..\packages\System.Data.SQLite.Linq\lib\net20\System.Data.SQLite.Linq.dll</HintPath>
+          <Private>True</Private>
+          <Paket>True</Paket>
+        </Reference>
+      </ItemGroup>
+    </When>
+    <When Condition="$(TargetFrameworkIdentifier) == '.NETFramework' And $(TargetFrameworkVersion) == 'v4.0'">
+      <ItemGroup>
+        <Reference Include="System.Data.SQLite.Linq">
+          <HintPath>..\..\packages\System.Data.SQLite.Linq\lib\net40\System.Data.SQLite.Linq.dll</HintPath>
+          <Private>True</Private>
+          <Paket>True</Paket>
+        </Reference>
+      </ItemGroup>
+    </When>
+    <When Condition="$(TargetFrameworkIdentifier) == '.NETFramework' And $(TargetFrameworkVersion) == 'v4.5'">
+      <ItemGroup>
+        <Reference Include="System.Data.SQLite.Linq">
+          <HintPath>..\..\packages\System.Data.SQLite.Linq\lib\net45\System.Data.SQLite.Linq.dll</HintPath>
+          <Private>True</Private>
+          <Paket>True</Paket>
+        </Reference>
+      </ItemGroup>
+    </When>
+    <When Condition="$(TargetFrameworkIdentifier) == '.NETFramework' And $(TargetFrameworkVersion) == 'v4.5.1'">
+      <ItemGroup>
+        <Reference Include="System.Data.SQLite.Linq">
+          <HintPath>..\..\packages\System.Data.SQLite.Linq\lib\net451\System.Data.SQLite.Linq.dll</HintPath>
+          <Private>True</Private>
+          <Paket>True</Paket>
+        </Reference>
+      </ItemGroup>
+    </When>
+    <When Condition="$(TargetFrameworkIdentifier) == '.NETFramework' And ($(TargetFrameworkVersion) == 'v4.6' Or $(TargetFrameworkVersion) == 'v4.6.1' Or $(TargetFrameworkVersion) == 'v4.6.2' Or $(TargetFrameworkVersion) == 'v4.6.3')">
+      <ItemGroup>
+        <Reference Include="System.Data.SQLite.Linq">
+          <HintPath>..\..\packages\System.Data.SQLite.Linq\lib\net46\System.Data.SQLite.Linq.dll</HintPath>
+          <Private>True</Private>
+          <Paket>True</Paket>
+        </Reference>
+      </ItemGroup>
+    </When>
+  </Choose>
   <Choose>
     <When Condition="$(TargetFrameworkIdentifier) == '.NETStandard' And ($(TargetFrameworkVersion) == 'v1.3' Or $(TargetFrameworkVersion) == 'v1.4' Or $(TargetFrameworkVersion) == 'v1.5' Or $(TargetFrameworkVersion) == 'v1.6')">
       <ItemGroup>
@@ -870,4 +1072,5 @@
       </ItemGroup>
     </When>
   </Choose>
+  <Import Project="..\..\packages\System.Data.SQLite.Core\build\$(__paket__System_Data_SQLite_Core_targets).targets" Condition="Exists('..\..\packages\System.Data.SQLite.Core\build\$(__paket__System_Data_SQLite_Core_targets).targets')" Label="Paket" />
 </Project>
