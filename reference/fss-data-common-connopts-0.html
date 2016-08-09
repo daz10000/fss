@@ -2,7 +2,7 @@
 <html lang="en">
   <head>
     <meta charset="utf-8"/>
-    <title>Pool<'T> - fss</title>
+    <title>ConnOpts - fss</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
     <meta name="description" content=""/>
     <meta name="author" content="Darren Platt"/>
@@ -35,100 +35,32 @@
 
 
 
-<h1>Pool<'T></h1>
+<h1>ConnOpts</h1>
 <p>
-  <span>Namespace: Fss</span><br />
-  <span>Parent Module: <a href="fss-pool.html">Pool</a></span>
+  <span>Namespace: Fss.Data</span><br />
+  <span>Parent Module: <a href="fss-data-common-0.html">Common</a></span>
 </p>
 <div class="xmldoc">
-<p>---- pool implementation ----------------------------------------
-manages a shared pool of resources, e.g. database handles</p>
-
 </div>
-  <h3>Constructors</h3>
+  <h3>Record Fields</h3>
   <table class="table table-bordered member-list">
     <thead>
-      <tr><td>Constructor</td><td>Description</td></tr>
+      <tr><td>Record Field</td><td>Description</td></tr>
     </thead>
     <tbody>
       <tr>
         <td class="member-name">
 
-          <code onmouseout="hideTip(event, '76', 76)" onmouseover="showTip(event, '76', 76)">
-            new(size, make)
+          <code onmouseout="hideTip(event, '376', 376)" onmouseover="showTip(event, '376', 376)">
+            logConnUse
           </code>
-          <div class="tip" id="76">
-            <strong>Signature:</strong> (size:int * make:(int -&gt; &#39;T)) -&gt; Pool&lt;&#39;T&gt;<br />
+          <div class="tip" id="376">
+            <strong>Signature:</strong> bool<br />
+              <strong>Modifiers:</strong> mutable<br />
                       </div>
         </td>
         <td class="xmldoc">
-            <a href="http://github.com/daz10000/fss/tree/master/src/fss/pool.fs#L9-9" class="github-link">
-              <img src="../content/img/github.png" class="normal" />
-              <img src="../content/img/github-blue.png" class="hover" />
-            </a>
-          
-              <p>CompiledName: <code>.ctor</code></p>
-        </td>
-      </tr>
-    </tbody>
-  </table>
-  <h3>Instance members</h3>
-  <table class="table table-bordered member-list">
-    <thead>
-      <tr><td>Instance member</td><td>Description</td></tr>
-    </thead>
-    <tbody>
-      <tr>
-        <td class="member-name">
-
-          <code onmouseout="hideTip(event, '77', 77)" onmouseover="showTip(event, '77', 77)">
-            FreeCount
-          </code>
-          <div class="tip" id="77">
-            <strong>Signature:</strong> int<br />
-                      </div>
-        </td>
-        <td class="xmldoc">
-            <a href="http://github.com/daz10000/fss/tree/master/src/fss/pool.fs#L19-19" class="github-link">
-              <img src="../content/img/github.png" class="normal" />
-              <img src="../content/img/github-blue.png" class="hover" />
-            </a>
-          
-              <p>CompiledName: <code>get_FreeCount</code></p>
-        </td>
-      </tr>
-      <tr>
-        <td class="member-name">
-
-          <code onmouseout="hideTip(event, '78', 78)" onmouseover="showTip(event, '78', 78)">
-            Iter(f)
-          </code>
-          <div class="tip" id="78">
-            <strong>Signature:</strong> (f:(&#39;T -&gt; unit)) -&gt; unit<br />
-                      </div>
-        </td>
-        <td class="xmldoc">
-            <a href="http://github.com/daz10000/fss/tree/master/src/fss/pool.fs#L59-59" class="github-link">
-              <img src="../content/img/github.png" class="normal" />
-              <img src="../content/img/github-blue.png" class="hover" />
-            </a>
-          <p>Apply function f to every pool member (without locking first)</p>
-
-
-        </td>
-      </tr>
-      <tr>
-        <td class="member-name">
-
-          <code onmouseout="hideTip(event, '79', 79)" onmouseover="showTip(event, '79', 79)">
-            Release(h)
-          </code>
-          <div class="tip" id="79">
-            <strong>Signature:</strong> h:&#39;T -&gt; unit<br />
-                      </div>
-        </td>
-        <td class="xmldoc">
-            <a href="http://github.com/daz10000/fss/tree/master/src/fss/pool.fs#L44-44" class="github-link">
+            <a href="http://github.com/daz10000/fss/tree/master/src/fss/db_common.fs#L46-46" class="github-link">
               <img src="../content/img/github.png" class="normal" />
               <img src="../content/img/github-blue.png" class="hover" />
             </a>
@@ -138,15 +70,73 @@ manages a shared pool of resources, e.g. database handles</p>
       <tr>
         <td class="member-name">
 
-          <code onmouseout="hideTip(event, '80', 80)" onmouseover="showTip(event, '80', 80)">
-            Take()
+          <code onmouseout="hideTip(event, '377', 377)" onmouseover="showTip(event, '377', 377)">
+            logfile
           </code>
-          <div class="tip" id="80">
-            <strong>Signature:</strong> unit -&gt; &#39;T<br />
+          <div class="tip" id="377">
+            <strong>Signature:</strong> StreamWriter option<br />
+              <strong>Modifiers:</strong> mutable<br />
                       </div>
         </td>
         <td class="xmldoc">
-            <a href="http://github.com/daz10000/fss/tree/master/src/fss/pool.fs#L20-20" class="github-link">
+            <a href="http://github.com/daz10000/fss/tree/master/src/fss/db_common.fs#L45-45" class="github-link">
+              <img src="../content/img/github.png" class="normal" />
+              <img src="../content/img/github-blue.png" class="hover" />
+            </a>
+          
+        </td>
+      </tr>
+      <tr>
+        <td class="member-name">
+
+          <code onmouseout="hideTip(event, '378', 378)" onmouseover="showTip(event, '378', 378)">
+            logfileName
+          </code>
+          <div class="tip" id="378">
+            <strong>Signature:</strong> string option<br />
+              <strong>Modifiers:</strong> mutable<br />
+                      </div>
+        </td>
+        <td class="xmldoc">
+            <a href="http://github.com/daz10000/fss/tree/master/src/fss/db_common.fs#L45-45" class="github-link">
+              <img src="../content/img/github.png" class="normal" />
+              <img src="../content/img/github-blue.png" class="hover" />
+            </a>
+          
+        </td>
+      </tr>
+      <tr>
+        <td class="member-name">
+
+          <code onmouseout="hideTip(event, '379', 379)" onmouseover="showTip(event, '379', 379)">
+            logLongerThan
+          </code>
+          <div class="tip" id="379">
+            <strong>Signature:</strong> float<br />
+              <strong>Modifiers:</strong> mutable<br />
+                      </div>
+        </td>
+        <td class="xmldoc">
+            <a href="http://github.com/daz10000/fss/tree/master/src/fss/db_common.fs#L46-46" class="github-link">
+              <img src="../content/img/github.png" class="normal" />
+              <img src="../content/img/github-blue.png" class="hover" />
+            </a>
+          
+        </td>
+      </tr>
+      <tr>
+        <td class="member-name">
+
+          <code onmouseout="hideTip(event, '380', 380)" onmouseover="showTip(event, '380', 380)">
+            logQueries
+          </code>
+          <div class="tip" id="380">
+            <strong>Signature:</strong> bool<br />
+              <strong>Modifiers:</strong> mutable<br />
+                      </div>
+        </td>
+        <td class="xmldoc">
+            <a href="http://github.com/daz10000/fss/tree/master/src/fss/db_common.fs#L45-45" class="github-link">
               <img src="../content/img/github.png" class="normal" />
               <img src="../content/img/github-blue.png" class="hover" />
             </a>

@@ -2,7 +2,7 @@
 <html lang="en">
   <head>
     <meta charset="utf-8"/>
-    <title>DynamicSqlTransaction<'Parameter, 'Conn> - fss</title>
+    <title>DynamicSqlCommand<'Parameter> - fss</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
     <meta name="description" content=""/>
     <meta name="author" content="Darren Platt"/>
@@ -35,15 +35,14 @@
 
 
 
-<h1>DynamicSqlTransaction<'Parameter, 'Conn></h1>
+<h1>DynamicSqlCommand<'Parameter></h1>
 <p>
   <span>Namespace: Fss.Data</span><br />
-  <span>Parent Module: <a href="fss-data-common_mysql.html">Common_mysql</a></span>
+  <span>Parent Module: <a href="fss-data-common-0.html">Common</a></span>
 </p>
 <div class="xmldoc">
-<p>Sql Transaction wrapper that encapsulates an active database
-connection and hands of DynamicSqlCommand objects with the
-connection and transcation set correctly</p>
+<p>SqlCommand wrapper that allows setting properties of a
+stored procedure using dynamic setter operator</p>
 
 </div>
   <h3>Constructors</h3>
@@ -55,15 +54,15 @@ connection and transcation set correctly</p>
       <tr>
         <td class="member-name">
 
-          <code onmouseout="hideTip(event, '274', 274)" onmouseover="showTip(event, '274', 274)">
-            new(conn, opts, log)
+          <code onmouseout="hideTip(event, '387', 387)" onmouseover="showTip(event, '387', 387)">
+            new(cmd, release, opts, log)
           </code>
-          <div class="tip" id="274">
-            <strong>Signature:</strong> (conn:DynamicSqlConnection&lt;&#39;Conn,&#39;Parameter&gt; * opts:ConnOpts * log:(string -&gt; unit)) -&gt; DynamicSqlTransaction&lt;&#39;Parameter,&#39;Conn&gt;<br />
+          <div class="tip" id="387">
+            <strong>Signature:</strong> (cmd:DbCommand * release:(unit -&gt; unit) * opts:ConnOpts * log:(string -&gt; unit)) -&gt; DynamicSqlCommand&lt;&#39;Parameter&gt;<br />
                       </div>
         </td>
         <td class="xmldoc">
-            <a href="http://github.com/daz10000/fss/tree/master/src/fss/db_common_mysql.fs#L397-397" class="github-link">
+            <a href="http://github.com/daz10000/fss/tree/master/src/fss/db_common.fs#L84-84" class="github-link">
               <img src="../content/img/github.png" class="normal" />
               <img src="../content/img/github-blue.png" class="hover" />
             </a>
@@ -82,33 +81,15 @@ connection and transcation set correctly</p>
       <tr>
         <td class="member-name">
 
-          <code onmouseout="hideTip(event, '275', 275)" onmouseover="showTip(event, '275', 275)">
-            cc(commandText)
+          <code onmouseout="hideTip(event, '388', 388)" onmouseover="showTip(event, '388', 388)">
+            Close()
           </code>
-          <div class="tip" id="275">
-            <strong>Signature:</strong> commandText:string -&gt; DynamicSqlCommand&lt;&#39;Parameter&gt;<br />
-                      </div>
-        </td>
-        <td class="xmldoc">
-            <a href="http://github.com/daz10000/fss/tree/master/src/fss/db_common_mysql.fs#L409-409" class="github-link">
-              <img src="../content/img/github.png" class="normal" />
-              <img src="../content/img/github-blue.png" class="hover" />
-            </a>
-          
-        </td>
-      </tr>
-      <tr>
-        <td class="member-name">
-
-          <code onmouseout="hideTip(event, '276', 276)" onmouseover="showTip(event, '276', 276)">
-            Commit()
-          </code>
-          <div class="tip" id="276">
+          <div class="tip" id="388">
             <strong>Signature:</strong> unit -&gt; unit<br />
                       </div>
         </td>
         <td class="xmldoc">
-            <a href="http://github.com/daz10000/fss/tree/master/src/fss/db_common_mysql.fs#L417-417" class="github-link">
+            <a href="http://github.com/daz10000/fss/tree/master/src/fss/db_common.fs#L120-120" class="github-link">
               <img src="../content/img/github.png" class="normal" />
               <img src="../content/img/github-blue.png" class="hover" />
             </a>
@@ -118,15 +99,15 @@ connection and transcation set correctly</p>
       <tr>
         <td class="member-name">
 
-          <code onmouseout="hideTip(event, '277', 277)" onmouseover="showTip(event, '277', 277)">
-            ExecuteScalar(sql)
+          <code onmouseout="hideTip(event, '389', 389)" onmouseover="showTip(event, '389', 389)">
+            ExecuteNonQuery()
           </code>
-          <div class="tip" id="277">
-            <strong>Signature:</strong> sql:string -&gt; obj<br />
+          <div class="tip" id="389">
+            <strong>Signature:</strong> unit -&gt; int<br />
                       </div>
         </td>
         <td class="xmldoc">
-            <a href="http://github.com/daz10000/fss/tree/master/src/fss/db_common_mysql.fs#L436-436" class="github-link">
+            <a href="http://github.com/daz10000/fss/tree/master/src/fss/db_common.fs#L103-103" class="github-link">
               <img src="../content/img/github.png" class="normal" />
               <img src="../content/img/github-blue.png" class="hover" />
             </a>
@@ -136,15 +117,15 @@ connection and transcation set correctly</p>
       <tr>
         <td class="member-name">
 
-          <code onmouseout="hideTip(event, '278', 278)" onmouseover="showTip(event, '278', 278)">
-            InsertMany(items, table, ignoredColumns)
+          <code onmouseout="hideTip(event, '390', 390)" onmouseover="showTip(event, '390', 390)">
+            ExecuteReader()
           </code>
-          <div class="tip" id="278">
-            <strong>Signature:</strong> (items:seq&lt;&#39;T&gt; * table:string option * ignoredColumns:seq&lt;string&gt; option) -&gt; &#39;R []<br />
+          <div class="tip" id="390">
+            <strong>Signature:</strong> unit -&gt; DynamicSqlDataReader&lt;&#39;T&gt;<br />
                       </div>
         </td>
         <td class="xmldoc">
-            <a href="http://github.com/daz10000/fss/tree/master/src/fss/db_common_mysql.fs#L422-422" class="github-link">
+            <a href="http://github.com/daz10000/fss/tree/master/src/fss/db_common.fs#L96-96" class="github-link">
               <img src="../content/img/github.png" class="normal" />
               <img src="../content/img/github-blue.png" class="hover" />
             </a>
@@ -154,15 +135,15 @@ connection and transcation set correctly</p>
       <tr>
         <td class="member-name">
 
-          <code onmouseout="hideTip(event, '279', 279)" onmouseover="showTip(event, '279', 279)">
-            InsertOne(item, table, ignoredColumns)
+          <code onmouseout="hideTip(event, '391', 391)" onmouseover="showTip(event, '391', 391)">
+            ExecuteScalar()
           </code>
-          <div class="tip" id="279">
-            <strong>Signature:</strong> (item:&#39;T * table:string option * ignoredColumns:seq&lt;string&gt; option) -&gt; &#39;R<br />
+          <div class="tip" id="391">
+            <strong>Signature:</strong> unit -&gt; obj<br />
                       </div>
         </td>
         <td class="xmldoc">
-            <a href="http://github.com/daz10000/fss/tree/master/src/fss/db_common_mysql.fs#L429-429" class="github-link">
+            <a href="http://github.com/daz10000/fss/tree/master/src/fss/db_common.fs#L110-110" class="github-link">
               <img src="../content/img/github.png" class="normal" />
               <img src="../content/img/github-blue.png" class="hover" />
             </a>
@@ -172,15 +153,15 @@ connection and transcation set correctly</p>
       <tr>
         <td class="member-name">
 
-          <code onmouseout="hideTip(event, '280', 280)" onmouseover="showTip(event, '280', 280)">
-            Query(sql)
+          <code onmouseout="hideTip(event, '392', 392)" onmouseover="showTip(event, '392', 392)">
+            GetConnHash()
           </code>
-          <div class="tip" id="280">
-            <strong>Signature:</strong> sql:string -&gt; seq&lt;&#39;T&gt;<br />
+          <div class="tip" id="392">
+            <strong>Signature:</strong> unit -&gt; int<br />
                       </div>
         </td>
         <td class="xmldoc">
-            <a href="http://github.com/daz10000/fss/tree/master/src/fss/db_common_mysql.fs#L419-419" class="github-link">
+            <a href="http://github.com/daz10000/fss/tree/master/src/fss/db_common.fs#L86-86" class="github-link">
               <img src="../content/img/github.png" class="normal" />
               <img src="../content/img/github-blue.png" class="hover" />
             </a>
@@ -190,19 +171,85 @@ connection and transcation set correctly</p>
       <tr>
         <td class="member-name">
 
-          <code onmouseout="hideTip(event, '281', 281)" onmouseover="showTip(event, '281', 281)">
-            Rollback()
+          <code onmouseout="hideTip(event, '393', 393)" onmouseover="showTip(event, '393', 393)">
+            Parameters
           </code>
-          <div class="tip" id="281">
+          <div class="tip" id="393">
+            <strong>Signature:</strong> DbParameterCollection<br />
+                      </div>
+        </td>
+        <td class="xmldoc">
+            <a href="http://github.com/daz10000/fss/tree/master/src/fss/db_common.fs#L119-119" class="github-link">
+              <img src="../content/img/github.png" class="normal" />
+              <img src="../content/img/github-blue.png" class="hover" />
+            </a>
+          
+              <p>CompiledName: <code>get_Parameters</code></p>
+        </td>
+      </tr>
+      <tr>
+        <td class="member-name">
+
+          <code onmouseout="hideTip(event, '394', 394)" onmouseover="showTip(event, '394', 394)">
+            Transaction()
+          </code>
+          <div class="tip" id="394">
+            <strong>Signature:</strong> unit -&gt; DbTransaction<br />
+                      </div>
+        </td>
+        <td class="xmldoc">
+            <a href="http://github.com/daz10000/fss/tree/master/src/fss/db_common.fs#L126-126" class="github-link">
+              <img src="../content/img/github.png" class="normal" />
+              <img src="../content/img/github-blue.png" class="hover" />
+            </a>
+          
+              <p>CompiledName: <code>set_Transaction</code></p>
+        </td>
+      </tr>
+      <tr>
+        <td class="member-name">
+
+          <code onmouseout="hideTip(event, '395', 395)" onmouseover="showTip(event, '395', 395)">
+            Transaction()
+          </code>
+          <div class="tip" id="395">
             <strong>Signature:</strong> unit -&gt; unit<br />
                       </div>
         </td>
         <td class="xmldoc">
-            <a href="http://github.com/daz10000/fss/tree/master/src/fss/db_common_mysql.fs#L415-415" class="github-link">
+            <a href="http://github.com/daz10000/fss/tree/master/src/fss/db_common.fs#L126-126" class="github-link">
               <img src="../content/img/github.png" class="normal" />
               <img src="../content/img/github-blue.png" class="hover" />
             </a>
           
+              <p>CompiledName: <code>set_Transaction</code></p>
+        </td>
+      </tr>
+    </tbody>
+  </table>
+  <h3>Static members</h3>
+  <table class="table table-bordered member-list">
+    <thead>
+      <tr><td>Static member</td><td>Description</td></tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td class="member-name">
+
+          <code onmouseout="hideTip(event, '396', 396)" onmouseover="showTip(event, '396', 396)">
+            ( ?&lt;- )(cmd, name, value)
+          </code>
+          <div class="tip" id="396">
+            <strong>Signature:</strong> (cmd:DynamicSqlCommand&lt;&#39;Parameter&gt; * name:string * value:&#39;?8447) -&gt; unit<br />
+                      </div>
+        </td>
+        <td class="xmldoc">
+            <a href="http://github.com/daz10000/fss/tree/master/src/fss/db_common.fs#L88-88" class="github-link">
+              <img src="../content/img/github.png" class="normal" />
+              <img src="../content/img/github-blue.png" class="hover" />
+            </a>
+          
+              <p>CompiledName: <code>op_DynamicAssignment</code></p>
         </td>
       </tr>
     </tbody>

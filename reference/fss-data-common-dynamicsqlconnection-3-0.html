@@ -2,7 +2,7 @@
 <html lang="en">
   <head>
     <meta charset="utf-8"/>
-    <title>DynamicSqlConnection<'Conn, 'Parameter> - fss</title>
+    <title>DynamicSqlConnection<'Conn, 'Parameter, 'Customizer> - fss</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
     <meta name="description" content=""/>
     <meta name="author" content="Darren Platt"/>
@@ -35,15 +35,12 @@
 
 
 
-<h1>DynamicSqlConnection<'Conn, 'Parameter></h1>
+<h1>DynamicSqlConnection<'Conn, 'Parameter, 'Customizer></h1>
 <p>
   <span>Namespace: Fss.Data</span><br />
-  <span>Parent Module: <a href="fss-data-common_mysql.html">Common_mysql</a></span>
+  <span>Parent Module: <a href="fss-data-common-0.html">Common</a></span>
 </p>
 <div class="xmldoc">
-<p>SqlConnection wrapper that allows creating stored
-procedure calls using the dynamic access operator</p>
-
 </div>
   <h3>Constructors</h3>
   <table class="table table-bordered member-list">
@@ -54,15 +51,15 @@ procedure calls using the dynamic access operator</p>
       <tr>
         <td class="member-name">
 
-          <code onmouseout="hideTip(event, '247', 247)" onmouseover="showTip(event, '247', 247)">
+          <code onmouseout="hideTip(event, '397', 397)" onmouseover="showTip(event, '397', 397)">
             new(connStr)
           </code>
-          <div class="tip" id="247">
-            <strong>Signature:</strong> connStr:string -&gt; DynamicSqlConnection&lt;&#39;Conn,&#39;Parameter&gt;<br />
+          <div class="tip" id="397">
+            <strong>Signature:</strong> connStr:string -&gt; DynamicSqlConnection&lt;&#39;Conn,&#39;Parameter,&#39;Customizer&gt;<br />
                       </div>
         </td>
         <td class="xmldoc">
-            <a href="http://github.com/daz10000/fss/tree/master/src/fss/db_common_mysql.fs#L363-363" class="github-link">
+            <a href="http://github.com/daz10000/fss/tree/master/src/fss/db_common.fs#L458-458" class="github-link">
               <img src="../content/img/github.png" class="normal" />
               <img src="../content/img/github-blue.png" class="hover" />
             </a>
@@ -73,15 +70,15 @@ procedure calls using the dynamic access operator</p>
       <tr>
         <td class="member-name">
 
-          <code onmouseout="hideTip(event, '248', 248)" onmouseover="showTip(event, '248', 248)">
+          <code onmouseout="hideTip(event, '398', 398)" onmouseover="showTip(event, '398', 398)">
             new(connStr, poolSize)
           </code>
-          <div class="tip" id="248">
-            <strong>Signature:</strong> (connStr:string * poolSize:int) -&gt; DynamicSqlConnection&lt;&#39;Conn,&#39;Parameter&gt;<br />
+          <div class="tip" id="398">
+            <strong>Signature:</strong> (connStr:string * poolSize:int) -&gt; DynamicSqlConnection&lt;&#39;Conn,&#39;Parameter,&#39;Customizer&gt;<br />
                       </div>
         </td>
         <td class="xmldoc">
-            <a href="http://github.com/daz10000/fss/tree/master/src/fss/db_common_mysql.fs#L94-94" class="github-link">
+            <a href="http://github.com/daz10000/fss/tree/master/src/fss/db_common.fs#L139-139" class="github-link">
               <img src="../content/img/github.png" class="normal" />
               <img src="../content/img/github-blue.png" class="hover" />
             </a>
@@ -100,15 +97,15 @@ procedure calls using the dynamic access operator</p>
       <tr>
         <td class="member-name">
 
-          <code onmouseout="hideTip(event, '249', 249)" onmouseover="showTip(event, '249', 249)">
+          <code onmouseout="hideTip(event, '399', 399)" onmouseover="showTip(event, '399', 399)">
             cc(comm)
           </code>
-          <div class="tip" id="249">
+          <div class="tip" id="399">
             <strong>Signature:</strong> comm:string -&gt; DynamicSqlCommand&lt;&#39;Parameter&gt;<br />
                       </div>
         </td>
         <td class="xmldoc">
-            <a href="http://github.com/daz10000/fss/tree/master/src/fss/db_common_mysql.fs#L373-373" class="github-link">
+            <a href="http://github.com/daz10000/fss/tree/master/src/fss/db_common.fs#L468-468" class="github-link">
               <img src="../content/img/github.png" class="normal" />
               <img src="../content/img/github-blue.png" class="hover" />
             </a>
@@ -118,15 +115,15 @@ procedure calls using the dynamic access operator</p>
       <tr>
         <td class="member-name">
 
-          <code onmouseout="hideTip(event, '250', 250)" onmouseover="showTip(event, '250', 250)">
+          <code onmouseout="hideTip(event, '400', 400)" onmouseover="showTip(event, '400', 400)">
             Command(commandText)
           </code>
-          <div class="tip" id="250">
+          <div class="tip" id="400">
             <strong>Signature:</strong> commandText:string -&gt; DynamicSqlCommand&lt;&#39;Parameter&gt;<br />
                       </div>
         </td>
         <td class="xmldoc">
-            <a href="http://github.com/daz10000/fss/tree/master/src/fss/db_common_mysql.fs#L374-374" class="github-link">
+            <a href="http://github.com/daz10000/fss/tree/master/src/fss/db_common.fs#L469-469" class="github-link">
               <img src="../content/img/github.png" class="normal" />
               <img src="../content/img/github-blue.png" class="hover" />
             </a>
@@ -136,15 +133,15 @@ procedure calls using the dynamic access operator</p>
       <tr>
         <td class="member-name">
 
-          <code onmouseout="hideTip(event, '251', 251)" onmouseover="showTip(event, '251', 251)">
+          <code onmouseout="hideTip(event, '401', 401)" onmouseover="showTip(event, '401', 401)">
             ExecuteScalar(sql)
           </code>
-          <div class="tip" id="251">
+          <div class="tip" id="401">
             <strong>Signature:</strong> sql:string -&gt; obj<br />
                       </div>
         </td>
         <td class="xmldoc">
-            <a href="http://github.com/daz10000/fss/tree/master/src/fss/db_common_mysql.fs#L359-359" class="github-link">
+            <a href="http://github.com/daz10000/fss/tree/master/src/fss/db_common.fs#L454-454" class="github-link">
               <img src="../content/img/github.png" class="normal" />
               <img src="../content/img/github-blue.png" class="hover" />
             </a>
@@ -154,15 +151,15 @@ procedure calls using the dynamic access operator</p>
       <tr>
         <td class="member-name">
 
-          <code onmouseout="hideTip(event, '252', 252)" onmouseover="showTip(event, '252', 252)">
+          <code onmouseout="hideTip(event, '402', 402)" onmouseover="showTip(event, '402', 402)">
             InsertMany(...)
           </code>
-          <div class="tip" id="252">
-            <strong>Signature:</strong> (items:seq&lt;&#39;T&gt; * table:string option * transProvided:DynamicSqlTransaction&lt;&#39;Parameter,&#39;Conn&gt; option * ignoredColumns:seq&lt;string&gt; option) -&gt; &#39;R []<br />
+          <div class="tip" id="402">
+            <strong>Signature:</strong> (items:seq&lt;&#39;T&gt; * table:string option * transProvided:DynamicSqlTransaction&lt;&#39;Parameter,&#39;Conn,&#39;Customizer&gt; option * ignoredColumns:seq&lt;string&gt; option) -&gt; &#39;R []<br />
                       </div>
         </td>
         <td class="xmldoc">
-            <a href="http://github.com/daz10000/fss/tree/master/src/fss/db_common_mysql.fs#L136-136" class="github-link">
+            <a href="http://github.com/daz10000/fss/tree/master/src/fss/db_common.fs#L258-258" class="github-link">
               <img src="../content/img/github.png" class="normal" />
               <img src="../content/img/github-blue.png" class="hover" />
             </a>
@@ -172,15 +169,15 @@ procedure calls using the dynamic access operator</p>
       <tr>
         <td class="member-name">
 
-          <code onmouseout="hideTip(event, '253', 253)" onmouseover="showTip(event, '253', 253)">
+          <code onmouseout="hideTip(event, '403', 403)" onmouseover="showTip(event, '403', 403)">
             InsertOne(...)
           </code>
-          <div class="tip" id="253">
-            <strong>Signature:</strong> (item:&#39;T * table:string option * transProvided:DynamicSqlTransaction&lt;&#39;Parameter,&#39;Conn&gt; option * ignoredColumns:seq&lt;string&gt; option) -&gt; &#39;R<br />
+          <div class="tip" id="403">
+            <strong>Signature:</strong> (item:&#39;T * table:string option * transProvided:DynamicSqlTransaction&lt;&#39;Parameter,&#39;Conn,&#39;Customizer&gt; option * ignoredColumns:seq&lt;string&gt; option) -&gt; &#39;R<br />
                       </div>
         </td>
         <td class="xmldoc">
-            <a href="http://github.com/daz10000/fss/tree/master/src/fss/db_common_mysql.fs#L291-291" class="github-link">
+            <a href="http://github.com/daz10000/fss/tree/master/src/fss/db_common.fs#L380-380" class="github-link">
               <img src="../content/img/github.png" class="normal" />
               <img src="../content/img/github-blue.png" class="hover" />
             </a>
@@ -190,33 +187,71 @@ procedure calls using the dynamic access operator</p>
       <tr>
         <td class="member-name">
 
-          <code onmouseout="hideTip(event, '254', 254)" onmouseover="showTip(event, '254', 254)">
-            Log(msg)
+          <code onmouseout="hideTip(event, '404', 404)" onmouseover="showTip(event, '404', 404)">
+            KeepAlive()
           </code>
-          <div class="tip" id="254">
-            <strong>Signature:</strong> msg:string -&gt; unit<br />
-                      </div>
-        </td>
-        <td class="xmldoc">
-            <a href="http://github.com/daz10000/fss/tree/master/src/fss/db_common_mysql.fs#L131-131" class="github-link">
-              <img src="../content/img/github.png" class="normal" />
-              <img src="../content/img/github-blue.png" class="hover" />
-            </a>
-          
-        </td>
-      </tr>
-      <tr>
-        <td class="member-name">
-
-          <code onmouseout="hideTip(event, '255', 255)" onmouseover="showTip(event, '255', 255)">
-            LogConnUse()
-          </code>
-          <div class="tip" id="255">
+          <div class="tip" id="404">
             <strong>Signature:</strong> unit -&gt; bool<br />
                       </div>
         </td>
         <td class="xmldoc">
-            <a href="http://github.com/daz10000/fss/tree/master/src/fss/db_common_mysql.fs#L132-132" class="github-link">
+            <a href="http://github.com/daz10000/fss/tree/master/src/fss/db_common.fs#L223-223" class="github-link">
+              <img src="../content/img/github.png" class="normal" />
+              <img src="../content/img/github-blue.png" class="hover" />
+            </a>
+          
+              <p>CompiledName: <code>set_KeepAlive</code></p>
+        </td>
+      </tr>
+      <tr>
+        <td class="member-name">
+
+          <code onmouseout="hideTip(event, '405', 405)" onmouseover="showTip(event, '405', 405)">
+            KeepAlive()
+          </code>
+          <div class="tip" id="405">
+            <strong>Signature:</strong> unit -&gt; unit<br />
+                      </div>
+        </td>
+        <td class="xmldoc">
+            <a href="http://github.com/daz10000/fss/tree/master/src/fss/db_common.fs#L223-223" class="github-link">
+              <img src="../content/img/github.png" class="normal" />
+              <img src="../content/img/github-blue.png" class="hover" />
+            </a>
+          
+              <p>CompiledName: <code>get_KeepAlive</code></p>
+        </td>
+      </tr>
+      <tr>
+        <td class="member-name">
+
+          <code onmouseout="hideTip(event, '406', 406)" onmouseover="showTip(event, '406', 406)">
+            Log(msg)
+          </code>
+          <div class="tip" id="406">
+            <strong>Signature:</strong> msg:string -&gt; unit<br />
+                      </div>
+        </td>
+        <td class="xmldoc">
+            <a href="http://github.com/daz10000/fss/tree/master/src/fss/db_common.fs#L225-225" class="github-link">
+              <img src="../content/img/github.png" class="normal" />
+              <img src="../content/img/github-blue.png" class="hover" />
+            </a>
+          
+        </td>
+      </tr>
+      <tr>
+        <td class="member-name">
+
+          <code onmouseout="hideTip(event, '407', 407)" onmouseover="showTip(event, '407', 407)">
+            LogConnUse()
+          </code>
+          <div class="tip" id="407">
+            <strong>Signature:</strong> unit -&gt; bool<br />
+                      </div>
+        </td>
+        <td class="xmldoc">
+            <a href="http://github.com/daz10000/fss/tree/master/src/fss/db_common.fs#L226-226" class="github-link">
               <img src="../content/img/github.png" class="normal" />
               <img src="../content/img/github-blue.png" class="hover" />
             </a>
@@ -227,15 +262,15 @@ procedure calls using the dynamic access operator</p>
       <tr>
         <td class="member-name">
 
-          <code onmouseout="hideTip(event, '256', 256)" onmouseover="showTip(event, '256', 256)">
+          <code onmouseout="hideTip(event, '408', 408)" onmouseover="showTip(event, '408', 408)">
             LogConnUse()
           </code>
-          <div class="tip" id="256">
+          <div class="tip" id="408">
             <strong>Signature:</strong> unit -&gt; unit<br />
                       </div>
         </td>
         <td class="xmldoc">
-            <a href="http://github.com/daz10000/fss/tree/master/src/fss/db_common_mysql.fs#L132-132" class="github-link">
+            <a href="http://github.com/daz10000/fss/tree/master/src/fss/db_common.fs#L226-226" class="github-link">
               <img src="../content/img/github.png" class="normal" />
               <img src="../content/img/github-blue.png" class="hover" />
             </a>
@@ -246,15 +281,15 @@ procedure calls using the dynamic access operator</p>
       <tr>
         <td class="member-name">
 
-          <code onmouseout="hideTip(event, '257', 257)" onmouseover="showTip(event, '257', 257)">
+          <code onmouseout="hideTip(event, '409', 409)" onmouseover="showTip(event, '409', 409)">
             Logfile()
           </code>
-          <div class="tip" id="257">
+          <div class="tip" id="409">
             <strong>Signature:</strong> unit -&gt; string<br />
                       </div>
         </td>
         <td class="xmldoc">
-            <a href="http://github.com/daz10000/fss/tree/master/src/fss/db_common_mysql.fs#L124-124" class="github-link">
+            <a href="http://github.com/daz10000/fss/tree/master/src/fss/db_common.fs#L218-218" class="github-link">
               <img src="../content/img/github.png" class="normal" />
               <img src="../content/img/github-blue.png" class="hover" />
             </a>
@@ -267,15 +302,15 @@ procedure calls using the dynamic access operator</p>
       <tr>
         <td class="member-name">
 
-          <code onmouseout="hideTip(event, '258', 258)" onmouseover="showTip(event, '258', 258)">
+          <code onmouseout="hideTip(event, '410', 410)" onmouseover="showTip(event, '410', 410)">
             Logfile()
           </code>
-          <div class="tip" id="258">
+          <div class="tip" id="410">
             <strong>Signature:</strong> unit -&gt; unit<br />
                       </div>
         </td>
         <td class="xmldoc">
-            <a href="http://github.com/daz10000/fss/tree/master/src/fss/db_common_mysql.fs#L123-123" class="github-link">
+            <a href="http://github.com/daz10000/fss/tree/master/src/fss/db_common.fs#L217-217" class="github-link">
               <img src="../content/img/github.png" class="normal" />
               <img src="../content/img/github-blue.png" class="hover" />
             </a>
@@ -288,15 +323,15 @@ procedure calls using the dynamic access operator</p>
       <tr>
         <td class="member-name">
 
-          <code onmouseout="hideTip(event, '259', 259)" onmouseover="showTip(event, '259', 259)">
+          <code onmouseout="hideTip(event, '411', 411)" onmouseover="showTip(event, '411', 411)">
             LogLongerThan()
           </code>
-          <div class="tip" id="259">
+          <div class="tip" id="411">
             <strong>Signature:</strong> unit -&gt; float<br />
                       </div>
         </td>
         <td class="xmldoc">
-            <a href="http://github.com/daz10000/fss/tree/master/src/fss/db_common_mysql.fs#L134-134" class="github-link">
+            <a href="http://github.com/daz10000/fss/tree/master/src/fss/db_common.fs#L228-228" class="github-link">
               <img src="../content/img/github.png" class="normal" />
               <img src="../content/img/github-blue.png" class="hover" />
             </a>
@@ -307,15 +342,15 @@ procedure calls using the dynamic access operator</p>
       <tr>
         <td class="member-name">
 
-          <code onmouseout="hideTip(event, '260', 260)" onmouseover="showTip(event, '260', 260)">
+          <code onmouseout="hideTip(event, '412', 412)" onmouseover="showTip(event, '412', 412)">
             LogLongerThan()
           </code>
-          <div class="tip" id="260">
+          <div class="tip" id="412">
             <strong>Signature:</strong> unit -&gt; unit<br />
                       </div>
         </td>
         <td class="xmldoc">
-            <a href="http://github.com/daz10000/fss/tree/master/src/fss/db_common_mysql.fs#L134-134" class="github-link">
+            <a href="http://github.com/daz10000/fss/tree/master/src/fss/db_common.fs#L228-228" class="github-link">
               <img src="../content/img/github.png" class="normal" />
               <img src="../content/img/github-blue.png" class="hover" />
             </a>
@@ -326,15 +361,15 @@ procedure calls using the dynamic access operator</p>
       <tr>
         <td class="member-name">
 
-          <code onmouseout="hideTip(event, '261', 261)" onmouseover="showTip(event, '261', 261)">
+          <code onmouseout="hideTip(event, '413', 413)" onmouseover="showTip(event, '413', 413)">
             LogQueries()
           </code>
-          <div class="tip" id="261">
+          <div class="tip" id="413">
             <strong>Signature:</strong> unit -&gt; bool<br />
                       </div>
         </td>
         <td class="xmldoc">
-            <a href="http://github.com/daz10000/fss/tree/master/src/fss/db_common_mysql.fs#L133-133" class="github-link">
+            <a href="http://github.com/daz10000/fss/tree/master/src/fss/db_common.fs#L227-227" class="github-link">
               <img src="../content/img/github.png" class="normal" />
               <img src="../content/img/github-blue.png" class="hover" />
             </a>
@@ -345,15 +380,15 @@ procedure calls using the dynamic access operator</p>
       <tr>
         <td class="member-name">
 
-          <code onmouseout="hideTip(event, '262', 262)" onmouseover="showTip(event, '262', 262)">
+          <code onmouseout="hideTip(event, '414', 414)" onmouseover="showTip(event, '414', 414)">
             LogQueries()
           </code>
-          <div class="tip" id="262">
+          <div class="tip" id="414">
             <strong>Signature:</strong> unit -&gt; unit<br />
                       </div>
         </td>
         <td class="xmldoc">
-            <a href="http://github.com/daz10000/fss/tree/master/src/fss/db_common_mysql.fs#L133-133" class="github-link">
+            <a href="http://github.com/daz10000/fss/tree/master/src/fss/db_common.fs#L227-227" class="github-link">
               <img src="../content/img/github.png" class="normal" />
               <img src="../content/img/github-blue.png" class="hover" />
             </a>
@@ -364,15 +399,15 @@ procedure calls using the dynamic access operator</p>
       <tr>
         <td class="member-name">
 
-          <code onmouseout="hideTip(event, '263', 263)" onmouseover="showTip(event, '263', 263)">
+          <code onmouseout="hideTip(event, '415', 415)" onmouseover="showTip(event, '415', 415)">
             Opts
           </code>
-          <div class="tip" id="263">
+          <div class="tip" id="415">
             <strong>Signature:</strong> ConnOpts<br />
                       </div>
         </td>
         <td class="xmldoc">
-            <a href="http://github.com/daz10000/fss/tree/master/src/fss/db_common_mysql.fs#L130-130" class="github-link">
+            <a href="http://github.com/daz10000/fss/tree/master/src/fss/db_common.fs#L224-224" class="github-link">
               <img src="../content/img/github.png" class="normal" />
               <img src="../content/img/github-blue.png" class="hover" />
             </a>
@@ -383,15 +418,15 @@ procedure calls using the dynamic access operator</p>
       <tr>
         <td class="member-name">
 
-          <code onmouseout="hideTip(event, '264', 264)" onmouseover="showTip(event, '264', 264)">
+          <code onmouseout="hideTip(event, '416', 416)" onmouseover="showTip(event, '416', 416)">
             Query(sql, transProvided)
           </code>
-          <div class="tip" id="264">
-            <strong>Signature:</strong> (sql:string * transProvided:DynamicSqlTransaction&lt;&#39;Parameter,&#39;Conn&gt; option) -&gt; seq&lt;&#39;T&gt;<br />
+          <div class="tip" id="416">
+            <strong>Signature:</strong> (sql:string * transProvided:DynamicSqlTransaction&lt;&#39;Parameter,&#39;Conn,&#39;Customizer&gt; option) -&gt; seq&lt;&#39;T&gt;<br />
                       </div>
         </td>
         <td class="xmldoc">
-            <a href="http://github.com/daz10000/fss/tree/master/src/fss/db_common_mysql.fs#L302-302" class="github-link">
+            <a href="http://github.com/daz10000/fss/tree/master/src/fss/db_common.fs#L395-395" class="github-link">
               <img src="../content/img/github.png" class="normal" />
               <img src="../content/img/github-blue.png" class="hover" />
             </a>
@@ -401,15 +436,33 @@ procedure calls using the dynamic access operator</p>
       <tr>
         <td class="member-name">
 
-          <code onmouseout="hideTip(event, '265', 265)" onmouseover="showTip(event, '265', 265)">
+          <code onmouseout="hideTip(event, '417', 417)" onmouseover="showTip(event, '417', 417)">
+            RegisterEnum()
+          </code>
+          <div class="tip" id="417">
+            <strong>Signature:</strong> unit -&gt; unit<br />
+                      </div>
+        </td>
+        <td class="xmldoc">
+            <a href="http://github.com/daz10000/fss/tree/master/src/fss/db_common.fs#L230-230" class="github-link">
+              <img src="../content/img/github.png" class="normal" />
+              <img src="../content/img/github-blue.png" class="hover" />
+            </a>
+          
+        </td>
+      </tr>
+      <tr>
+        <td class="member-name">
+
+          <code onmouseout="hideTip(event, '418', 418)" onmouseover="showTip(event, '418', 418)">
             Release(z)
           </code>
-          <div class="tip" id="265">
-            <strong>Signature:</strong> z:&#39;?7533 -&gt; unit<br />
+          <div class="tip" id="418">
+            <strong>Signature:</strong> z:&#39;?8492 -&gt; unit<br />
                       </div>
         </td>
         <td class="xmldoc">
-            <a href="http://github.com/daz10000/fss/tree/master/src/fss/db_common_mysql.fs#L129-129" class="github-link">
+            <a href="http://github.com/daz10000/fss/tree/master/src/fss/db_common.fs#L222-222" class="github-link">
               <img src="../content/img/github.png" class="normal" />
               <img src="../content/img/github-blue.png" class="hover" />
             </a>
@@ -419,15 +472,33 @@ procedure calls using the dynamic access operator</p>
       <tr>
         <td class="member-name">
 
-          <code onmouseout="hideTip(event, '266', 266)" onmouseover="showTip(event, '266', 266)">
+          <code onmouseout="hideTip(event, '419', 419)" onmouseover="showTip(event, '419', 419)">
+            Reload()
+          </code>
+          <div class="tip" id="419">
+            <strong>Signature:</strong> unit -&gt; unit<br />
+                      </div>
+        </td>
+        <td class="xmldoc">
+            <a href="http://github.com/daz10000/fss/tree/master/src/fss/db_common.fs#L233-233" class="github-link">
+              <img src="../content/img/github.png" class="normal" />
+              <img src="../content/img/github-blue.png" class="hover" />
+            </a>
+          
+        </td>
+      </tr>
+      <tr>
+        <td class="member-name">
+
+          <code onmouseout="hideTip(event, '420', 420)" onmouseover="showTip(event, '420', 420)">
             StartTrans()
           </code>
-          <div class="tip" id="266">
-            <strong>Signature:</strong> unit -&gt; DynamicSqlTransaction&lt;&#39;Parameter,&#39;Conn&gt;<br />
+          <div class="tip" id="420">
+            <strong>Signature:</strong> unit -&gt; DynamicSqlTransaction&lt;&#39;Parameter,&#39;Conn,&#39;Customizer&gt;<br />
                       </div>
         </td>
         <td class="xmldoc">
-            <a href="http://github.com/daz10000/fss/tree/master/src/fss/db_common_mysql.fs#L381-381" class="github-link">
+            <a href="http://github.com/daz10000/fss/tree/master/src/fss/db_common.fs#L476-476" class="github-link">
               <img src="../content/img/github.png" class="normal" />
               <img src="../content/img/github-blue.png" class="hover" />
             </a>
@@ -437,15 +508,15 @@ procedure calls using the dynamic access operator</p>
       <tr>
         <td class="member-name">
 
-          <code onmouseout="hideTip(event, '267', 267)" onmouseover="showTip(event, '267', 267)">
+          <code onmouseout="hideTip(event, '421', 421)" onmouseover="showTip(event, '421', 421)">
             Take()
           </code>
-          <div class="tip" id="267">
+          <div class="tip" id="421">
             <strong>Signature:</strong> unit -&gt; DbConnection<br />
                       </div>
         </td>
         <td class="xmldoc">
-            <a href="http://github.com/daz10000/fss/tree/master/src/fss/db_common_mysql.fs#L128-128" class="github-link">
+            <a href="http://github.com/daz10000/fss/tree/master/src/fss/db_common.fs#L221-221" class="github-link">
               <img src="../content/img/github.png" class="normal" />
               <img src="../content/img/github-blue.png" class="hover" />
             </a>
@@ -463,15 +534,15 @@ procedure calls using the dynamic access operator</p>
       <tr>
         <td class="member-name">
 
-          <code onmouseout="hideTip(event, '268', 268)" onmouseover="showTip(event, '268', 268)">
+          <code onmouseout="hideTip(event, '422', 422)" onmouseover="showTip(event, '422', 422)">
             ( ? )(conn, name)
           </code>
-          <div class="tip" id="268">
-            <strong>Signature:</strong> (conn:DynamicSqlConnection&lt;&#39;Conn,&#39;Parameter&gt; * name:string) -&gt; DynamicSqlCommand&lt;&#39;Parameter&gt;<br />
+          <div class="tip" id="422">
+            <strong>Signature:</strong> (conn:DynamicSqlConnection&lt;&#39;Conn,&#39;Parameter,&#39;Customizer&gt; * name:string) -&gt; DynamicSqlCommand&lt;&#39;Parameter&gt;<br />
                       </div>
         </td>
         <td class="xmldoc">
-            <a href="http://github.com/daz10000/fss/tree/master/src/fss/db_common_mysql.fs#L366-366" class="github-link">
+            <a href="http://github.com/daz10000/fss/tree/master/src/fss/db_common.fs#L461-461" class="github-link">
               <img src="../content/img/github.png" class="normal" />
               <img src="../content/img/github-blue.png" class="hover" />
             </a>
