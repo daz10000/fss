@@ -54,15 +54,15 @@ stored procedure using dynamic setter operator</p>
       <tr>
         <td class="member-name">
 
-          <code onmouseout="hideTip(event, '306', 306)" onmouseover="showTip(event, '306', 306)">
+          <code onmouseout="hideTip(event, '307', 307)" onmouseover="showTip(event, '307', 307)">
             new(cmd, release, opts, log)
           </code>
-          <div class="tip" id="306">
+          <div class="tip" id="307">
             <strong>Signature:</strong> (cmd:DbCommand * release:(unit -&gt; unit) * opts:ConnOpts * log:(string -&gt; unit)) -&gt; DynamicSqlCommand&lt;&#39;Parameter&gt;<br />
                       </div>
         </td>
         <td class="xmldoc">
-            <a href="http://github.com/daz10000/fss/tree/master/src/fss/db_common.fs#L84-84" class="github-link">
+            <a href="http://github.com/daz10000/fss/tree/master/src/fss/db_common.fs#L86-86" class="github-link">
               <img src="../content/img/github.png" class="normal" />
               <img src="../content/img/github-blue.png" class="hover" />
             </a>
@@ -81,33 +81,15 @@ stored procedure using dynamic setter operator</p>
       <tr>
         <td class="member-name">
 
-          <code onmouseout="hideTip(event, '307', 307)" onmouseover="showTip(event, '307', 307)">
+          <code onmouseout="hideTip(event, '308', 308)" onmouseover="showTip(event, '308', 308)">
             Close()
           </code>
-          <div class="tip" id="307">
+          <div class="tip" id="308">
             <strong>Signature:</strong> unit -&gt; unit<br />
                       </div>
         </td>
         <td class="xmldoc">
-            <a href="http://github.com/daz10000/fss/tree/master/src/fss/db_common.fs#L120-120" class="github-link">
-              <img src="../content/img/github.png" class="normal" />
-              <img src="../content/img/github-blue.png" class="hover" />
-            </a>
-          
-        </td>
-      </tr>
-      <tr>
-        <td class="member-name">
-
-          <code onmouseout="hideTip(event, '308', 308)" onmouseover="showTip(event, '308', 308)">
-            ExecuteNonQuery()
-          </code>
-          <div class="tip" id="308">
-            <strong>Signature:</strong> unit -&gt; int<br />
-                      </div>
-        </td>
-        <td class="xmldoc">
-            <a href="http://github.com/daz10000/fss/tree/master/src/fss/db_common.fs#L103-103" class="github-link">
+            <a href="http://github.com/daz10000/fss/tree/master/src/fss/db_common.fs#L122-122" class="github-link">
               <img src="../content/img/github.png" class="normal" />
               <img src="../content/img/github-blue.png" class="hover" />
             </a>
@@ -118,14 +100,14 @@ stored procedure using dynamic setter operator</p>
         <td class="member-name">
 
           <code onmouseout="hideTip(event, '309', 309)" onmouseover="showTip(event, '309', 309)">
-            ExecuteReader()
+            ExecuteNonQuery()
           </code>
           <div class="tip" id="309">
-            <strong>Signature:</strong> unit -&gt; DynamicSqlDataReader&lt;&#39;T&gt;<br />
+            <strong>Signature:</strong> unit -&gt; int<br />
                       </div>
         </td>
         <td class="xmldoc">
-            <a href="http://github.com/daz10000/fss/tree/master/src/fss/db_common.fs#L96-96" class="github-link">
+            <a href="http://github.com/daz10000/fss/tree/master/src/fss/db_common.fs#L105-105" class="github-link">
               <img src="../content/img/github.png" class="normal" />
               <img src="../content/img/github-blue.png" class="hover" />
             </a>
@@ -136,14 +118,14 @@ stored procedure using dynamic setter operator</p>
         <td class="member-name">
 
           <code onmouseout="hideTip(event, '310', 310)" onmouseover="showTip(event, '310', 310)">
-            ExecuteScalar()
+            ExecuteReader()
           </code>
           <div class="tip" id="310">
-            <strong>Signature:</strong> unit -&gt; obj<br />
+            <strong>Signature:</strong> unit -&gt; DynamicSqlDataReader&lt;&#39;T&gt;<br />
                       </div>
         </td>
         <td class="xmldoc">
-            <a href="http://github.com/daz10000/fss/tree/master/src/fss/db_common.fs#L110-110" class="github-link">
+            <a href="http://github.com/daz10000/fss/tree/master/src/fss/db_common.fs#L98-98" class="github-link">
               <img src="../content/img/github.png" class="normal" />
               <img src="../content/img/github-blue.png" class="hover" />
             </a>
@@ -154,14 +136,14 @@ stored procedure using dynamic setter operator</p>
         <td class="member-name">
 
           <code onmouseout="hideTip(event, '311', 311)" onmouseover="showTip(event, '311', 311)">
-            GetConnHash()
+            ExecuteScalar()
           </code>
           <div class="tip" id="311">
-            <strong>Signature:</strong> unit -&gt; int<br />
+            <strong>Signature:</strong> unit -&gt; obj<br />
                       </div>
         </td>
         <td class="xmldoc">
-            <a href="http://github.com/daz10000/fss/tree/master/src/fss/db_common.fs#L86-86" class="github-link">
+            <a href="http://github.com/daz10000/fss/tree/master/src/fss/db_common.fs#L112-112" class="github-link">
               <img src="../content/img/github.png" class="normal" />
               <img src="../content/img/github-blue.png" class="hover" />
             </a>
@@ -172,14 +154,32 @@ stored procedure using dynamic setter operator</p>
         <td class="member-name">
 
           <code onmouseout="hideTip(event, '312', 312)" onmouseover="showTip(event, '312', 312)">
-            Parameters
+            GetConnHash()
           </code>
           <div class="tip" id="312">
+            <strong>Signature:</strong> unit -&gt; int<br />
+                      </div>
+        </td>
+        <td class="xmldoc">
+            <a href="http://github.com/daz10000/fss/tree/master/src/fss/db_common.fs#L88-88" class="github-link">
+              <img src="../content/img/github.png" class="normal" />
+              <img src="../content/img/github-blue.png" class="hover" />
+            </a>
+          
+        </td>
+      </tr>
+      <tr>
+        <td class="member-name">
+
+          <code onmouseout="hideTip(event, '313', 313)" onmouseover="showTip(event, '313', 313)">
+            Parameters
+          </code>
+          <div class="tip" id="313">
             <strong>Signature:</strong> DbParameterCollection<br />
                       </div>
         </td>
         <td class="xmldoc">
-            <a href="http://github.com/daz10000/fss/tree/master/src/fss/db_common.fs#L119-119" class="github-link">
+            <a href="http://github.com/daz10000/fss/tree/master/src/fss/db_common.fs#L121-121" class="github-link">
               <img src="../content/img/github.png" class="normal" />
               <img src="../content/img/github-blue.png" class="hover" />
             </a>
@@ -190,15 +190,15 @@ stored procedure using dynamic setter operator</p>
       <tr>
         <td class="member-name">
 
-          <code onmouseout="hideTip(event, '313', 313)" onmouseover="showTip(event, '313', 313)">
+          <code onmouseout="hideTip(event, '314', 314)" onmouseover="showTip(event, '314', 314)">
             Transaction()
           </code>
-          <div class="tip" id="313">
+          <div class="tip" id="314">
             <strong>Signature:</strong> unit -&gt; DbTransaction<br />
                       </div>
         </td>
         <td class="xmldoc">
-            <a href="http://github.com/daz10000/fss/tree/master/src/fss/db_common.fs#L126-126" class="github-link">
+            <a href="http://github.com/daz10000/fss/tree/master/src/fss/db_common.fs#L128-128" class="github-link">
               <img src="../content/img/github.png" class="normal" />
               <img src="../content/img/github-blue.png" class="hover" />
             </a>
@@ -209,15 +209,15 @@ stored procedure using dynamic setter operator</p>
       <tr>
         <td class="member-name">
 
-          <code onmouseout="hideTip(event, '314', 314)" onmouseover="showTip(event, '314', 314)">
+          <code onmouseout="hideTip(event, '315', 315)" onmouseover="showTip(event, '315', 315)">
             Transaction()
           </code>
-          <div class="tip" id="314">
+          <div class="tip" id="315">
             <strong>Signature:</strong> unit -&gt; unit<br />
                       </div>
         </td>
         <td class="xmldoc">
-            <a href="http://github.com/daz10000/fss/tree/master/src/fss/db_common.fs#L126-126" class="github-link">
+            <a href="http://github.com/daz10000/fss/tree/master/src/fss/db_common.fs#L128-128" class="github-link">
               <img src="../content/img/github.png" class="normal" />
               <img src="../content/img/github-blue.png" class="hover" />
             </a>
@@ -236,15 +236,15 @@ stored procedure using dynamic setter operator</p>
       <tr>
         <td class="member-name">
 
-          <code onmouseout="hideTip(event, '315', 315)" onmouseover="showTip(event, '315', 315)">
+          <code onmouseout="hideTip(event, '316', 316)" onmouseover="showTip(event, '316', 316)">
             ( ?&lt;- )(cmd, name, value)
           </code>
-          <div class="tip" id="315">
-            <strong>Signature:</strong> (cmd:DynamicSqlCommand&lt;&#39;Parameter&gt; * name:string * value:&#39;?7870) -&gt; unit<br />
+          <div class="tip" id="316">
+            <strong>Signature:</strong> (cmd:DynamicSqlCommand&lt;&#39;Parameter&gt; * name:string * value:&#39;?7877) -&gt; unit<br />
                       </div>
         </td>
         <td class="xmldoc">
-            <a href="http://github.com/daz10000/fss/tree/master/src/fss/db_common.fs#L88-88" class="github-link">
+            <a href="http://github.com/daz10000/fss/tree/master/src/fss/db_common.fs#L90-90" class="github-link">
               <img src="../content/img/github.png" class="normal" />
               <img src="../content/img/github-blue.png" class="hover" />
             </a>

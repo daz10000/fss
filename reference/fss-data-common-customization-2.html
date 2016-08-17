@@ -53,35 +53,16 @@
       <tr>
         <td class="member-name">
 
-          <code onmouseout="hideTip(event, '300', 300)" onmouseover="showTip(event, '300', 300)">
-            loadColDetail(arg1)
-          </code>
-          <div class="tip" id="300">
-            <strong>Signature:</strong> &#39;Conn -&gt; Map&lt;string,ColDetail []&gt;<br />
-              <strong>Modifiers:</strong> abstract<br />
-                      </div>
-        </td>
-        <td class="xmldoc">
-            <a href="http://github.com/daz10000/fss/tree/master/src/fss/db_common.fs#L38-38" class="github-link">
-              <img src="../content/img/github.png" class="normal" />
-              <img src="../content/img/github-blue.png" class="hover" />
-            </a>
-          
-        </td>
-      </tr>
-      <tr>
-        <td class="member-name">
-
           <code onmouseout="hideTip(event, '301', 301)" onmouseover="showTip(event, '301', 301)">
-            needsKeepAlive()
+            getSearchPath(arg1)
           </code>
           <div class="tip" id="301">
-            <strong>Signature:</strong> unit -&gt; bool<br />
+            <strong>Signature:</strong> &#39;Conn -&gt; string list<br />
               <strong>Modifiers:</strong> abstract<br />
                       </div>
         </td>
         <td class="xmldoc">
-            <a href="http://github.com/daz10000/fss/tree/master/src/fss/db_common.fs#L42-42" class="github-link">
+            <a href="http://github.com/daz10000/fss/tree/master/src/fss/db_common.fs#L44-44" class="github-link">
               <img src="../content/img/github.png" class="normal" />
               <img src="../content/img/github-blue.png" class="hover" />
             </a>
@@ -92,10 +73,10 @@
         <td class="member-name">
 
           <code onmouseout="hideTip(event, '302', 302)" onmouseover="showTip(event, '302', 302)">
-            registerEnum()
+            loadColDetail(arg1)
           </code>
           <div class="tip" id="302">
-            <strong>Signature:</strong> unit -&gt; unit<br />
+            <strong>Signature:</strong> &#39;Conn -&gt; Map&lt;SchematizedTable,ColDetail []&gt;<br />
               <strong>Modifiers:</strong> abstract<br />
                       </div>
         </td>
@@ -111,15 +92,15 @@
         <td class="member-name">
 
           <code onmouseout="hideTip(event, '303', 303)" onmouseover="showTip(event, '303', 303)">
-            reloadTypes(arg1)
+            needsKeepAlive()
           </code>
           <div class="tip" id="303">
-            <strong>Signature:</strong> &#39;Conn -&gt; unit<br />
+            <strong>Signature:</strong> unit -&gt; bool<br />
               <strong>Modifiers:</strong> abstract<br />
                       </div>
         </td>
         <td class="xmldoc">
-            <a href="http://github.com/daz10000/fss/tree/master/src/fss/db_common.fs#L37-37" class="github-link">
+            <a href="http://github.com/daz10000/fss/tree/master/src/fss/db_common.fs#L43-43" class="github-link">
               <img src="../content/img/github.png" class="normal" />
               <img src="../content/img/github-blue.png" class="hover" />
             </a>
@@ -130,7 +111,7 @@
         <td class="member-name">
 
           <code onmouseout="hideTip(event, '304', 304)" onmouseover="showTip(event, '304', 304)">
-            reopenConnection(arg1)
+            reloadTypes(arg1)
           </code>
           <div class="tip" id="304">
             <strong>Signature:</strong> &#39;Conn -&gt; unit<br />
@@ -149,15 +130,34 @@
         <td class="member-name">
 
           <code onmouseout="hideTip(event, '305', 305)" onmouseover="showTip(event, '305', 305)">
-            sequenceMechanism()
+            reopenConnection(arg1)
           </code>
           <div class="tip" id="305">
-            <strong>Signature:</strong> unit -&gt; SequenceMechanism<br />
+            <strong>Signature:</strong> &#39;Conn -&gt; unit<br />
               <strong>Modifiers:</strong> abstract<br />
                       </div>
         </td>
         <td class="xmldoc">
             <a href="http://github.com/daz10000/fss/tree/master/src/fss/db_common.fs#L41-41" class="github-link">
+              <img src="../content/img/github.png" class="normal" />
+              <img src="../content/img/github-blue.png" class="hover" />
+            </a>
+          
+        </td>
+      </tr>
+      <tr>
+        <td class="member-name">
+
+          <code onmouseout="hideTip(event, '306', 306)" onmouseover="showTip(event, '306', 306)">
+            sequenceMechanism()
+          </code>
+          <div class="tip" id="306">
+            <strong>Signature:</strong> unit -&gt; SequenceMechanism<br />
+              <strong>Modifiers:</strong> abstract<br />
+                      </div>
+        </td>
+        <td class="xmldoc">
+            <a href="http://github.com/daz10000/fss/tree/master/src/fss/db_common.fs#L42-42" class="github-link">
               <img src="../content/img/github.png" class="normal" />
               <img src="../content/img/github-blue.png" class="hover" />
             </a>
