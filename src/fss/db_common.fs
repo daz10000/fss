@@ -13,8 +13,10 @@ module Common =
     open System
     open Fss.Pool // used for database handle pooling
     
+    type SchematizedTable = { schema : string ; table : string}
+
     /// Details of one table column for dynamic record filling
-    type ColDetail = { 
+    type ColDetail = {  schema : string
                         typType : char
                         isEnum : bool
                         cname : string
@@ -35,11 +37,11 @@ module Common =
                                     > =
         //abstract member makeEnum: string->string->'Parameter
         abstract member reloadTypes:'Conn->unit
-        abstract member loadColDetail:'Conn->Map<string,ColDetail []>
+        abstract member loadColDetail:'Conn->Map<SchematizedTable,ColDetail []>
         abstract member reopenConnection:'Conn->unit
-        abstract member registerEnum<'Enum when 'Enum:(new:unit->'Enum) and 'Enum:struct and 'Enum :> System.ValueType> : unit->unit
         abstract member sequenceMechanism:unit->SequenceMechanism
         abstract member needsKeepAlive:unit->bool
+        abstract member getSearchPath:'Conn->string list
     
 
     type ConnOpts = {  mutable logfile : StreamWriter option ; mutable logfileName : string option ; mutable logQueries : bool;
@@ -172,8 +174,13 @@ module Common =
             pool.Release conn
             data
           /// Table specific meta data
-          let mutable colMetadata : Map<string,ColDetail []> = fetchColData()
-            
+          let mutable colMetadata : Map<SchematizedTable,ColDetail []> = fetchColData()
+          let mutable searchPath = 
+            let conn = pool.Take()
+            let data = customizer.getSearchPath (conn :?> 'Conn)
+            pool.Release conn
+            data
+
           let log (msg:string) =
             match opts.logfile with
                 | None -> ()
@@ -226,9 +233,6 @@ module Common =
           member x.LogConnUse with get() = opts.logConnUse and set(v) = opts.logConnUse <- v  
           member x.LogQueries with get() = opts.logQueries and set(v) = opts.logQueries <- v  
           member x.LogLongerThan with get() = opts.logLongerThan  and set(v) = opts.logLongerThan <- v  
-
-          member x.RegisterEnum<'Enum when 'Enum:(new:unit->'Enum) and 'Enum:struct and 'Enum :> System.ValueType>() =
-            customizer.registerEnum<'Enum>()
           
           member x.Reload() =
             // For each connection in the pool, run the customization provided function
@@ -265,9 +269,19 @@ module Common =
             let ignoredColumns = 
                 match ignoredColumns with
                 | Some(cols) -> cols |> Seq.map (fun c -> c.ToLower()) |> Set.ofSeq
-                | None -> Set.empty
+                | None -> Set.empty 
 
-            match colMetadata.TryFind table with
+            /// Walk through search path until we find a lookup for this table in a schema on the
+            /// search path.
+            let rec findTableUsingSearchPath table path = 
+                        match path with
+                            | [] -> None
+                            | hd::tl ->
+                                match colMetadata.TryFind ( {schema = hd ; table = table}  ) with
+                                    | None -> findTableUsingSearchPath table tl
+                                    | _ as x -> x
+
+            match findTableUsingSearchPath table searchPath with
                 | None ->
 //                    // They probably misnamed the table request
                       failwithf "ERROR: no such table '%s'" table

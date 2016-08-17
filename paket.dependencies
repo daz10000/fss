@@ -4,7 +4,6 @@ nuget FSharp.Core redirects: force
 nuget Mono.Security 3.2.3 framework: >= net452
 nuget MySql.Data framework: >= net40
 nuget Newtonsoft.Json 8.0.3 framework: >= net40
-nuget Npgsql 3.1.4
 nuget NuGet.CommandLine
 nuget System.Data.SQLite
 

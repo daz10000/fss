@@ -117,7 +117,12 @@ let getConnString() =
         System.IO.File.ReadAllText("connection_postgres.txt")
 
 // reusable primitives for testing
-let gc() = new DynamicSqlConnection(getConnString(),4)
+let gc() = 
+    Npgsql.NpgsqlConnection.UnmapEnumGlobally<Mood>()
+    new DynamicSqlConnection(getConnString(),4)
+let gcWithEnumRegister() = 
+    Npgsql.NpgsqlConnection.MapEnumGlobally<Mood>()
+    new DynamicSqlConnection(getConnString(),4)
 let drop table (conn:DynamicSqlConnection)  = table |> sprintf "drop table if exists %s" 
                                                 |> conn.ExecuteScalar |> ignore
 
@@ -323,7 +328,6 @@ type TestPGDbBasic() = class
 
 end
 
-(*
 [<TestFixture>]
 type TestEnums() = class
     let conn = gc()
@@ -334,6 +338,9 @@ type TestEnums() = class
         dropEnum1 conn
         setupE1 conn
         createT6 conn
+        conn.Reload() // Need to reopen after mapping
+        Npgsql.NpgsqlConnection.MapEnumGlobally<Mood>()
+
         conn.Reload()
     /// drop enum and table
     let dropET() =
@@ -372,8 +379,7 @@ type TestEnums() = class
 
     [<Test>]
     member x.Test003InsertAndQuery() =
-        setupE1 conn
-        createT6 conn
+        setupET()
 
         let ids : int [] = conn.InsertMany [|  t6a ; t6b |] 
 
@@ -389,13 +395,13 @@ type TestEnums() = class
 
         let ids : int [] = conn.InsertMany [|  t6a ; t6b |] 
 
-        use conn2 = gc()
+        use conn2 = gcWithEnumRegister()
         use comm = conn2.Command "select * from test6"
         use reader = comm.ExecuteReader()
         while reader.Read() do
             let x : int32  = reader?id
-            let y : string  = reader?temperment
-            printfn "%d %s" x y
+            let y : Mood  = reader?temperment
+            printfn "%d %A" x y
     [<Test>]
     member x.Test005EnumByOperator() =
         setupET()
@@ -406,13 +412,12 @@ type TestEnums() = class
         use reader = comm.ExecuteReader()
         reader.Read()|> ignore
         let id : int = reader?id
-        let y : string  = reader?temperment
-        Assert.AreEqual(y,"happy")
+        let y : Mood  = reader?temperment
+        Assert.AreEqual(y,Mood.happy)
 
     [<Test>]
     member x.Test005EnumByOperator2() =
         setupET()
-        conn.RegisterEnum<Mood>()
 
         let ids : int [] = conn.InsertMany [|  t6a ; t6b |] 
 
@@ -436,8 +441,8 @@ type TestEnums() = class
         Assert.AreEqual(records.Length,2)
         Assert.AreEqual("wilma",records.[0].first)
         Assert.AreEqual("fred",records.[1].first)
-        Assert.AreEqual("happy",records.[0].temperment)
-        Assert.AreEqual("sad",records.[1].temperment)
+        Assert.AreEqual(Mood.happy,records.[0].temperment)
+        Assert.AreEqual(Mood.sad,records.[1].temperment)
 
         drop "test6" conn
         dropEnum1 conn
@@ -449,8 +454,6 @@ type TestEnums() = class
             (conn :> IDisposable).Dispose()
 
 end
-
-*)
 
 [<TestFixture>]
 type TestTransactions() = class

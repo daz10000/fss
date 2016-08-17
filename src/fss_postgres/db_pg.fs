@@ -12,13 +12,6 @@ module Postgres =
 
     type PgCustomizations() =  class
         interface Fss.Data.Common.Customization<NpgsqlParameter,NpgsqlConnection> with
-//            member x.makeEnum name v =
-//                let p = Npgsql.NpgsqlParameter(name,v)
-//                p.NpgsqlDbType<-NpgsqlTypes.NpgsqlDbType.Unknown
-//                p
-            member x.registerEnum<'Enum when 'Enum:(new:unit->'Enum) and 'Enum:struct and 'Enum :> System.ValueType>() =
-                NpgsqlConnection.MapEnumGlobally<'Enum>()
-                ()
             member x.sequenceMechanism() = Fss.Data.Common.RETURNS_CLAUSE
             member x.needsKeepAlive() = true
 
@@ -26,24 +19,45 @@ module Postgres =
                 conn.ReloadTypes()
             member x.reopenConnection(conn:NpgsqlConnection) = 
                 NpgsqlConnection.ClearPool(conn)
+            member x.getSearchPath(conn:NpgsqlConnection) =
+                use command : NpgsqlCommand = conn.CreateCommand()
+                command.CommandText <- "show search_path"
+                let searchPath = command.ExecuteScalar( ) :?> string
+
+                command.CommandText <- "select CURRENT_USER"
+                let currentUser = command.ExecuteScalar() :?> string
+
+                let schemas = searchPath.Split([|','|]) 
+                                |> Array.map (fun s -> s.Trim())
+                                |> Array.map (fun s -> if s = "$user" then currentUser else s)
+                                |> Array.filter (fun x -> not ( 
+                                                                x.StartsWith("$") 
+                                                              ) 
+                                                )
+                                |> List.ofArray
+                schemas
+
             member x.loadColDetail(conn:NpgsqlConnection) =
                
 
 
                 /// db columns
-                let cols:Map<string,Fss.Data.Common.ColDetail []> =
+                let cols:Map<Fss.Data.Common.SchematizedTable,Fss.Data.Common.ColDetail []> =
                         seq { 
                             // Inspect table definition.
                             use command : NpgsqlCommand = conn.CreateCommand()
-                            command.CommandText <- "select c.relname,t.typtype,a.attname as attname,t.typname as tname,attnum,attnotnull from 
+                            command.CommandText <- "select nsp.nspname as namespace,c.relname,t.typtype,a.attname as attname,t.typname as tname,attnum,attnotnull from 
                                                                 pg_class c JOIN pg_attribute a ON c.oid = a.attrelid 
-                                                                JOIN pg_type t ON t.oid = a.atttypid WHERE
+                                                                JOIN pg_type t ON t.oid = a.atttypid
+                                                                join pg_namespace nsp on nsp.oid = c.relnamespace
+                                                                WHERE
                                                                 -- c.relname = :tablename AND
                                                                 a.attnum > 0"
                             use r = command.ExecuteReader()
                             while r.Read() do
                                 let c : Fss.Data.Common.ColDetail = 
-                                            {   isEnum = r.["typtype"] :?> char = 'e' 
+                                            {   schema = r.["namespace"] :?> string
+                                                isEnum = r.["typtype"] :?> char = 'e' 
                                                 typType= r.["typtype"] :?> char
                                                 relName = r.["relname"] :?> string
                                                 cname = r.["attname"] :?> string
@@ -53,8 +67,11 @@ module Postgres =
                                                 isPK = false // temporarily
                                             } 
                                 yield c
-                        } |> Seq.groupBy (fun c -> c.relName) 
-                        |> Seq.map(fun (relName,cols) -> relName,Array.ofSeq cols)
+                        } |> Seq.groupBy (fun c -> c.schema,c.relName) 
+                        |> Seq.map(fun ((schema,relName),cols) -> 
+                                                (
+                                                    ({schema = schema ; table = relName}:Fss.Data.Common.SchematizedTable),(Array.ofSeq cols))
+                                                )
                         |> Map.ofSeq
 
                 // Fetch primary key details
@@ -64,24 +81,25 @@ module Postgres =
                 let pkCols = seq {
                                     use comm3 = conn.CreateCommand()
                                     
-                                    comm3.CommandText <- "select relname,conkey from 
-                                                    pg_constraint c JOIN pg_class cl ON c.conrelid = cl.oid 
-                                                    WHERE contype = 'p'  "
+                                    comm3.CommandText <- "select nspname as namespace,relname,conkey from 
+                                                            pg_constraint c 
+                                                            JOIN pg_class cl ON c.conrelid = cl.oid 
+                                                            join pg_namespace nsp on nsp.oid = cl.relnamespace
+                                                            WHERE contype = 'p'  "
 
                                     use reader3 = comm3.ExecuteReader()
                                     while reader3.Read() do
                                         let table = reader3.["relname"] :?> string
+                                        let schema = reader3.["namespace"] :?> string
                                         let conKey = reader3.["conkey"] :?> int16 []
-                                        yield table,conKey
+                                        yield ({schema = schema ; table = table}:Fss.Data.Common.SchematizedTable),conKey
                               } 
-                                //|> Seq.groupBy (fun (t,c) -> t)
-                                //|> Seq.map (fun (t,cols) -> t,cols |> Seq.map (snd) |> Set.ofSeq)
                                 |> Map.ofSeq
 
                 // Take column map (table->coldetails) and flag columns that are primary keys based on
                 // the query above.  Map over the table->colDetail map and update colDetails
-                cols |> Map.map (fun table cols ->
-                                    match pkCols.TryFind table with
+                cols |> Map.map (fun schemaTable cols ->
+                                    match pkCols.TryFind schemaTable with
                                     | None ->cols // no primary key info for this table
                                     | Some(pkColArray) ->
                                          // primary key columns for this table

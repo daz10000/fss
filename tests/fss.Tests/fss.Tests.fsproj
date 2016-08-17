@@ -134,6 +134,7 @@
       <Project>{3fe73d7c-144c-4be5-937d-eee1a4a91a2c}</Project>
       <Private>True</Private>
     </ProjectReference>
+    <Reference Include="System.Transactions" />
   </ItemGroup>
   <Choose>
     <When Condition="$(TargetFrameworkIdentifier) == '.NETFramework' And $(TargetFrameworkVersion) == 'v4.0'">

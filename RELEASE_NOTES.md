@@ -1,19 +1,24 @@
+### v1.5.0 -- Aug 17 2016
+* ORM: support for sqlite solid
+* ORM: support for postgres enums solid
+* ORM: support for postgres schemas / search_path
+
 ### v1.4.1 -- Aug 7 2016
-* freql: support for sqlite added
-* freql: small cleanup issue in keepalive thread fixed
+* ORM: support for sqlite added
+* ORM: small cleanup issue in keepalive thread fixed
 
 ### v1.4.0 -- July 17 2016
-* freql: caching schema information at first load for postgres
-* freql: better NULL/ Nullable support
+* ORM: caching schema information at first load for postgres
+* ORM: better NULL/ Nullable support
 
 ### v1.3.1
-* freql: int16,decimal support
+* ORM: int16,decimal support
 * templates: expression legal in for loop iter RHS value
 * templates: elseif implementation
 
 ### v1.3.0
-* freql: fss-mysql implementation
-* freql: decimal null support
+* ORM: fss-mysql implementation
+* ORM: decimal null support
 
 ### v1.2.9
 * templates: BUG: includes with internal variables mixed with extends werenot expanded properly
