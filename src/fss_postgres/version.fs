@@ -1,4 +1,4 @@
 ﻿module version
 
 [<Literal>]
-let version = "1.4.1.0" 
+let version = "1.5.1.0" 

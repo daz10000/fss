@@ -312,12 +312,14 @@ module Common =
                                                                 | [| x |] -> sprintf "returning %s" x
                                                                 | _ -> "" // multi column key not supported
                                                         | _ -> "" // nothing needed here if we don't use the returns pattern
-
+                                // assume all cols from same schema for purposes of getting schema
+                                let schema = cols.[0].schema
                                 // Create SQL statement  e.g. something like t his
                                 // insert into test (username,host,port,usessl,password,nextuid,uidvalidity,checkcert) values 
                                 //                                    (:username,:host,:port,:usessl,:password,:nextuid,
                                 //                                       :uidvalidity,:checkcert) returning id"
-                                let sql = sprintf "insert into %s(%s) values(%s) %s"  
+                                let sql = sprintf "insert into %s.%s(%s) values(%s) %s"  
+                                            schema
                                             table 
                                             (String.Join(",",colNames|> Array.map(fun x -> x.ToLower()))) 
                                             (String.Join(",",[| for i in 1..fields.Length  -> sprintf ":p%d"i |]))

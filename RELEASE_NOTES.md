@@ -1,3 +1,6 @@
+### v1.5.1 -- Aug 30 2016
+* ORM: specified explicit schema now for insertMany
+
 ### v1.5.0 -- Aug 17 2016
 * ORM: support for sqlite solid
 * ORM: support for postgres enums solid
