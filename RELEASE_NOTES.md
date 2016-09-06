@@ -1,3 +1,6 @@
+### v1.5.2 -- Sep 05 2016
+* ORM: mapping metadata to lowercase as sqlite does not match postgres behavior
+
 ### v1.5.1 -- Aug 30 2016
 * ORM: specified explicit schema now for insertMany
 

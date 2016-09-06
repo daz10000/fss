@@ -94,7 +94,7 @@
     <Compile Include="testTemplate.fs" />
     <Compile Include="testPool.fs" />
     <Compile Include="testServer.fs" />
-    <Compile Include="test_db.fs" />
+    <Compile Include="test_db_postgres.fs" />
     <Compile Include="test_db_sqlite.fs" />
     <Compile Include="test_db_mysql.fs" />
     <None Include="paket.references" />

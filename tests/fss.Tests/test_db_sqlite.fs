@@ -60,6 +60,18 @@ type Test4 = { id : int64 option ; age : int64 option ; first : string option ; 
 
 let t4a = { id = Some 1L ; age = Some(40L) ; first = Some "wilma" ; last = Some "flintstone" ; rate = Some 1.256 ; happy = Some true}
 let t4b = { id = Some 2L ; age = None ; first = None ; last = None ; rate = None ; happy = None}
+
+let createT10SQL = """
+create table test10 (
+    lower int NOT NULL,
+    Upper int NOT NULL,
+    aMixed int NOT NULL
+)"""
+
+type Test10 = { lower : int64 ; Upper : int64 ; aMixed : int64}
+
+let t10a = { lower = 9L ; Upper = 900L ; aMixed = 90L}
+
 let confFile = "connection_sqlite.txt"
 let getConnString() =
     if not (File.Exists(confFile)) then
@@ -76,12 +88,14 @@ let createT1 (conn:DynamicSqlConnection) = conn.ExecuteScalar(createT1SQL) |> ig
 let createT2 (conn:DynamicSqlConnection) = conn.ExecuteScalar(createT2SQL) |> ignore
 let createT3 (conn:DynamicSqlConnection) = conn.ExecuteScalar(createT3SQL) |> ignore
 let createT4 (conn:DynamicSqlConnection) = conn.ExecuteScalar(createT4SQL) |> ignore
+let createT10 (conn:DynamicSqlConnection) = conn.ExecuteScalar(createT10SQL) |> ignore
     
 
 let setupT1 (conn:DynamicSqlConnection) = drop "test1" conn ; createT1 conn
 let setupT2 (conn:DynamicSqlConnection) = drop "test2" conn ; createT2 conn
 let setupT3 (conn:DynamicSqlConnection) = drop "test3" conn ; createT3 conn
 let setupT4 (conn:DynamicSqlConnection) = drop "test4" conn ; createT4 conn
+let setupT10 (conn:DynamicSqlConnection) = drop "test10" conn ; createT10 conn
 
 
 [<TestFixture>]
@@ -193,6 +207,23 @@ type TestSQLiteBasic() = class
 //        conn.InsertOne<Test4,int>(t4a,ignoredColumns=["id"]) |> ignore
        
 end
+[<TestFixture>]
+type TestCase() = class
+    let conn = gc()
+    do
+        use conn = gc()
+        setupT10 conn
+        conn.Reload()
+
+    let cleanTable() =
+        conn.ExecuteScalar("delete from test10") |> ignore
+
+    [<Test>]
+    member x.Test200UpperCaseCols() =
+        cleanTable()
+        conn.InsertOne(t10a) |> ignore
+end
+
 
 [<TestFixture>]
 type TestTransactions() = class
@@ -338,6 +369,9 @@ type TestTransactions() = class
         trans.Rollback()
         Assert.IsTrue(conn.ExecuteScalar "SELECT COUNT(*) FROM test1" :?> int64 = 1L)
         cleanTable()
+
+
+
     (* // not appropriate torture for sqlite
     [<Test>]
     // Insert several rows then roll back; 

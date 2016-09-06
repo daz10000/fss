@@ -288,7 +288,7 @@ module Common =
                 | Some(cols) ->
                                         
                     /// db column names
-                    let dbColNames = cols |> Array.map (fun z -> z.cname ) |> Set.ofSeq
+                    let dbColNames = cols |> Array.map (fun z -> z.cname.ToLower()) |> Set.ofSeq
                     // Determine which columns were mentioned in the item being inserted.  May
                     // be a subset of the available column names, but can't include non columns.
                     // Filtering out also the columns we do not want to insert in the database, as 
@@ -350,7 +350,7 @@ module Common =
                                     |> Array.map (fun f ->
                                                     let pt = f.PropertyType
                                                     let isOption = pt.IsGenericType &&  pt.GetGenericTypeDefinition() = genericOptionType
-                                                    let isNotNull = (cols |> Array.find (fun c -> c.cname = f.Name.ToLower())).cNotNull
+                                                    let isNotNull = (cols |> Array.find (fun c -> c.cname.ToLower() = f.Name.ToLower())).cNotNull
                                                     match isOption,isNotNull with
                                                         | true,false -> true
                                                         | true,true -> failwithf "ERROR: field %s is option but not nullable in db" f.Name

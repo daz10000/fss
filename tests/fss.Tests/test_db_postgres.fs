@@ -110,6 +110,19 @@ let t5a = { a = 15s ; b = 1.2M}
 let t6a = { id =1 ; first = "wilma" ; temperment = Mood.happy}
 let t6b = { id =2 ; first = "fred" ; temperment = Mood.sad}
 
+let createT10SQL = """
+create table test10 (
+    lower int NOT NULL,
+    Upper int NOT NULL,
+    aMixed int NOT NULL
+)"""
+
+type Test10 = { lower : int64 ; Upper : int64 ; aMixed : int64}
+
+let t10a = { lower = 9L ; Upper = 900L ; aMixed = 90L}
+
+
+
 let getConnString() =
     if not (File.Exists("connection_postgres.txt")) then
         failwithf "ERROR: expected connection_postgres.txt file with connstring"
@@ -133,9 +146,11 @@ let createT4 (conn:DynamicSqlConnection) = conn.ExecuteScalar(createT4SQL) |> ig
 let createT5 (conn:DynamicSqlConnection) = conn.ExecuteScalar(createT5SQL) |> ignore
 let createT6 (conn:DynamicSqlConnection) = conn.ExecuteScalar(createT6SQL) |> ignore
 let createT7 (conn:DynamicSqlConnection) = conn.ExecuteScalar(createT7SQL) |> ignore
+let createT10 (conn:DynamicSqlConnection) = conn.ExecuteScalar(createT10SQL) |> ignore
 
 let createEnum1 (conn:DynamicSqlConnection) = conn.ExecuteScalar(createMoodEnum) |> ignore
 let dropEnum1 (conn:DynamicSqlConnection) = conn.ExecuteScalar(dropMoodEnum) |> ignore
+
 
 let setupT1 (conn:DynamicSqlConnection) = drop "test1" conn ; createT1 conn
 let setupT2 (conn:DynamicSqlConnection) = drop "test2" conn ; createT2 conn
@@ -145,6 +160,7 @@ let setupT5 (conn:DynamicSqlConnection) = drop "test5" conn ; createT5 conn
 let setupT6 (conn:DynamicSqlConnection) = drop "test6" conn ; createT6 conn
 let setupT7 (conn:DynamicSqlConnection) = drop "test7" conn ; createT7 conn
 let setupE1 (conn:DynamicSqlConnection) = dropEnum1 conn ; createEnum1 conn
+let setupT10 (conn:DynamicSqlConnection) = drop "test10" conn ; createT10 conn
 
 
 [<TestFixture>]
@@ -329,6 +345,21 @@ type TestPGDbBasic() = class
 end
 
 [<TestFixture>]
+type TestCase() = class
+    let conn = gc()
+    do
+        use conn = gc()
+        setupT10 conn
+    let cleanTable() =
+        conn.ExecuteScalar("delete from test10") |> ignore
+
+    [<Test>]
+    member x.Test200UpperCaseCols() =
+        cleanTable()
+        conn.InsertOne(t10a) |> ignore
+end
+
+[<TestFixture>]
 type TestEnums() = class
     let conn = gc()
 
@@ -461,6 +492,7 @@ type TestTransactions() = class
     do
         use conn = gc()
         setupT1 conn
+        conn.Reload()
         
     let cleanTable() =
         conn.ExecuteScalar("delete from test1") |> ignore
