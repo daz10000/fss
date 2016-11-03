@@ -389,6 +389,21 @@ type Basic() = class
         let templateExpected2 = "mary had a little cow its milk was brown as chocolate"
         let page2 = template2.Render([||])
         sc templateExpected2 page2
+
+    [<Test>]
+    member x.Test051_ExtendInclude() =
+        /// Proc (web) filesystem to expose status info
+        let grab page =
+            match page with
+                | "base.html" -> """in base {{rid}}.{% block content %}{% endblock %}"""
+                | "navbar.html" -> "in navbar {{rid}}."
+                | _ -> "file not found"
+        let template = Template("""{% extends "base.html" %}{% block content %}{% include "navbar.html" %}in index {{rid}}.{% endblock %}""",grab)
+        let templateExpected = """in base 55.in navbar 55.in index 55."""
+        let page = template.Render([| ("rid", box 55)|])
+        sc templateExpected page   
+ 
+        ()
           
 end
 
