@@ -89,7 +89,7 @@ module Common =
       // Adds parameter with the specified name and value
       static member (?<-) (cmd:DynamicSqlCommand<'Parameter>, name:string, value) = 
         let p = new 'Parameter() 
-        p.ParameterName <- "@"+name
+        p.ParameterName <- "@"+name // FIXFIX - '@' doesn't work for sqlite, needs configuration
 
         let bv = box value
         p.Value <- if bv = box null then box DBNull.Value else bv
@@ -199,16 +199,25 @@ module Common =
 
           let keepAliveThread() =
             while not hasDisposed do
+                let conn = takeInternal()
+                let mutable wasOpen = true
                 try
-                    let conn = takeInternal()
                     use comm = conn.CreateCommand()
                     comm.CommandText <- "select 1 as x"
                     comm.ExecuteScalar() |> ignore
+                    if not wasOpen then
+                        printfn "Kepp alive: Reopening connection pool after success"
+                        pool.Iter(fun conn -> customizer.reopenConnection (conn:?>'Conn) )
+                        wasOpen <- true
                     release conn
                     ()
                 with _ as x ->
+                    release conn
+                    wasOpen <- false
+                    printfn "Keep alive: pre-emptively reopening connection pool after success"
+                    
                     pool.Iter(fun conn -> customizer.reopenConnection (conn:?>'Conn) )
-                    printfn "Keep alive exception %s\n%s" x.Message x.StackTrace
+                    printfn "Keep alive: exception %s\n%s" x.Message x.StackTrace
                 
                 System.Threading.Thread.Sleep(keepAliveInterval)
             ()
@@ -468,8 +477,11 @@ module Common =
 
           
           member x.ExecuteScalar(sql:string) =
-            use comm = x.Command sql
-            comm.ExecuteScalar()
+            let comm = x.Command sql
+            try
+                comm.ExecuteScalar()
+            finally
+                (comm :> IDisposable).Dispose()
 
           new(connStr:string) = new DynamicSqlConnection<'Conn,'Parameter,'Customizer>(connStr,10)
           member private x.Pool = pool

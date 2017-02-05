@@ -129,7 +129,7 @@ module Template =
         | ComparisonFactor(e1, Ws(t)) ->
             let rec aux e1 = function
               | 'o'::'r'::Ws(ComparisonFactor(e2, t)) -> aux (OR(e1,e2)) t
-              | _ as t -> Some(e1,t)
+              | t -> Some(e1,t)
             aux e1 t
         | _ -> None
     and (|ComparisonFactor|_|) = function
@@ -178,8 +178,8 @@ module Template =
                         match nextChar::tl with
                             | Atom(VARIABLE(v),tl2) ->
                                 aux (DOT(e,v)) tl2
-                            | _ as tl2 -> Some(e,tl2)
-                    | _ as tl -> Some(e,tl)
+                            | tl2 -> Some(e,tl2)
+                    | tl -> Some(e,tl)
             aux a tl
         | _ -> None
       and (|Atom|_|) = function
@@ -208,7 +208,7 @@ module Template =
                 match rem with
                     | ')'::rem2 -> Some(RANGE(e1,None,e2),rem2)
                     | ','::Expr(e3,')'::rem2) -> Some(RANGE(e1,Some(e2),e3),rem2)
-                    | _ as x -> failwithf "Unexpected tokens in range statement '%A'" x
+                    | x -> failwithf "Unexpected tokens in range statement '%A'" x
 
         | '\''::t -> // Single quoted string
             let sb = StringBuilder()
@@ -317,7 +317,7 @@ module Template =
                     let rec aux = function
                                         | 'i'::'n'::' '::Expr(fi,[]) -> Some(fv,fi) // Changed remainder2 -> [], test!
                                         | ' '::tl -> aux tl
-                                        | _ as x -> failwithf "ERROR: unexpected near %s" (new String(Array.ofList x))
+                                        | x -> failwithf "ERROR: unexpected near %s" (new String(Array.ofList x))
                     aux remainder
                 | _ -> None
 
@@ -349,17 +349,17 @@ module Template =
                                                     match forVar with
                                                         | VARIABLE(v) -> FORSTART(v,targetVar)
                                                         | _  -> failwithf "ERROR: for loops must take form for x in y where x is a variable"
-                                            | _ as x -> parseError "bad for loop format" x |> failwith
+                                            | x -> parseError "bad for loop format" x |> failwith
                             | x when x.StartsWith("if") -> 
                                         match (List.ofSeq x.[3..]) with
                                                     | Ws(BoolExpr(c,[])) -> IFSTART(c) // boolean expression like if x
-                                                    | _ as x -> parseError "parsing if expression" x |> failwith
+                                                    | x -> parseError "parsing if expression" x |> failwith
                             | x when x.StartsWith("elseif") -> 
                                         match (List.ofSeq x.[6..]) with
                                                     | Ws(BoolExpr(c,[])) -> ELSEIF(c) // boolean expression like if x
-                                                    | _ as x -> parseError "parsing elseif expression" x |> failwith
+                                                    | x -> parseError "parsing elseif expression" x |> failwith
                             | "else" -> ELSE
-                            | _ as x -> UNKNOWNLOGIC(x)
+                            | x -> UNKNOWNLOGIC(x)
 
 
     
@@ -456,7 +456,7 @@ module Template =
     /// Wrapper to handle case of IF ELSE or IF ELSEIF  with empty body
     and (|MaybeParsedSection|) = function
         | ParsedSections(sections,tl) -> sections,tl
-        | _ as x -> [],x
+        | x -> [],x
     /// ALl the logic after the initial IF statement,  i.e. body of if and subsequent sections like else
          
     and (|IfEnd|) cond1 b tl = 
@@ -487,12 +487,11 @@ module Template =
 
     and (|Parsed|) = function
             | ParsedSections(p,[]) -> p
-            | _ as p -> failwithf "ERROR: parse error, likely unbalanced elements in template, parsed\n %s" (pp "" p)
+            | p -> failwithf "ERROR: parse error, likely unbalanced elements in template, parsed\n %s" (pp "" p)
 
     // -------------------------------------------------------------------------------------------------
 
     // Template front end
-    open System.Reflection
     open Microsoft.FSharp.Reflection
 
     /// Take a parameter argument and build a map of
@@ -510,37 +509,37 @@ module Template =
 
         let rec procAtom (o:obj) =
             try
-                if o = null then
-                    Some(SCONST("none"))
-                else
-                    let f2t = o.GetType() 
-                    let v = 
-                        if f2t = intType then ICONST(o :?> int)
-                        elif f2t = boolType then BCONST(o :?> bool)
-                        elif f2t = int64Type then ICONST64(o :?> int64)
-                        elif f2t = floatType then FCONST(o :?> float)
-                        elif f2t = stringType then SCONST(string o)
-                        elif f2t.IsGenericType && f2t.GetGenericTypeDefinition() = genericListType then 
-                            // Doesn't work, see http://stackoverflow.com/questions/2140079/how-to-cast-an-object-to-a-list-of-generic-type-in-f
-                            let x = o :?> List<obj> |> Seq.ofList
-                            let y = [| for i in x -> procAtom i |] |> Array.choose (id)
-                            ARRAYCONST(y)
-                        elif f2t.IsArray then 
-                            let x : Array = o :?> Array
-                            let y = [| for i in x -> procAtom i |] |> Array.choose (id)
-                            ARRAYCONST(y)
-                        elif f2t.IsClass then
-                            CLASS(
-                                    seq {
-                                        for p in f2t.GetProperties()  do
-                                                match procAtom (p.GetValue(o,null)) with
-                                                    | Some(v) -> yield p.Name,v
-                                                    | None -> ()
-                                    } |> Map.ofSeq    
-                            )
-                        else SCONST(o.ToString()) // failwithf "ERROR: unknown type %A used in variable" o
-                    Some(v)
-            with _ as exn ->
+                match o with
+                    | null -> Some(SCONST("none"))
+                    | _ ->
+                        let f2t = o.GetType() 
+                        let v = 
+                            if f2t = intType then ICONST(o :?> int)
+                            elif f2t = boolType then BCONST(o :?> bool)
+                            elif f2t = int64Type then ICONST64(o :?> int64)
+                            elif f2t = floatType then FCONST(o :?> float)
+                            elif f2t = stringType then SCONST(string o)
+                            elif f2t.IsGenericType && f2t.GetGenericTypeDefinition() = genericListType then 
+                                // Doesn't work, see http://stackoverflow.com/questions/2140079/how-to-cast-an-object-to-a-list-of-generic-type-in-f
+                                let x = o :?> List<obj> |> Seq.ofList
+                                let y = [| for i in x -> procAtom i |] |> Array.choose (id)
+                                ARRAYCONST(y)
+                            elif f2t.IsArray then 
+                                let x : Array = o :?> Array
+                                let y = [| for i in x -> procAtom i |] |> Array.choose (id)
+                                ARRAYCONST(y)
+                            elif f2t.IsClass then
+                                CLASS(
+                                        seq {
+                                            for p in f2t.GetProperties()  do
+                                                    match procAtom (p.GetValue(o,null)) with
+                                                        | Some(v) -> yield p.Name,v
+                                                        | None -> ()
+                                        } |> Map.ofSeq    
+                                )
+                            else SCONST(o.ToString()) // failwithf "ERROR: unknown type %A used in variable" o
+                        Some(v)
+            with exn ->
                 Some(SCONST(sprintf "%s\n%s" exn.Message exn.StackTrace))
         let rec procOne (o:obj) =
             if FSharpType.IsTuple(o.GetType()) then
@@ -652,7 +651,7 @@ module Template =
             match vf.Get(v) with
                 | BCONST(e) ->
                     Some(e)
-                | _ as x -> failwithf "ERROR: '%A' not a boolean expression" (x.ToString())
+                | x -> failwithf "ERROR: '%A' not a boolean expression" (x.ToString())
         | _ -> None
 
     /// Main template rendering class.  Instantiated usings
@@ -663,7 +662,7 @@ module Template =
         /// a single Page object.   No semantic processing is done at this stage, e.g. matching FOR/ENDFOR
         let parts = match  List.ofSeq input with
                         | Page(p) -> p
-                        | _ as x -> failwithf "ERROR: failed to process (parse) page template, received %A instead" x
+                        | x -> failwithf "ERROR: failed to process (parse) page template, received %A instead" x
                         
         // Wipe out any include tokens in the page, recursively so the whole page is now assembled into one
         // document
@@ -674,14 +673,14 @@ module Template =
                         | EXTENDS(file)::tl -> // Hit an extends statement, grab parent template and build out tree of template and filled out blocks
                             let parts = match List.ofSeq (fetcher file) with
                                             | Page(p) -> p
-                                            | _ as x -> failwithf "ERROR: failed to process (parse) extends page template %s, received %A instead" file x
+                                            | x -> failwithf "ERROR: failed to process (parse) extends page template %s, received %A instead" file x
                             let (Parsed parsed) = parts
                             let (Parsed parsedTail) = expandIncludesExtends tl []// Parse remainder of this page past the extends and recursively expand
                             [EXTENDSBUNDLED(parsedTail,parsed)]
                         | INCLUDE(file)::tl ->
                             let parts = match  List.ofSeq (fetcher file) with
                                             | Page(p) -> p
-                                            | _ as x -> failwithf "ERROR: failed to process (parse) included page template %s, received %A instead" file x
+                                            | x -> failwithf "ERROR: failed to process (parse) included page template %s, received %A instead" file x
                             expandIncludesExtends tl (( (expandIncludesExtends parts [] )|> List.rev)@res)
                         | hd::tl -> expandIncludesExtends tl (hd::res)
 
@@ -708,21 +707,21 @@ module Template =
                     | ICONST64(i1),ICONST64(i2) -> ICONST64(i1+i2)
                     | SCONST(i1),SCONST(i2) -> SCONST(i1+i2)
                     | FCONST(i1),FCONST(i2) -> FCONST(i1+i2)
-                    | _,_ as x -> failwithf "Error: evaluating expression, addition performed on inappropriate types %A" x
+                    | _,x -> failwithf "Error: evaluating expression, addition performed on inappropriate types %A" x
 
             | SUB(e1,e2) -> 
                 match (c e1),(c e2) with
                     | ICONST(i1),ICONST(i2) -> ICONST(i1-i2)
                     | ICONST64(i1),ICONST64(i2) -> ICONST64(i1-i2)
                     | FCONST(i1),FCONST(i2) -> FCONST(i1-i2)
-                    | _,_ as x -> failwithf "Error: evaluating expression, subtraction performed on inappropriate types %A" x
+                    | _,x -> failwithf "Error: evaluating expression, subtraction performed on inappropriate types %A" x
 
             | MULT(e1,e2) -> 
                 match (c e1),(c e2) with
                     | ICONST(i1),ICONST(i2) -> ICONST(i1*i2)
                     | ICONST64(i1),ICONST64(i2) -> ICONST64(i1*i2)
                     | FCONST(i1),FCONST(i2) -> FCONST(i1*i2)
-                    | _,_ as x -> failwithf "Error: evaluating expression, multiplication performed on inappropriate types %A" x
+                    | _,x -> failwithf "Error: evaluating expression, multiplication performed on inappropriate types %A" x
 
             | MOD(e1,e2) -> 
                 match (c e1),(c e2) with
@@ -735,7 +734,7 @@ module Template =
                     | ICONST(i1),ICONST(i2) -> ICONST(i1/i2)
                     | ICONST64(i1),ICONST64(i2) -> ICONST64(i1/i2)
                     | FCONST(i1),FCONST(i2) -> FCONST(i1/i2)
-                    | _,_ as x -> failwithf "Error: evaluating expression, subtraction performed on inappropriate types %A" x
+                    | _,x -> failwithf "Error: evaluating expression, subtraction performed on inappropriate types %A" x
 
             | EQUALS(e1,e2) -> 
                 match (c e1),(c e2) with
@@ -745,7 +744,7 @@ module Template =
                     | ICONST(i1),ICONST64(i2) -> BCONST(int64 i1=i2)
                     | SCONST(i1),SCONST(i2) -> BCONST(i1=i2)
                     | FCONST(i1),FCONST(i2) -> BCONST(i1=i2)
-                    | _,_ as x -> failwithf "Error: evaluating expression, equality performed on inappropriate types %A" x
+                    | _,x -> failwithf "Error: evaluating expression, equality performed on inappropriate types %A" x
             | NOTEQUAL(e1,e2) -> 
                 match (c e1),(c e2) with
                     | ICONST(i1),ICONST(i2) -> BCONST(i1<>i2)
@@ -754,7 +753,7 @@ module Template =
                     | ICONST(i1),ICONST64(i2) -> BCONST(int64 i1<>i2)
                     | SCONST(i1),SCONST(i2) -> BCONST(i1<>i2)
                     | FCONST(i1),FCONST(i2) -> BCONST(i1<>i2)
-                    | _,_ as x -> failwithf "Error: evaluating expression, equality performed on inappropriate types %A" x
+                    | _,x -> failwithf "Error: evaluating expression, equality performed on inappropriate types %A" x
             | GREATERTHAN(e1,e2) -> 
                 match (c e1),(c e2) with
                     | ICONST(i1),ICONST(i2) -> BCONST(i1>i2)
@@ -762,7 +761,7 @@ module Template =
                     | ICONST(i1),ICONST64(i2) -> BCONST(int64 i1>i2)
                     | SCONST(i1),SCONST(i2) -> BCONST(i1>i2)
                     | FCONST(i1),FCONST(i2) -> BCONST(i1>i2)
-                    | _,_ as x -> failwithf "Error: evaluating expression, > performed on inappropriate types %A" x
+                    | _,x -> failwithf "Error: evaluating expression, > performed on inappropriate types %A" x
             | GREATERTHANOREQUALTO(e1,e2) ->
                 match (c e1),(c e2) with
                     | ICONST(i1),ICONST(i2) -> BCONST(i1>=i2)
@@ -770,7 +769,7 @@ module Template =
                     | ICONST(i1),ICONST64(i2) -> BCONST(int64 i1>=i2)
                     | SCONST(i1),SCONST(i2) -> BCONST(i1>=i2)
                     | FCONST(i1),FCONST(i2) -> BCONST(i1>=i2)
-                    | _,_ as x -> failwithf "Error: evaluating expression, >= performed on inappropriate types %A" x
+                    | _,x -> failwithf "Error: evaluating expression, >= performed on inappropriate types %A" x
 
             | LESSTHANOREQUALTO(e1,e2) ->
                 match (c e1),(c e2) with
@@ -779,7 +778,7 @@ module Template =
                     | ICONST(i1),ICONST64(i2) -> BCONST(int64 i1<=i2)
                     | SCONST(i1),SCONST(i2) -> BCONST(i1<=i2)
                     | FCONST(i1),FCONST(i2) -> BCONST(i1<=i2)
-                    | _,_ as x -> failwithf "Error: evaluating expression, => performed on inappropriate types %A" x
+                    | _,x -> failwithf "Error: evaluating expression, => performed on inappropriate types %A" x
 
             | LESSTHAN(e1,e2) -> 
                 match (c e1),(c e2) with
@@ -788,7 +787,7 @@ module Template =
                     | ICONST(i1),ICONST64(i2) -> BCONST(int64 i1<i2)
                     | SCONST(i1),SCONST(i2) -> BCONST(i1<i2)
                     | FCONST(i1),FCONST(i2) -> BCONST(i1<i2)
-                    | _,_ as x -> failwithf "Error: evaluating expression, > performed on inappropriate types %A" x
+                    | _,x -> failwithf "Error: evaluating expression, > performed on inappropriate types %A" x
             | FCONST(_) as x -> x
             | ICONST(_) as x -> x
             | ICONST64(_) as x -> x
@@ -798,26 +797,26 @@ module Template =
                     | ICONST(i1) -> ICONST(-i1)
                     | ICONST64(i1) -> ICONST64(-i1)
                     | FCONST(i1) -> FCONST(-i1)
-                    | _ as x -> failwithf "Error: evaluating expression, negation performed on inappropriate types %A" x
+                    | x -> failwithf "Error: evaluating expression, negation performed on inappropriate types %A" x
             | BOOLEXP(e) -> match (c e) with
                             | BConstOrVar vf (r) -> BCONST(r)
-                            | _ as x -> failwithf "Error: evaluating bool expression, %A not a boolean const"  x
+                            | x -> failwithf "Error: evaluating bool expression, %A not a boolean const"  x
 
             | NOT(e) -> match (c e) with
                             | BConstOrVar vf (b) -> BCONST(not b)
-                            | _ as x -> failwithf "Error: evaluating expression, not performed on inappropriate types %A" x
+                            | x -> failwithf "Error: evaluating expression, not performed on inappropriate types %A" x
             | AND(e1,e2) -> match (c e1),(c e2) with
                             | BConstOrVar vf (b1),BConstOrVar vf (b2) -> BCONST(b1&&b2)
-                            | _ as x -> failwithf "Error: evaluating AND expression, not performed on inappropriate types %A" x
+                            | x -> failwithf "Error: evaluating AND expression, not performed on inappropriate types %A" x
             | OR(e1,e2) -> match (c e1),(c e2) with
                             | BConstOrVar vf (b1),BConstOrVar vf (b2) -> BCONST(b1||b2)
-                            | _ as x -> failwithf "Error: evaluating OR expression, not performed on inappropriate types %A" x
+                            | x -> failwithf "Error: evaluating OR expression, not performed on inappropriate types %A" x
             | VARIABLE(v) -> vf.Get(v) 
             | DOT(e,f) -> match (calc vf e) with
                                 | CLASS (x) -> match x.TryFind f with
                                                 | Some(v) -> v
                                                 | None -> failwithf "ERROR: no field '%s' in expression %A " f x
-                                | _ as x -> failwithf "ERROR: can't apply dot notation to %A" x
+                                | x -> failwithf "ERROR: can't apply dot notation to %A" x
             | CURLYEXP(e) -> calc vf e 
             | BCONST(_) as x -> x // Nothing to calculate here
             | ARRAYCONST(_) as x -> x
@@ -831,7 +830,7 @@ module Template =
                             | ICONST64(ii) -> 
                                 if ii<0L || ii>=(int64 a.Length) then failwithf "ERROR: index %d out of bounds for array %A" ii a
                                 a.[int ii]
-                            | _ as x -> failwithf "ERROR: index into array should be int or int64, not %A" x 
+                            | x -> failwithf "ERROR: index into array should be int or int64, not %A" x 
                     | _  ->
                         failwithf "ERROR: attempt to index [] into non array expression %s" (ppExpr e)
             | CLASS(_) -> failwithf "Error: evaluating expression: can't evaluate a class"
@@ -839,18 +838,18 @@ module Template =
                 let fi = match calc vf f with
                             | ICONST(i) ->  i
                             | ICONST64(i) -> int i
-                            | _ as x -> failwithf "ERROR: range constant start must be ints, found %A instead" x
+                            | x -> failwithf "ERROR: range constant start must be ints, found %A instead" x
                 let ti = match calc vf t with
                             | ICONST(i) -> i
                             | ICONST64(i) -> int i
-                            | _ as x -> failwithf "ERROR: range constant end must be ints, found %A instead" x
+                            | x -> failwithf "ERROR: range constant end must be ints, found %A instead" x
                 match s with
                     | None -> ARRAYCONST([| for i in fi..ti -> ICONST(i) |])
                     | Some(sv) -> 
                         let svi = match calc vf sv with
                                     | ICONST(i) ->  i
                                     | ICONST64(i) -> int i
-                                    | _ as x -> failwithf "ERROR: range constant step must be int, found %A instead" x
+                                    | x -> failwithf "ERROR: range constant step must be int, found %A instead" x
                         ARRAYCONST([| for i in fi..svi..ti -> ICONST(i) |])
 
                 
@@ -921,14 +920,14 @@ module Template =
                                         | VARIABLE(name) -> 
                                             match (match (lookupLocals locals name) with | Some(s) ->s | None -> ve.Get(name) ) (* ve.Get(name) *) with
                                                 | ARRAYCONST(expArr) -> expArr
-                                                | _ as x -> failwithf "ERROR: loop expansion only permitted over array types.  %s is %A" name x
+                                                | x -> failwithf "ERROR: loop expansion only permitted over array types.  %s is %A" name x
                                         | ARRAYCONST(expArr) -> expArr
-                                        | RANGE(_,_,_) as r -> 
+                                        | RANGE(_) as r -> 
                                                         let vf = VarFetcher(ve,locals) 
                                                         match calc vf r with
                                                                 | ARRAYCONST(x) -> x
                                                                 | _ -> failwithf "ERROR: unexpected eval type for range expression"
-                                        | _ as x ->
+                                        | x ->
                                             failwithf "ERROR: loop expansion only permitted over array types, not %A" x
                                 for v in arr do
                                     // Now expand the inner block
@@ -939,7 +938,7 @@ module Template =
                                 // FIXFIX - this should now be an expression, need to evaluate????
                                 let vf = VarFetcher(ve,locals) 
                                 calc vf e |> ppExpr |> sb.Append |> ignore
-                            | IFSTART(_)  | BLOCKSTART(_) | ENDBLOCK(_) | ENDFOR | ENDIF | ENDRAW | FORSTART(_) | LOGIC(_) | ELSE | ELSEIF _ as x -> 
+                            | IFSTART(_)  | BLOCKSTART(_) | ENDBLOCK(_) | ENDFOR | ENDIF | ENDRAW | FORSTART(_) | LOGIC(_) | ELSE | ELSEIF _ -> 
                                 failwithf "Internal error: Unexpected %A element that should have been consolidated" x
                             | UNKNOWNLOGIC(u) -> 
                                 failwithf "Unknown logic element %A encountered in expansion" u

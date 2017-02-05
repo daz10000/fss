@@ -1,3 +1,9 @@
+### v1.5.4 -- Jan 08 2017
+* MNT: update to 3.1.9.0 Npgsl
+
+### v1.5.3 -- Nov 16 2016
+* ORM: fss_postgres reconnect stability improvements
+
 ### v1.5.2 -- Sep 05 2016
 * ORM: mapping metadata to lowercase as sqlite does not match postgres behavior
 
