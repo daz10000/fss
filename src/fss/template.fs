@@ -654,6 +654,176 @@ module Template =
                 | x -> failwithf "ERROR: '%A' not a boolean expression" (x.ToString())
         | _ -> None
 
+    let rec calc (vf:VarFetcher) (expression:Expression)  =
+        let c = calc vf
+        match expression with
+        | ADD(e1,e2) -> 
+            match (c e1),(c e2) with
+                | ICONST(i1),ICONST(i2) -> ICONST(i1+i2)
+                | ICONST64(i1),ICONST64(i2) -> ICONST64(i1+i2)
+                | SCONST(i1),SCONST(i2) -> SCONST(i1+i2)
+                | FCONST(i1),FCONST(i2) -> FCONST(i1+i2)
+                | x,y -> failwithf "Error: evaluating expression, addition performed on inappropriate types %A+%A" x y
+
+        | SUB(e1,e2) -> 
+            match (c e1),(c e2) with
+                | ICONST(i1),ICONST(i2) -> ICONST(i1-i2)
+                | ICONST64(i1),ICONST64(i2) -> ICONST64(i1-i2)
+                | FCONST(i1),FCONST(i2) -> FCONST(i1-i2)
+                | x,y -> failwithf "Error: evaluating expression, subtraction performed on inappropriate types %A-%A" x y
+
+        | MULT(e1,e2) -> 
+            match (c e1),(c e2) with
+                | ICONST(i1),ICONST(i2) -> ICONST(i1*i2)
+                | ICONST64(i1),ICONST64(i2) -> ICONST64(i1*i2)
+                | FCONST(i1),FCONST(i2) -> FCONST(i1*i2)
+                | x,y -> failwithf "Error: evaluating expression, multiplication performed on inappropriate types %A*%A" x y
+
+        | MOD(e1,e2) -> 
+            match (c e1),(c e2) with
+                | ICONST(i1),ICONST(i2) -> ICONST(i1%i2)
+                | ICONST64(i1),ICONST64(i2) -> ICONST64(i1%i2)
+                | x,y  -> failwithf "Error: evaluating expression, mod performed on inappropriate types %A %A" x y
+
+        | DIVIDE(e1,e2) -> 
+            match (c e1),(c e2) with
+                | ICONST(i1),ICONST(i2) -> ICONST(i1/i2)
+                | ICONST64(i1),ICONST64(i2) -> ICONST64(i1/i2)
+                | FCONST(i1),FCONST(i2) -> FCONST(i1/i2)
+                | x,y -> failwithf "Error: evaluating expression, subtraction performed on inappropriate types %A/%A" x y
+
+        | EQUALS(e1,e2) -> 
+            match (c e1),(c e2) with
+                | ICONST(i1),ICONST(i2) -> BCONST(i1=i2)
+                | ICONST64(i1),ICONST64(i2) -> BCONST(i1=i2)
+                | ICONST64(i1),ICONST(i2) -> BCONST(i1=int64 i2)
+                | ICONST(i1),ICONST64(i2) -> BCONST(int64 i1=i2)
+                | SCONST(i1),SCONST(i2) -> BCONST(i1=i2)
+                | FCONST(i1),FCONST(i2) -> BCONST(i1=i2)
+                | x,y -> failwithf "Error: evaluating expression, equality performed on inappropriate types %A==%A" x y
+        | NOTEQUAL(e1,e2) -> 
+            match (c e1),(c e2) with
+                | ICONST(i1),ICONST(i2) -> BCONST(i1<>i2)
+                | ICONST64(i1),ICONST64(i2) -> BCONST(i1<>i2)
+                | ICONST64(i1),ICONST(i2) -> BCONST(i1<>int64 i2)
+                | ICONST(i1),ICONST64(i2) -> BCONST(int64 i1<>i2)
+                | SCONST(i1),SCONST(i2) -> BCONST(i1<>i2)
+                | FCONST(i1),FCONST(i2) -> BCONST(i1<>i2)
+                | x,y -> failwithf "Error: evaluating expression, inequality performed on inappropriate types %A<>%A" x y
+        | GREATERTHAN(e1,e2) -> 
+            match (c e1),(c e2) with
+                | ICONST(i1),ICONST(i2) -> BCONST(i1>i2)
+                | ICONST64(i1),ICONST(i2) -> BCONST(i1>int64 i2)
+                | ICONST(i1),ICONST64(i2) -> BCONST(int64 i1>i2)
+                | SCONST(i1),SCONST(i2) -> BCONST(i1>i2)
+                | FCONST(i1),FCONST(i2) -> BCONST(i1>i2)
+                | x,y -> failwithf "Error: evaluating expression, > performed on inappropriate types %A>%A" x y
+        | GREATERTHANOREQUALTO(e1,e2) ->
+            match (c e1),(c e2) with
+                | ICONST(i1),ICONST(i2) -> BCONST(i1>=i2)
+                | ICONST64(i1),ICONST(i2) -> BCONST(i1>=int64 i2)
+                | ICONST(i1),ICONST64(i2) -> BCONST(int64 i1>=i2)
+                | SCONST(i1),SCONST(i2) -> BCONST(i1>=i2)
+                | FCONST(i1),FCONST(i2) -> BCONST(i1>=i2)
+                | x,y -> failwithf "Error: evaluating expression, >= performed on inappropriate types %A>=%A" x y
+
+        | LESSTHANOREQUALTO(e1,e2) ->
+            match (c e1),(c e2) with
+                | ICONST(i1),ICONST(i2) -> BCONST(i1<=i2)
+                | ICONST64(i1),ICONST(i2) -> BCONST(i1<=int64 i2)
+                | ICONST(i1),ICONST64(i2) -> BCONST(int64 i1<=i2)
+                | SCONST(i1),SCONST(i2) -> BCONST(i1<=i2)
+                | FCONST(i1),FCONST(i2) -> BCONST(i1<=i2)
+                | x,y -> failwithf "Error: evaluating expression, => performed on inappropriate types %A<=%A" x y
+
+        | LESSTHAN(e1,e2) -> 
+            match (c e1),(c e2) with
+                | ICONST(i1),ICONST(i2) -> BCONST(i1<i2)
+                | ICONST64(i1),ICONST(i2) -> BCONST(i1<int64 i2)
+                | ICONST(i1),ICONST64(i2) -> BCONST(int64 i1<i2)
+                | SCONST(i1),SCONST(i2) -> BCONST(i1<i2)
+                | FCONST(i1),FCONST(i2) -> BCONST(i1<i2)
+                | x,y -> failwithf "Error: evaluating expression, > performed on inappropriate types %A < %A" x y
+        | FCONST(_) as x -> x
+        | ICONST(_) as x -> x
+        | ICONST64(_) as x -> x
+        | SCONST(_) as x -> x
+        | NEGATE(e) -> 
+            match (c e) with
+                | ICONST(i1) -> ICONST(-i1)
+                | ICONST64(i1) -> ICONST64(-i1)
+                | FCONST(i1) -> FCONST(-i1)
+                | x -> failwithf "Error: evaluating expression, negation performed on inappropriate type %A" x
+        | BOOLEXP(e) -> match (c e) with
+                        | BConstOrVar vf (r) -> BCONST(r)
+                        | x -> failwithf "Error: evaluating bool expression, %A not a boolean const"  x
+
+        | NOT(e) -> match (c e) with
+                        | BConstOrVar vf (b) -> BCONST(not b)
+                        | x -> failwithf "Error: evaluating expression, not performed on inappropriate types %A" x
+        | AND(e1,e2) -> match (c e1),(c e2) with
+                        | BConstOrVar vf (b1),BConstOrVar vf (b2) -> BCONST(b1&&b2)
+                        | x,y -> failwithf "Error: evaluating AND expression, not performed on inappropriate types %A %A" x y
+        | OR(e1,e2) -> match (c e1),(c e2) with
+                        | BConstOrVar vf (b1),BConstOrVar vf (b2) -> BCONST(b1||b2)
+                        | x,y -> failwithf "Error: evaluating OR expression, not performed on inappropriate types %A %A" x y
+        | VARIABLE(v) -> vf.Get(v) 
+        | DOT(e,f) -> match (calc vf e) with
+                            | CLASS (x) -> match x.TryFind f with
+                                            | Some(v) -> v
+                                            | None -> failwithf "ERROR: no field '%s' in expression %A " f x
+                            | x -> failwithf "ERROR: can't apply dot notation to %A" x
+        | CURLYEXP(e) -> calc vf e 
+        | BCONST(_) as x -> x // Nothing to calculate here
+        | ARRAYCONST(_) as x -> x
+        | INDEX(e,i) -> // Index into expression(array e) distance i (zero based)
+            match (calc vf e) with
+                | ARRAYCONST(a) ->
+                    match (calc vf i) with
+                        | ICONST(ii) -> 
+                            if ii<0 || ii>=a.Length then failwithf "ERROR: index %d out of bounds for array %A" ii a
+                            a.[ii]
+                        | ICONST64(ii) -> 
+                            if ii<0L || ii>=(int64 a.Length) then failwithf "ERROR: index %d out of bounds for array %A" ii a
+                            a.[int ii]
+                        | x -> failwithf "ERROR: index into array should be int or int64, not %A" x 
+                | _  ->
+                    failwithf "ERROR: attempt to index [] into non array expression %s" (ppExpr e)
+        | CLASS(_) -> failwithf "Error: evaluating expression: can't evaluate a class"
+        | RANGE(f,s,t) ->
+            let fi = match calc vf f with
+                        | ICONST(i) ->  i
+                        | ICONST64(i) -> int i
+                        | x -> failwithf "ERROR: range constant start must be ints, found %A instead" x
+            let ti = match calc vf t with
+                        | ICONST(i) -> i
+                        | ICONST64(i) -> int i
+                        | x -> failwithf "ERROR: range constant end must be ints, found %A instead" x
+            match s with
+                | None -> ARRAYCONST([| for i in fi..ti -> ICONST(i) |])
+                | Some(sv) -> 
+                    let svi = match calc vf sv with
+                                | ICONST(i) ->  i
+                                | ICONST64(i) -> int i
+                                | x -> failwithf "ERROR: range constant step must be int, found %A instead" x
+                    ARRAYCONST([| for i in fi..svi..ti -> ICONST(i) |])
+
+            
+    let rec isTrue (expression:Expression) (vf:VarFetcher) = 
+        match expression with 
+        | BOOLEXP(e) -> isTrue e vf
+        | NOT e -> isTrue e vf |> not
+        | VARIABLE(v) -> match vf.Get(v) with
+                         | SCONST(s) -> s <> ""
+                         | BCONST(b) -> b
+                         | ARRAYCONST(a) -> a.Length > 0
+                         | _ -> true
+        | _ -> match calc vf expression with
+               | BCONST(b) -> b
+               | SCONST(s) -> s <> "" // allow "" or false to indicate variable is unset
+               | _  -> 
+                   failwithf "Non boolean expression %s used in if statement" (ppExpr expression)
+
     /// Main template rendering class.  Instantiated usings
     /// string as a constructor and optionally a function to fetch sub templates  
     type Template(input:string,fetcher:string->string) = class
@@ -698,176 +868,6 @@ module Template =
         /// into consolidated template parts. e.g. FORSTART/ENDFOR -> FOR()
         let (Parsed parsed) = includeFreePartsList
         
-        let rec calc (vf:VarFetcher) (expression:Expression)  =
-            let c = calc vf
-            match expression with
-            | ADD(e1,e2) -> 
-                match (c e1),(c e2) with
-                    | ICONST(i1),ICONST(i2) -> ICONST(i1+i2)
-                    | ICONST64(i1),ICONST64(i2) -> ICONST64(i1+i2)
-                    | SCONST(i1),SCONST(i2) -> SCONST(i1+i2)
-                    | FCONST(i1),FCONST(i2) -> FCONST(i1+i2)
-                    | _,x -> failwithf "Error: evaluating expression, addition performed on inappropriate types %A" x
-
-            | SUB(e1,e2) -> 
-                match (c e1),(c e2) with
-                    | ICONST(i1),ICONST(i2) -> ICONST(i1-i2)
-                    | ICONST64(i1),ICONST64(i2) -> ICONST64(i1-i2)
-                    | FCONST(i1),FCONST(i2) -> FCONST(i1-i2)
-                    | _,x -> failwithf "Error: evaluating expression, subtraction performed on inappropriate types %A" x
-
-            | MULT(e1,e2) -> 
-                match (c e1),(c e2) with
-                    | ICONST(i1),ICONST(i2) -> ICONST(i1*i2)
-                    | ICONST64(i1),ICONST64(i2) -> ICONST64(i1*i2)
-                    | FCONST(i1),FCONST(i2) -> FCONST(i1*i2)
-                    | _,x -> failwithf "Error: evaluating expression, multiplication performed on inappropriate types %A" x
-
-            | MOD(e1,e2) -> 
-                match (c e1),(c e2) with
-                    | ICONST(i1),ICONST(i2) -> ICONST(i1%i2)
-                    | ICONST64(i1),ICONST64(i2) -> ICONST64(i1%i2)
-                    | _,_  -> failwithf "Error: evaluating expression, mod performed on inappropriate types"
-
-            | DIVIDE(e1,e2) -> 
-                match (c e1),(c e2) with
-                    | ICONST(i1),ICONST(i2) -> ICONST(i1/i2)
-                    | ICONST64(i1),ICONST64(i2) -> ICONST64(i1/i2)
-                    | FCONST(i1),FCONST(i2) -> FCONST(i1/i2)
-                    | _,x -> failwithf "Error: evaluating expression, subtraction performed on inappropriate types %A" x
-
-            | EQUALS(e1,e2) -> 
-                match (c e1),(c e2) with
-                    | ICONST(i1),ICONST(i2) -> BCONST(i1=i2)
-                    | ICONST64(i1),ICONST64(i2) -> BCONST(i1=i2)
-                    | ICONST64(i1),ICONST(i2) -> BCONST(i1=int64 i2)
-                    | ICONST(i1),ICONST64(i2) -> BCONST(int64 i1=i2)
-                    | SCONST(i1),SCONST(i2) -> BCONST(i1=i2)
-                    | FCONST(i1),FCONST(i2) -> BCONST(i1=i2)
-                    | _,x -> failwithf "Error: evaluating expression, equality performed on inappropriate types %A" x
-            | NOTEQUAL(e1,e2) -> 
-                match (c e1),(c e2) with
-                    | ICONST(i1),ICONST(i2) -> BCONST(i1<>i2)
-                    | ICONST64(i1),ICONST64(i2) -> BCONST(i1<>i2)
-                    | ICONST64(i1),ICONST(i2) -> BCONST(i1<>int64 i2)
-                    | ICONST(i1),ICONST64(i2) -> BCONST(int64 i1<>i2)
-                    | SCONST(i1),SCONST(i2) -> BCONST(i1<>i2)
-                    | FCONST(i1),FCONST(i2) -> BCONST(i1<>i2)
-                    | _,x -> failwithf "Error: evaluating expression, equality performed on inappropriate types %A" x
-            | GREATERTHAN(e1,e2) -> 
-                match (c e1),(c e2) with
-                    | ICONST(i1),ICONST(i2) -> BCONST(i1>i2)
-                    | ICONST64(i1),ICONST(i2) -> BCONST(i1>int64 i2)
-                    | ICONST(i1),ICONST64(i2) -> BCONST(int64 i1>i2)
-                    | SCONST(i1),SCONST(i2) -> BCONST(i1>i2)
-                    | FCONST(i1),FCONST(i2) -> BCONST(i1>i2)
-                    | _,x -> failwithf "Error: evaluating expression, > performed on inappropriate types %A" x
-            | GREATERTHANOREQUALTO(e1,e2) ->
-                match (c e1),(c e2) with
-                    | ICONST(i1),ICONST(i2) -> BCONST(i1>=i2)
-                    | ICONST64(i1),ICONST(i2) -> BCONST(i1>=int64 i2)
-                    | ICONST(i1),ICONST64(i2) -> BCONST(int64 i1>=i2)
-                    | SCONST(i1),SCONST(i2) -> BCONST(i1>=i2)
-                    | FCONST(i1),FCONST(i2) -> BCONST(i1>=i2)
-                    | _,x -> failwithf "Error: evaluating expression, >= performed on inappropriate types %A" x
-
-            | LESSTHANOREQUALTO(e1,e2) ->
-                match (c e1),(c e2) with
-                    | ICONST(i1),ICONST(i2) -> BCONST(i1<=i2)
-                    | ICONST64(i1),ICONST(i2) -> BCONST(i1<=int64 i2)
-                    | ICONST(i1),ICONST64(i2) -> BCONST(int64 i1<=i2)
-                    | SCONST(i1),SCONST(i2) -> BCONST(i1<=i2)
-                    | FCONST(i1),FCONST(i2) -> BCONST(i1<=i2)
-                    | _,x -> failwithf "Error: evaluating expression, => performed on inappropriate types %A" x
-
-            | LESSTHAN(e1,e2) -> 
-                match (c e1),(c e2) with
-                    | ICONST(i1),ICONST(i2) -> BCONST(i1<i2)
-                    | ICONST64(i1),ICONST(i2) -> BCONST(i1<int64 i2)
-                    | ICONST(i1),ICONST64(i2) -> BCONST(int64 i1<i2)
-                    | SCONST(i1),SCONST(i2) -> BCONST(i1<i2)
-                    | FCONST(i1),FCONST(i2) -> BCONST(i1<i2)
-                    | _,x -> failwithf "Error: evaluating expression, > performed on inappropriate types %A" x
-            | FCONST(_) as x -> x
-            | ICONST(_) as x -> x
-            | ICONST64(_) as x -> x
-            | SCONST(_) as x -> x
-            | NEGATE(e) -> 
-                match (c e) with
-                    | ICONST(i1) -> ICONST(-i1)
-                    | ICONST64(i1) -> ICONST64(-i1)
-                    | FCONST(i1) -> FCONST(-i1)
-                    | x -> failwithf "Error: evaluating expression, negation performed on inappropriate types %A" x
-            | BOOLEXP(e) -> match (c e) with
-                            | BConstOrVar vf (r) -> BCONST(r)
-                            | x -> failwithf "Error: evaluating bool expression, %A not a boolean const"  x
-
-            | NOT(e) -> match (c e) with
-                            | BConstOrVar vf (b) -> BCONST(not b)
-                            | x -> failwithf "Error: evaluating expression, not performed on inappropriate types %A" x
-            | AND(e1,e2) -> match (c e1),(c e2) with
-                            | BConstOrVar vf (b1),BConstOrVar vf (b2) -> BCONST(b1&&b2)
-                            | x -> failwithf "Error: evaluating AND expression, not performed on inappropriate types %A" x
-            | OR(e1,e2) -> match (c e1),(c e2) with
-                            | BConstOrVar vf (b1),BConstOrVar vf (b2) -> BCONST(b1||b2)
-                            | x -> failwithf "Error: evaluating OR expression, not performed on inappropriate types %A" x
-            | VARIABLE(v) -> vf.Get(v) 
-            | DOT(e,f) -> match (calc vf e) with
-                                | CLASS (x) -> match x.TryFind f with
-                                                | Some(v) -> v
-                                                | None -> failwithf "ERROR: no field '%s' in expression %A " f x
-                                | x -> failwithf "ERROR: can't apply dot notation to %A" x
-            | CURLYEXP(e) -> calc vf e 
-            | BCONST(_) as x -> x // Nothing to calculate here
-            | ARRAYCONST(_) as x -> x
-            | INDEX(e,i) -> // Index into expression(array e) distance i (zero based)
-                match (calc vf e) with
-                    | ARRAYCONST(a) ->
-                        match (calc vf i) with
-                            | ICONST(ii) -> 
-                                if ii<0 || ii>=a.Length then failwithf "ERROR: index %d out of bounds for array %A" ii a
-                                a.[ii]
-                            | ICONST64(ii) -> 
-                                if ii<0L || ii>=(int64 a.Length) then failwithf "ERROR: index %d out of bounds for array %A" ii a
-                                a.[int ii]
-                            | x -> failwithf "ERROR: index into array should be int or int64, not %A" x 
-                    | _  ->
-                        failwithf "ERROR: attempt to index [] into non array expression %s" (ppExpr e)
-            | CLASS(_) -> failwithf "Error: evaluating expression: can't evaluate a class"
-            | RANGE(f,s,t) ->
-                let fi = match calc vf f with
-                            | ICONST(i) ->  i
-                            | ICONST64(i) -> int i
-                            | x -> failwithf "ERROR: range constant start must be ints, found %A instead" x
-                let ti = match calc vf t with
-                            | ICONST(i) -> i
-                            | ICONST64(i) -> int i
-                            | x -> failwithf "ERROR: range constant end must be ints, found %A instead" x
-                match s with
-                    | None -> ARRAYCONST([| for i in fi..ti -> ICONST(i) |])
-                    | Some(sv) -> 
-                        let svi = match calc vf sv with
-                                    | ICONST(i) ->  i
-                                    | ICONST64(i) -> int i
-                                    | x -> failwithf "ERROR: range constant step must be int, found %A instead" x
-                        ARRAYCONST([| for i in fi..svi..ti -> ICONST(i) |])
-
-                
-        let rec isTrue (expression:Expression) (vf:VarFetcher) = 
-            match expression with 
-            | BOOLEXP(e) -> isTrue e vf
-            | NOT e -> isTrue e vf |> not
-            | VARIABLE(v) -> match vf.Get(v) with
-                             | SCONST(s) -> s <> ""
-                             | BCONST(b) -> b
-                             | ARRAYCONST(a) -> a.Length > 0
-                             | _ -> true
-            | _ -> match calc vf expression with
-                   | BCONST(b) -> b
-                   | SCONST(s) -> s <> "" // allow "" or false to indicate variable is unset
-                   | _  -> 
-                       failwithf "Non boolean expression %s used in if statement" (ppExpr expression)
-
 
         new (templateString:string) = Template(templateString,fun s -> sprintf "[Warning: no data source to fetch '%s']" s)
         ///
