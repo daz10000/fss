@@ -18,7 +18,12 @@ module Postgres =
             member x.reloadTypes (conn:NpgsqlConnection) =
                 conn.ReloadTypes()
             member x.reopenConnection(conn:NpgsqlConnection) = 
-                NpgsqlConnection.ClearPool(conn)
+                try
+                    if conn.State = ConnectionState.Closed then
+                        conn.Open()
+                with _ ->
+                    ()
+                    //NpgsqlConnection.ClearPool(conn)
             member x.getSearchPath(conn:NpgsqlConnection) =
                 use command : NpgsqlCommand = conn.CreateCommand()
                 command.CommandText <- "show search_path"
