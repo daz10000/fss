@@ -1,4 +1,5 @@
 ### v1.5.5 -- Feb 5th 2017
+* BUG: postgres db reopening could throw error and die previously
 * LNT: cleaned up fslint recommendations for template.fs
 * FEA: moved exposed calculation routines in template to make them useful for external applications
 
