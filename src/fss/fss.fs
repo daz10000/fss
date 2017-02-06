@@ -252,7 +252,7 @@ module Server =
                                     sprintf "fss%d: Executing post\n" id |> log 2
                                     this.doPost id bs sw path headers 
                             | _ -> Response(500,"text/html")
-                    with _ as x ->
+                    with x ->
                         let resp = Response(500,"text/html")
                         resp.Text <- sprintf "<PRE>\n%s\n%s\n</PRE>" x.Message x.StackTrace
                         resp
@@ -417,14 +417,14 @@ module Server =
                                 match headers.["GET"].Split([| " " |],StringSplitOptions.None) with
                                     | [| path ; _(*version*) |] -> runCmd keepAlive "GET" path headers
                                     | [| path |] -> runCmd keepAlive "GET" path headers
-                                    | _ as x-> 
+                                    | x-> 
                                         sprintf "fss%d: Unrecognized format '%A'\n" id x |> log 2
                                         sendErr 400 "Bad request syntax"
                             else if headers.ContainsKey("POST") then // TODO: validate version number
                                 match headers.["POST"].Split([| " " |],StringSplitOptions.None) with
                                     | [| path ; _(*version*) |] -> runCmd keepAlive "POST" path headers
                                     | [| path |] -> runCmd keepAlive "POST" path headers
-                                    | _ as x-> 
+                                    | x-> 
                                         sprintf "fss%d: Unrecognized format '%A'\n" id x |> log 2
                                         sendErr 400 "Bad request syntax"
                                     //runCmd keepAlive "POST" (headers.["POST"]) headers
@@ -548,7 +548,7 @@ module Server =
                                 | 6,D6(fn) -> fn ur (g 1) (g 2) (g 3) (g 4) (g 5) (g 6) //(fn:?> UR->string -> string-> string-> string-> string->Response) ur (g 1) (g 2) (g 3) (g 4) (g 5)
                                 | 7,D7(fn) -> fn ur (g 1) (g 2) (g 3) (g 4) (g 5) (g 6) (g 7) //(fn:?> UR->string -> string-> string-> string-> string-> string->Response) ur (g 1) (g 2) (g 3) (g 4) (g 5) (g 6)
                                 | _ -> failwith "not supported"
-                        with _ as x ->
+                        with x ->
                             let resp = Response(500,"text/html")
                             resp.Text <- sprintf "<PRE>Error matching UD dispatch function\n%s\n%s\n</PRE>" x.Message x.StackTrace
                             printfn "fss%d UD:%s" ur.handleId resp.Text

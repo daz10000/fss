@@ -36,7 +36,7 @@ module JSON =
             sb.Append(x) |>  ignore
             let rec accum = function
                     | hd::tl when isDigit hd -> sb.Append(hd) |> ignore ; accum tl
-                    | _ as x -> Some(sb.ToString() |> int,x)
+                    | x  -> Some(sb.ToString() |> int,x)
             accum tl
         | _ -> None
 

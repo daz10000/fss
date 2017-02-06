@@ -48,14 +48,14 @@ module Multipart =
         let newlineLen = match firstEOL-eob with
                             | 1 -> 1
                             | 2 -> 2
-                            | _ as x -> failwithf "ERROR: unexpected newline length %d" x
+                            | x  -> failwithf "ERROR: unexpected newline length %d" x
         // Find multipart boundary string
         let border = bytes.[..eob]
     
         let splitOneHeader (s:string) =    
             match s.IndexOf(':') with
                 | -1 -> failwithf "ERROR: bad header '%s'" s
-                | _ as i -> s.[..i-1].ToLower(),s.[i+1..]
+                | i -> s.[..i-1].ToLower(),s.[i+1..]
 
         let rec parseMultipart startSection =      seq{
                     match find border 0 startSection (startSection+1) with

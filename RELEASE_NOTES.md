@@ -1,3 +1,7 @@
+### v1.5.5 -- Feb 5th 2017
+* LNT: cleaned up fslint recommendations for template.fs
+* FEA: moved exposed calculation routines in template to make them useful for external applications
+
 ### v1.5.4 -- Jan 08 2017
 * MNT: update to 3.1.9.0 Npgsl
 
