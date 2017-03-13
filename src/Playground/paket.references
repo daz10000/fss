@@ -1,3 +1,4 @@
+FSharp.Core
 group Build
 Npgsql
 System.Data.SQLite

@@ -1,3 +1,6 @@
+### v1.5.6 -- Mar 13th 2017
+* MNT: updated to FSharp.Core 4.4.1.0
+
 ### v1.5.5 -- Feb 5th 2017
 * BUG: postgres db reopening could throw error and die previously
 * LNT: cleaned up fslint recommendations for template.fs

@@ -1,6 +1,6 @@
 source https://nuget.org/api/v2
 
-nuget FSharp.Core redirects: force
+nuget FSharp.Core >= 4.1.0 redirects: force
 nuget Mono.Security 3.2.3 framework: >= net452
 nuget MySql.Data framework: >= net40
 nuget Newtonsoft.Json 8.0.3 framework: >= net40
