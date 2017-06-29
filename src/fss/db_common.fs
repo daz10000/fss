@@ -154,6 +154,10 @@ module Common =
           let mutable keepAlive = customizer.needsKeepAlive()
           /// flag when connection is disposed to ensure keep alive shuts down gracefully
           let mutable hasDisposed = false 
+
+          /// lockable object to ensure keep alive and dispose don't fight
+          let disposeLock = (1,2)
+
           /// Inteval between tests that connections are alive
           let mutable keepAliveInterval = 5000
 
@@ -199,26 +203,29 @@ module Common =
 
           let keepAliveThread() =
             while not hasDisposed do
-                let conn = takeInternal()
-                let mutable wasOpen = true
-                try
-                    use comm = conn.CreateCommand()
-                    comm.CommandText <- "select 1 as x"
-                    comm.ExecuteScalar() |> ignore
-                    if not wasOpen then
-                        printfn "Kepp alive: Reopening connection pool after success"
-                        pool.Iter(fun conn -> customizer.reopenConnection (conn:?>'Conn) )
-                        wasOpen <- true
-                    release conn
-                    ()
-                with _ as x ->
-                    release conn
-                    wasOpen <- false
-                    printfn "Keep alive: pre-emptively reopening connection pool after success"
-                    
-                    pool.Iter(fun conn -> customizer.reopenConnection (conn:?>'Conn) )
-                    printfn "Keep alive: exception %s\n%s" x.Message x.StackTrace
-                
+                lock disposeLock (
+                        fun () ->
+                            if not hasDisposed then
+                                let conn = takeInternal()
+                                let mutable wasOpen = true
+                                try
+                                    use comm = conn.CreateCommand()
+                                    comm.CommandText <- "select 1 as x"
+                                    comm.ExecuteScalar() |> ignore
+                                    if not wasOpen then
+                                        printfn "Keep alive: Reopening connection pool after success"
+                                        pool.Iter(fun conn -> customizer.reopenConnection (conn:?>'Conn) )
+                                        wasOpen <- true
+                                    release conn
+                                    ()
+                                with _ as x ->
+                                    release conn
+                                    wasOpen <- false
+                                    printfn "Keep alive: pre-emptively reopening connection pool after success"
+                                    
+                                    pool.Iter(fun conn -> customizer.reopenConnection (conn:?>'Conn) )
+                                    printfn "Keep alive: exception %s\n%s" x.Message x.StackTrace
+                        )
                 System.Threading.Thread.Sleep(keepAliveInterval)
             ()
 
@@ -510,8 +517,10 @@ module Common =
             member x.Dispose() = 
                 // Need to explicitly dispose of the pool as we couldn't instantiate with with the use statement.
                 // This involves first casting to an IDisposable class instance)
-                hasDisposed<-true
-                (x.Pool :> IDisposable).Dispose()
+                lock disposeLock (fun () ->
+                                    hasDisposed<-true
+                                    (x.Pool :> IDisposable).Dispose()
+                                  )
 
 
     /// Sql Transaction wrapper that encapsulates an active database

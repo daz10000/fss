@@ -609,7 +609,7 @@ module Server =
                                | -1 -> path,Map.empty // No ?param section
                                | i -> path.[..i-1],UD.parseQueryArgs (path.[i+1..])
 
-            let ur =  { handleId = handleId ; sw = sw ; ud = this ; sr = None ; isPost = true ; path = path' ; headers = headers ; 
+            let ur =  { handleId = handleId ; sw = sw ; ud = this ; sr = Some sr ; isPost = true ; path = path' ; headers = headers ; 
                             session = None ; GET= args}
             dispatch ur path'
 

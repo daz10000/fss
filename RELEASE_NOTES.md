@@ -1,3 +1,8 @@
+### v1.5.7 -- Jun 28 2017
+* BUG: post requests did not handle ? style arguments gracefully
+* BUG: rare race condition between dispose and keep alive could throw exception
+* MNT: updated project files to build under VS2017 on command line cleanly
+
 ### v1.5.6 -- Mar 13th 2017
 * MNT: updated to FSharp.Core 4.4.1.0
 
