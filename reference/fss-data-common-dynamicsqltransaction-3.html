@@ -55,15 +55,15 @@ connection and transcation set correctly</p>
       <tr>
         <td class="member-name">
 
-          <code onmouseout="hideTip(event, '349', 349)" onmouseover="showTip(event, '349', 349)">
+          <code onmouseout="hideTip(event, '350', 350)" onmouseover="showTip(event, '350', 350)">
             new(conn, opts, log)
           </code>
-          <div class="tip" id="349">
+          <div class="tip" id="350">
             <strong>Signature:</strong> (conn:DynamicSqlConnection&lt;&#39;Conn,&#39;Parameter,&#39;Customizer&gt; * opts:ConnOpts * log:(string -&gt; unit)) -&gt; DynamicSqlTransaction&lt;&#39;Parameter,&#39;Conn,&#39;Customizer&gt;<br />
                       </div>
         </td>
         <td class="xmldoc">
-            <a href="http://github.com/daz10000/fss/tree/master/src/fss/db_common.fs#L521-521" class="github-link">
+            <a href="http://github.com/daz10000/fss/tree/master/src/fss/db_common.fs#L530-530" class="github-link">
               <img src="../content/img/github.png" class="normal" />
               <img src="../content/img/github-blue.png" class="hover" />
             </a>
@@ -82,33 +82,15 @@ connection and transcation set correctly</p>
       <tr>
         <td class="member-name">
 
-          <code onmouseout="hideTip(event, '350', 350)" onmouseover="showTip(event, '350', 350)">
+          <code onmouseout="hideTip(event, '351', 351)" onmouseover="showTip(event, '351', 351)">
             cc(commandText)
           </code>
-          <div class="tip" id="350">
+          <div class="tip" id="351">
             <strong>Signature:</strong> commandText:string -&gt; DynamicSqlCommand&lt;&#39;Parameter&gt;<br />
                       </div>
         </td>
         <td class="xmldoc">
-            <a href="http://github.com/daz10000/fss/tree/master/src/fss/db_common.fs#L535-535" class="github-link">
-              <img src="../content/img/github.png" class="normal" />
-              <img src="../content/img/github-blue.png" class="hover" />
-            </a>
-          
-        </td>
-      </tr>
-      <tr>
-        <td class="member-name">
-
-          <code onmouseout="hideTip(event, '351', 351)" onmouseover="showTip(event, '351', 351)">
-            Commit()
-          </code>
-          <div class="tip" id="351">
-            <strong>Signature:</strong> unit -&gt; unit<br />
-                      </div>
-        </td>
-        <td class="xmldoc">
-            <a href="http://github.com/daz10000/fss/tree/master/src/fss/db_common.fs#L543-543" class="github-link">
+            <a href="http://github.com/daz10000/fss/tree/master/src/fss/db_common.fs#L544-544" class="github-link">
               <img src="../content/img/github.png" class="normal" />
               <img src="../content/img/github-blue.png" class="hover" />
             </a>
@@ -119,14 +101,14 @@ connection and transcation set correctly</p>
         <td class="member-name">
 
           <code onmouseout="hideTip(event, '352', 352)" onmouseover="showTip(event, '352', 352)">
-            ExecuteScalar(sql)
+            Commit()
           </code>
           <div class="tip" id="352">
-            <strong>Signature:</strong> sql:string -&gt; obj<br />
+            <strong>Signature:</strong> unit -&gt; unit<br />
                       </div>
         </td>
         <td class="xmldoc">
-            <a href="http://github.com/daz10000/fss/tree/master/src/fss/db_common.fs#L580-580" class="github-link">
+            <a href="http://github.com/daz10000/fss/tree/master/src/fss/db_common.fs#L552-552" class="github-link">
               <img src="../content/img/github.png" class="normal" />
               <img src="../content/img/github-blue.png" class="hover" />
             </a>
@@ -137,14 +119,14 @@ connection and transcation set correctly</p>
         <td class="member-name">
 
           <code onmouseout="hideTip(event, '353', 353)" onmouseover="showTip(event, '353', 353)">
-            InsertMany(items, table, ignoredColumns)
+            ExecuteScalar(sql)
           </code>
           <div class="tip" id="353">
-            <strong>Signature:</strong> (items:seq&lt;&#39;T&gt; * table:string option * ignoredColumns:seq&lt;string&gt; option) -&gt; &#39;R []<br />
+            <strong>Signature:</strong> sql:string -&gt; obj<br />
                       </div>
         </td>
         <td class="xmldoc">
-            <a href="http://github.com/daz10000/fss/tree/master/src/fss/db_common.fs#L566-566" class="github-link">
+            <a href="http://github.com/daz10000/fss/tree/master/src/fss/db_common.fs#L589-589" class="github-link">
               <img src="../content/img/github.png" class="normal" />
               <img src="../content/img/github-blue.png" class="hover" />
             </a>
@@ -155,14 +137,14 @@ connection and transcation set correctly</p>
         <td class="member-name">
 
           <code onmouseout="hideTip(event, '354', 354)" onmouseover="showTip(event, '354', 354)">
-            InsertOne(item, table, ignoredColumns)
+            InsertMany(items, table, ignoredColumns)
           </code>
           <div class="tip" id="354">
-            <strong>Signature:</strong> (item:&#39;T * table:string option * ignoredColumns:seq&lt;string&gt; option) -&gt; &#39;R<br />
+            <strong>Signature:</strong> (items:seq&lt;&#39;T&gt; * table:string option * ignoredColumns:seq&lt;string&gt; option) -&gt; &#39;R []<br />
                       </div>
         </td>
         <td class="xmldoc">
-            <a href="http://github.com/daz10000/fss/tree/master/src/fss/db_common.fs#L573-573" class="github-link">
+            <a href="http://github.com/daz10000/fss/tree/master/src/fss/db_common.fs#L575-575" class="github-link">
               <img src="../content/img/github.png" class="normal" />
               <img src="../content/img/github-blue.png" class="hover" />
             </a>
@@ -173,14 +155,14 @@ connection and transcation set correctly</p>
         <td class="member-name">
 
           <code onmouseout="hideTip(event, '355', 355)" onmouseover="showTip(event, '355', 355)">
-            Query(sql)
+            InsertOne(item, table, ignoredColumns)
           </code>
           <div class="tip" id="355">
-            <strong>Signature:</strong> sql:string -&gt; seq&lt;&#39;T&gt;<br />
+            <strong>Signature:</strong> (item:&#39;T * table:string option * ignoredColumns:seq&lt;string&gt; option) -&gt; &#39;R<br />
                       </div>
         </td>
         <td class="xmldoc">
-            <a href="http://github.com/daz10000/fss/tree/master/src/fss/db_common.fs#L563-563" class="github-link">
+            <a href="http://github.com/daz10000/fss/tree/master/src/fss/db_common.fs#L582-582" class="github-link">
               <img src="../content/img/github.png" class="normal" />
               <img src="../content/img/github-blue.png" class="hover" />
             </a>
@@ -191,14 +173,32 @@ connection and transcation set correctly</p>
         <td class="member-name">
 
           <code onmouseout="hideTip(event, '356', 356)" onmouseover="showTip(event, '356', 356)">
-            Rollback()
+            Query(sql)
           </code>
           <div class="tip" id="356">
+            <strong>Signature:</strong> sql:string -&gt; seq&lt;&#39;T&gt;<br />
+                      </div>
+        </td>
+        <td class="xmldoc">
+            <a href="http://github.com/daz10000/fss/tree/master/src/fss/db_common.fs#L572-572" class="github-link">
+              <img src="../content/img/github.png" class="normal" />
+              <img src="../content/img/github-blue.png" class="hover" />
+            </a>
+          
+        </td>
+      </tr>
+      <tr>
+        <td class="member-name">
+
+          <code onmouseout="hideTip(event, '357', 357)" onmouseover="showTip(event, '357', 357)">
+            Rollback()
+          </code>
+          <div class="tip" id="357">
             <strong>Signature:</strong> unit -&gt; unit<br />
                       </div>
         </td>
         <td class="xmldoc">
-            <a href="http://github.com/daz10000/fss/tree/master/src/fss/db_common.fs#L541-541" class="github-link">
+            <a href="http://github.com/daz10000/fss/tree/master/src/fss/db_common.fs#L550-550" class="github-link">
               <img src="../content/img/github.png" class="normal" />
               <img src="../content/img/github-blue.png" class="hover" />
             </a>
