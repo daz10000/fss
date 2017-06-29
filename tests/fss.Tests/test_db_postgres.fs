@@ -432,7 +432,8 @@ type TestEnums() = class
         while reader.Read() do
             let x : int32  = reader?id
             let y : Mood  = reader?temperment
-            printfn "%d %A" x y
+            //printfn "%d %A" x y
+            ()
     [<Test>]
     member x.Test005EnumByOperator() =
         setupET()

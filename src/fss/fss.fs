@@ -590,24 +590,28 @@ module Server =
 
         member this.Start() = start()
         member this.Stop() = stop()
-        override this.doGet (handleId:int) (sw : StreamWriter) (path:string) headers =
-            let parseQueryArgs(s:string) =
+        static member parseQueryArgs(s:string) =
                 s.Split([| '&' |]) |> Array.map (fun s -> match s.Split([|'='|]) with
                                                                 | [| k ; v |] ->(k,Uri.UnescapeDataString(v))
                                                                 | _ -> failwithf "Invalid form args: %s" s) |> Map.ofSeq
 
+        override this.doGet (handleId:int) (sw : StreamWriter) (path:string) headers =
             let path',args = match path.IndexOf('?') with
                                | -1 -> path,Map.empty // No ? param section
-                               | i -> path.[..i-1],parseQueryArgs (path.[i+1..])
+                               | i -> path.[..i-1],UD.parseQueryArgs (path.[i+1..])
 
             let ur =  { handleId = handleId ; sw = sw ; ud = this ; sr = None ; isPost = false ; path = path' ; headers = headers ; 
                             session = None ; GET= args}
             dispatch ur path'
             
-        override this.doPost (handleId:int) (sr : Stream) (sw : StreamWriter) (path:string) header =
-            let ur =  { handleId = handleId ; sw = sw ; ud = this ; sr = Some(sr) ; isPost = true ; path = path ; headers = header ; session = None
-                            ; GET = Map.empty}
-            dispatch ur path
+        override this.doPost (handleId:int) (sr : Stream) (sw : StreamWriter) (path:string) headers =
+            let path',args = match path.IndexOf('?') with
+                               | -1 -> path,Map.empty // No ?param section
+                               | i -> path.[..i-1],UD.parseQueryArgs (path.[i+1..])
+
+            let ur =  { handleId = handleId ; sw = sw ; ud = this ; sr = None ; isPost = true ; path = path' ; headers = headers ; 
+                            session = None ; GET= args}
+            dispatch ur path'
 
         member this.AddDispatcher (url:string) (func:UDFunc) =
             urls<- (url,func)::urls
