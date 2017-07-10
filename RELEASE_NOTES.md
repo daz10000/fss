@@ -1,3 +1,6 @@
+### v1.5.8 -- Jul 3rd 2017
+* FEA: added secure UD implementation
+
 ### v1.5.7 -- Jun 28 2017
 * BUG: post requests did not handle ? style arguments gracefully
 * BUG: rare race condition between dispose and keep alive could throw exception

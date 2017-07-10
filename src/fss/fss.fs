@@ -524,10 +524,11 @@ module Server =
 
         // question: since path is in urInit, why have a separate path var at all?
         let dispatch urInit path =
-            let ok,ur = this.preCheck path urInit
-            if not ok then
+            match this.preCheck path urInit with
+            | Error x -> Http404 (String.concat "\n" x) :> Response
+            | Ok (false,ur) ->
                 this.preCheckFailed ur
-            else
+            | Ok (true,ur) -> 
                 //printf "Testing path='%s'\n urls=%A" path (urls |> List.map (fst))
                 match List.tryFind (urlMatch ur.path) urls with
                     | None ->
@@ -574,9 +575,9 @@ module Server =
         new (port:int,urls : (string * UDFunc) list) = UD(port,urls,2,false)
 
         /// Pre filter for security implementation that can veto dispatch
-        abstract preCheck :  string->UR->bool*UR
+        abstract preCheck :  string->UR->Result<bool*UR,string list>
         /// Default implementation lets everything through
-        default this.preCheck _(*path*) ur = true,ur 
+        default __.preCheck _path ur = Result.Ok (true,ur)
 
         /// Result of preCheck failure
         abstract preCheckFailed : UR->Response
@@ -638,19 +639,74 @@ module Server =
         resp.Text <- text
         resp
 
-    (*
-    /// Example web server implementation
-    type MyServer(port:int) as this = class
-        inherit Fss.FSS(port)
-        do
-            printf "Started my server\n"
-        
-        override this.doGet(path:string) =
-            printf "Myget: path=%s\n" path
-        
-    end
-    *)
-        
-    //createServer 8080
+    /// Secure, cookie based URL dispatcher that takes as arguments:
+    /// port
+    /// list of secured urls
+    /// list of unsecured urls
+    /// userCheck function processing cookie lines and
+    /// redirectToAuth method taking a passthrough URL and returning an Http303 response
+    /// loglevel
+    type SecUD( port,
+                urls,
+                unsecured_urls:string list,
+                userCheck:(string array->Result<Session option,string list>),
+                redirectToAuth:UR->string->Response,
+                logLevel) = class
+        inherit UD(port,urls,logLevel,true)
 
-     
+        let unsecured_urls' = unsecured_urls |> List.map (fun x -> Regex(x))
+
+        /// decide if we are going to let a URL request though and 
+        /// extract any relevant session info
+        override __.preCheck (url:string) (ur:UR) =
+            let insecure = unsecured_urls' |> List.exists (fun p -> p.Match(url).Success)
+            let findHeaders ur = 
+                    Ok (ur.headers |> Seq.map (fun k -> k.Key.ToLower(),k.Value) |> Map.ofSeq)
+
+            // Is there a session?
+            let findSession (headers:Map<string,string>) =
+                match headers.TryFind("cookie:") with
+                | None -> Ok None
+                | Some(cookie) -> 
+                    let cookieParts = cookie.Split([| ';' |]) 
+                    if cookieParts.Length = 0 then Ok None
+                    else userCheck cookieParts
+
+            let packageResponse (session:Session option) =
+                Ok (
+                    match (session, insecure) with
+                    | None,false -> false, ur
+                    | None,true -> true, ur
+                    | Some(session), _ -> true,{ur with session = Some(session)}
+                )
+
+            ur |> (findHeaders 
+                    >> (Result.bind findSession)
+                    >> (Result.bind packageResponse)
+                   )
+
+                            
+        override __.preCheckFailed (ur:UR) = 
+            if ur.isPost then
+                // take out the post content to avoid problems with follow on
+                ur.ReadPostAsBytes() |> ignore
+            // redirect to user supplied authentication handler with current url as the redirect path
+            "http://" + ur.headers.["Host:"] + ur.path |> redirectToAuth ur
+        end
+
+(*
+/// Example web server implementation
+type MyServer(port:int) as this = class
+    inherit Fss.FSS(port)
+    do
+        printf "Started my server\n"
+    
+    override this.doGet(path:string) =
+        printf "Myget: path=%s\n" path
+    
+end
+*)
+    
+//createServer 8080
+
+ 

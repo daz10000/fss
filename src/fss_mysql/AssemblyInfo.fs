@@ -5,13 +5,13 @@ open System.Reflection
 [<assembly: AssemblyTitleAttribute("fss_mysql")>]
 [<assembly: AssemblyProductAttribute("fss")>]
 [<assembly: AssemblyDescriptionAttribute("F# Server")>]
-[<assembly: AssemblyVersionAttribute("1.5.6")>]
-[<assembly: AssemblyFileVersionAttribute("1.5.6")>]
+[<assembly: AssemblyVersionAttribute("1.5.8")>]
+[<assembly: AssemblyFileVersionAttribute("1.5.8")>]
 do ()
 
 module internal AssemblyVersionInformation =
     let [<Literal>] AssemblyTitle = "fss_mysql"
     let [<Literal>] AssemblyProduct = "fss"
     let [<Literal>] AssemblyDescription = "F# Server"
-    let [<Literal>] AssemblyVersion = "1.5.6"
-    let [<Literal>] AssemblyFileVersion = "1.5.6"
+    let [<Literal>] AssemblyVersion = "1.5.8"
+    let [<Literal>] AssemblyFileVersion = "1.5.8"
