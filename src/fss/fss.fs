@@ -648,20 +648,25 @@ module Server =
     /// loglevel
     type SecUD( port,
                 urls,
-                unsecured_urls:string list,
+                unsecuredUrls:(string * UDFunc) list,
                 userCheck:(string array->Result<Session option,string list>),
                 redirectToAuth:UR->string->Response,
                 logLevel) = class
-        inherit UD(port,urls,logLevel,true)
+        inherit UD(port, (List.append urls unsecuredUrls), logLevel, true)
 
-        let unsecured_urls' = unsecured_urls |> List.map (fun x -> Regex(x))
+        /// Regular expressions to determine if a provided URL matches one of the endpoints declared
+        /// as unsecured.
+        let unsecuredUrls = unsecuredUrls |> List.map (fun (url, _) -> Regex(url))
 
         /// decide if we are going to let a URL request though and 
         /// extract any relevant session info
         override __.preCheck (url:string) (ur:UR) =
-            let insecure = unsecured_urls' |> List.exists (fun p -> p.Match(url).Success)
+            let insecure = unsecuredUrls |> List.exists (fun p -> p.Match(url).Success)
             let findHeaders ur = 
-                    Ok (ur.headers |> Seq.map (fun k -> k.Key.ToLower(),k.Value) |> Map.ofSeq)
+                ur.headers
+                |> Seq.map (fun k -> k.Key.ToLower(),k.Value)
+                |> Map.ofSeq
+                |> Ok
 
             // Is there a session?
             let findSession (headers:Map<string,string>) =
@@ -673,19 +678,17 @@ module Server =
                     else userCheck cookieParts
 
             let packageResponse (session:Session option) =
-                Ok (
-                    match (session, insecure) with
-                    | None,false -> false, ur
-                    | None,true -> true, ur
-                    | Some(session), _ -> true,{ur with session = Some(session)}
-                )
+                match (session, insecure) with
+                | None,false -> false, ur
+                | None,true -> true, ur
+                | Some(session), _ -> true,{ur with session = Some(session)}
+                |> Ok
 
-            ur |> (findHeaders 
-                    >> (Result.bind findSession)
-                    >> (Result.bind packageResponse)
-                   )
+            ur
+            |> findHeaders 
+            |> Result.bind findSession
+            |> Result.bind packageResponse
 
-                            
         override __.preCheckFailed (ur:UR) = 
             if ur.isPost then
                 // take out the post content to avoid problems with follow on
