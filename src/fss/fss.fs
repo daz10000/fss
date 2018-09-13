@@ -124,8 +124,11 @@ module Server =
 //            ()
 //    end
 
+    type Headers = Map<string,string>
+
     /// Function to handle an exception raised during the handling of a request.
-    type ErrorHandler = System.Exception -> Response
+    /// Passed the request headers, the matched route, and the exception that was raised.
+    type ErrorHandler = Headers -> string -> System.Exception -> Response
 
     type FSS(port:int, errorHandler:ErrorHandler option) = class
         let mutable minLogLevel = 4
@@ -138,7 +141,7 @@ module Server =
         let tcpListener = new TcpListener(System.Net.IPAddress.Any,port)
 
         /// By default, dump any exception into the response.
-        let defaultErrorHandler (err:System.Exception) =
+        let defaultErrorHandler _ _ (err:System.Exception) =
             let resp = Response(500,"text/html")
             resp.Text <- sprintf "<PRE>\n%s\n%s\n</PRE>" err.Message err.StackTrace
             resp
@@ -226,7 +229,7 @@ module Server =
                       set(n) = minLogLevel <- n
 
         /// Handler for accepted connections.  Takes a network stream and its id as arguments
-        member this.handle (ns:NetworkStream) (id:int)  =
+        member this.handle (ns:Stream) (id:int)  =
             sprintf "fss%d: top of handle\n" id |> log 1
 
             /// Writer for sending reply to network stream
@@ -265,7 +268,20 @@ module Server =
                                     this.doPost id bs sw path headers 
                             | _ -> Response(500,"text/html")
                     with x ->
-                        errorHandler x
+                        try
+                            errorHandler headers path x
+                        with handleErr ->
+                            sprintf
+                                "fss%d: exception while handling request error:\n%s\n%s\n\nRequest error:\n%s\n%s"
+                                id
+                                handleErr.Message
+                                handleErr.StackTrace
+                                x.Message
+                                x.StackTrace
+                            |> log 999
+                            let resp = Response(500, "text/html")
+                            resp.Text <- "<pre>An internal server error occurred.</pre>"
+                            resp
                                
                 // Start constructing the reply starting with the response code   
                 sprintf "fss%d: finished getting connection, sending response code\n" id |> log 1
