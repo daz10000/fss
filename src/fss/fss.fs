@@ -547,23 +547,17 @@ module Server =
                     | Some(url,fn) ->
                         let m = Regex.Match(path,url)
                         sprintf "fss%d UD: matching %s -> %s\n" ur.handleId ur.path url |> this.Log 3
-                        try
-                            let g (x:int) = m.Groups.[x].Value
-                            match m.Groups.Count-1,fn with
-                                | 0,D0(fn) -> fn ur // (fn:?> UR->Response) ur
-                                | 1,D1(fn) -> fn ur (g 1) //(fn:?> UR->string -> Response) ur (g 1)
-                                | 2,D2(fn) -> fn ur (g 1) (g 2) //(fn:?> UR->string -> string->Response) ur (g 1) (g 2)
-                                | 3,D3(fn) -> fn ur (g 1) (g 2) (g 3)//(fn:?> UR->string -> string-> string->Response) ur (g 1) (g 2) (g 3)
-                                | 4,D4(fn) -> fn ur (g 1) (g 2) (g 3) (g 4) ////(fn:?> UR->string -> string-> string-> string->Response) ur  (g 1) (g 2) (g 3) (g 4)
-                                | 5,D5(fn) -> fn ur (g 1) (g 2) (g 3) (g 4) (g 5) //(fn:?> UR->string -> string-> string-> string->Response) ur  (g 1) (g 2) (g 3) (g 4)
-                                | 6,D6(fn) -> fn ur (g 1) (g 2) (g 3) (g 4) (g 5) (g 6) //(fn:?> UR->string -> string-> string-> string-> string->Response) ur (g 1) (g 2) (g 3) (g 4) (g 5)
-                                | 7,D7(fn) -> fn ur (g 1) (g 2) (g 3) (g 4) (g 5) (g 6) (g 7) //(fn:?> UR->string -> string-> string-> string-> string-> string->Response) ur (g 1) (g 2) (g 3) (g 4) (g 5) (g 6)
-                                | _ -> failwith "not supported"
-                        with x ->
-                            let resp = Response(500,"text/html")
-                            resp.Text <- sprintf "<PRE>Error matching UD dispatch function\n%s\n%s\n</PRE>" x.Message x.StackTrace
-                            printfn "fss%d UD:%s" ur.handleId resp.Text
-                            resp
+                        let g (x:int) = m.Groups.[x].Value
+                        match m.Groups.Count-1,fn with
+                        | 0,D0(fn) -> fn ur // (fn:?> UR->Response) ur
+                        | 1,D1(fn) -> fn ur (g 1) //(fn:?> UR->string -> Response) ur (g 1)
+                        | 2,D2(fn) -> fn ur (g 1) (g 2) //(fn:?> UR->string -> string->Response) ur (g 1) (g 2)
+                        | 3,D3(fn) -> fn ur (g 1) (g 2) (g 3)//(fn:?> UR->string -> string-> string->Response) ur (g 1) (g 2) (g 3)
+                        | 4,D4(fn) -> fn ur (g 1) (g 2) (g 3) (g 4) ////(fn:?> UR->string -> string-> string-> string->Response) ur  (g 1) (g 2) (g 3) (g 4)
+                        | 5,D5(fn) -> fn ur (g 1) (g 2) (g 3) (g 4) (g 5) //(fn:?> UR->string -> string-> string-> string->Response) ur  (g 1) (g 2) (g 3) (g 4)
+                        | 6,D6(fn) -> fn ur (g 1) (g 2) (g 3) (g 4) (g 5) (g 6) //(fn:?> UR->string -> string-> string-> string-> string->Response) ur (g 1) (g 2) (g 3) (g 4) (g 5)
+                        | 7,D7(fn) -> fn ur (g 1) (g 2) (g 3) (g 4) (g 5) (g 6) (g 7) //(fn:?> UR->string -> string-> string-> string-> string-> string->Response) ur (g 1) (g 2) (g 3) (g 4) (g 5) (g 6)
+                        | _ -> failwith "not supported"
         let start() =
             this.Log 2 "Started my dispatcher\n"
             try
