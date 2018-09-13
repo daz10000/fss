@@ -1,3 +1,6 @@
+### v1.6.0 -- Sep 12th 2018
+* FEA: optional error handler for server 
+
 ### v1.5.8 -- Jul 3rd 2017
 * FEA: added secure UD implementation
 
