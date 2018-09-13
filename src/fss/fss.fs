@@ -124,7 +124,10 @@ module Server =
 //            ()
 //    end
 
-    type FSS(port:int) = class
+    /// Function to handle an exception raised during the handling of a request.
+    type ErrorHandler = System.Exception -> Response
+
+    type FSS(port:int, errorHandler:ErrorHandler option) = class
         let mutable minLogLevel = 4
         let myLock = (1,2) // Need object not value for locking
         
@@ -133,6 +136,15 @@ module Server =
         let lockThreadTracker() = Monitor.Enter(myLock)
         let unlockThreadTracker() = Monitor.Exit(myLock)
         let tcpListener = new TcpListener(System.Net.IPAddress.Any,port)
+
+        /// By default, dump any exception into the response.
+        let defaultErrorHandler (err:System.Exception) =
+            let resp = Response(500,"text/html")
+            resp.Text <- sprintf "<PRE>\n%s\n%s\n</PRE>" err.Message err.StackTrace
+            resp
+
+        /// Use this function to handle an exception raised during handling of a request.
+        let errorHandler = Option.defaultValue defaultErrorHandler errorHandler
 
         ///
         let log level (s:string) =
@@ -253,9 +265,7 @@ module Server =
                                     this.doPost id bs sw path headers 
                             | _ -> Response(500,"text/html")
                     with x ->
-                        let resp = Response(500,"text/html")
-                        resp.Text <- sprintf "<PRE>\n%s\n%s\n</PRE>" x.Message x.StackTrace
-                        resp
+                        errorHandler x
                                
                 // Start constructing the reply starting with the response code   
                 sprintf "fss%d: finished getting connection, sending response code\n" id |> log 1
@@ -517,8 +527,8 @@ module Server =
         | D7 of (UR->string->string->string->string->string->string->string->Response)
                 
     /// Dispatch URLs matching a set of pattens to functions
-    type UD(port:int,urlsInit : (string * UDFunc) list,logLevel:int,delayStart:bool) as this = class
-        inherit FSS(port)
+    type UD(port:int,urlsInit : (string * UDFunc) list,logLevel:int,delayStart:bool, ?errorHandler:ErrorHandler) as this = class
+        inherit FSS(port, errorHandler)
         let urlMatch path (url,_) = Regex.Match(path,url).Success
         let mutable urls = urlsInit
 
