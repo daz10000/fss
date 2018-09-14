@@ -24,4 +24,28 @@ type TestServerBasic() = class
         if not (f = expected ) then
             Assert.Fail(sprintf "Expected: '%s',  Got: '%s'" expected f)
 
+
+    [<Test>]
+    member x.TestErrorHandler() =
+        let mutable handled = false
+        let handle _ _ _ =
+            handled <- true
+            Response(500, "text/html")
+
+        let routes = [("^/bad/$", D0 (fun _ -> failwith "explode"))]
+
+        let ud = UD(10000, routes, 1, true, handle)
+
+        let header = System.Text.Encoding.ASCII.GetBytes("GET /bad/ HTTP/1.1")
+
+        use stream = new MemoryStream(256)
+
+        stream.Write(header, 0, header.Length)
+        stream.Position <- 0L
+        Assert.That stream.CanWrite
+
+        Assert.False(handled)
+        ud.handle stream 0
+
+        Assert.True(handled)
 end

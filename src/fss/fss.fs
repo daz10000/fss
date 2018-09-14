@@ -124,8 +124,11 @@ module Server =
 //            ()
 //    end
 
+    type Headers = Map<string,string>
+
     /// Function to handle an exception raised during the handling of a request.
-    type ErrorHandler = System.Exception -> Response
+    /// Passed the request headers, the matched route, and the exception that was raised.
+    type ErrorHandler = Headers -> string -> System.Exception -> Response
 
     type FSS(port:int, errorHandler:ErrorHandler option) = class
         let mutable minLogLevel = 4
@@ -138,7 +141,7 @@ module Server =
         let tcpListener = new TcpListener(System.Net.IPAddress.Any,port)
 
         /// By default, dump any exception into the response.
-        let defaultErrorHandler (err:System.Exception) =
+        let defaultErrorHandler _ _ (err:System.Exception) =
             let resp = Response(500,"text/html")
             resp.Text <- sprintf "<PRE>\n%s\n%s\n</PRE>" err.Message err.StackTrace
             resp
@@ -226,7 +229,7 @@ module Server =
                       set(n) = minLogLevel <- n
 
         /// Handler for accepted connections.  Takes a network stream and its id as arguments
-        member this.handle (ns:NetworkStream) (id:int)  =
+        member this.handle (ns:Stream) (id:int)  =
             sprintf "fss%d: top of handle\n" id |> log 1
 
             /// Writer for sending reply to network stream
@@ -265,7 +268,20 @@ module Server =
                                     this.doPost id bs sw path headers 
                             | _ -> Response(500,"text/html")
                     with x ->
-                        errorHandler x
+                        try
+                            errorHandler headers path x
+                        with handleErr ->
+                            sprintf
+                                "fss%d: exception while handling request error:\n%s\n%s\n\nRequest error:\n%s\n%s"
+                                id
+                                handleErr.Message
+                                handleErr.StackTrace
+                                x.Message
+                                x.StackTrace
+                            |> log 999
+                            let resp = Response(500, "text/html")
+                            resp.Text <- "<pre>An internal server error occurred.</pre>"
+                            resp
                                
                 // Start constructing the reply starting with the response code   
                 sprintf "fss%d: finished getting connection, sending response code\n" id |> log 1
@@ -547,23 +563,17 @@ module Server =
                     | Some(url,fn) ->
                         let m = Regex.Match(path,url)
                         sprintf "fss%d UD: matching %s -> %s\n" ur.handleId ur.path url |> this.Log 3
-                        try
-                            let g (x:int) = m.Groups.[x].Value
-                            match m.Groups.Count-1,fn with
-                                | 0,D0(fn) -> fn ur // (fn:?> UR->Response) ur
-                                | 1,D1(fn) -> fn ur (g 1) //(fn:?> UR->string -> Response) ur (g 1)
-                                | 2,D2(fn) -> fn ur (g 1) (g 2) //(fn:?> UR->string -> string->Response) ur (g 1) (g 2)
-                                | 3,D3(fn) -> fn ur (g 1) (g 2) (g 3)//(fn:?> UR->string -> string-> string->Response) ur (g 1) (g 2) (g 3)
-                                | 4,D4(fn) -> fn ur (g 1) (g 2) (g 3) (g 4) ////(fn:?> UR->string -> string-> string-> string->Response) ur  (g 1) (g 2) (g 3) (g 4)
-                                | 5,D5(fn) -> fn ur (g 1) (g 2) (g 3) (g 4) (g 5) //(fn:?> UR->string -> string-> string-> string->Response) ur  (g 1) (g 2) (g 3) (g 4)
-                                | 6,D6(fn) -> fn ur (g 1) (g 2) (g 3) (g 4) (g 5) (g 6) //(fn:?> UR->string -> string-> string-> string-> string->Response) ur (g 1) (g 2) (g 3) (g 4) (g 5)
-                                | 7,D7(fn) -> fn ur (g 1) (g 2) (g 3) (g 4) (g 5) (g 6) (g 7) //(fn:?> UR->string -> string-> string-> string-> string-> string->Response) ur (g 1) (g 2) (g 3) (g 4) (g 5) (g 6)
-                                | _ -> failwith "not supported"
-                        with x ->
-                            let resp = Response(500,"text/html")
-                            resp.Text <- sprintf "<PRE>Error matching UD dispatch function\n%s\n%s\n</PRE>" x.Message x.StackTrace
-                            printfn "fss%d UD:%s" ur.handleId resp.Text
-                            resp
+                        let g (x:int) = m.Groups.[x].Value
+                        match m.Groups.Count-1,fn with
+                        | 0,D0(fn) -> fn ur // (fn:?> UR->Response) ur
+                        | 1,D1(fn) -> fn ur (g 1) //(fn:?> UR->string -> Response) ur (g 1)
+                        | 2,D2(fn) -> fn ur (g 1) (g 2) //(fn:?> UR->string -> string->Response) ur (g 1) (g 2)
+                        | 3,D3(fn) -> fn ur (g 1) (g 2) (g 3)//(fn:?> UR->string -> string-> string->Response) ur (g 1) (g 2) (g 3)
+                        | 4,D4(fn) -> fn ur (g 1) (g 2) (g 3) (g 4) ////(fn:?> UR->string -> string-> string-> string->Response) ur  (g 1) (g 2) (g 3) (g 4)
+                        | 5,D5(fn) -> fn ur (g 1) (g 2) (g 3) (g 4) (g 5) //(fn:?> UR->string -> string-> string-> string->Response) ur  (g 1) (g 2) (g 3) (g 4)
+                        | 6,D6(fn) -> fn ur (g 1) (g 2) (g 3) (g 4) (g 5) (g 6) //(fn:?> UR->string -> string-> string-> string-> string->Response) ur (g 1) (g 2) (g 3) (g 4) (g 5)
+                        | 7,D7(fn) -> fn ur (g 1) (g 2) (g 3) (g 4) (g 5) (g 6) (g 7) //(fn:?> UR->string -> string-> string-> string-> string-> string->Response) ur (g 1) (g 2) (g 3) (g 4) (g 5) (g 6)
+                        | _ -> failwith "not supported"
         let start() =
             this.Log 2 "Started my dispatcher\n"
             try
