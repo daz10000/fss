@@ -1,3 +1,6 @@
+### v1.6.1 -- Sep 13th 2018
+* ENH: improvements to error handler
+
 ### v1.6.0 -- Sep 12th 2018
 * FEA: optional error handler for server 
 
