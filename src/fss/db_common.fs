@@ -9,7 +9,8 @@ open System.IO
 module Common =
     open System.Data
     open System.Data.Common
-    open System.Data.SqlClient
+    // Unavailable sqlite
+    // open System.Data.SqlClient
     open System
     open Fss.Pool // used for database handle pooling
     

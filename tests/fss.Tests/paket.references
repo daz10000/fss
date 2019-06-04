@@ -1,7 +1,9 @@
 FSharp.Core
 System.Data.SQLite
 group Test
-NUnit
-NUnit.Runners
 Npgsql
 MySql.Data
+NUnit
+Microsoft.NET.Test.Sdk
+NUnit3TestAdapter
+NUnit.ConsoleRunner

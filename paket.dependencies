@@ -25,8 +25,11 @@ group Build
 group Test
   source https://nuget.org/api/v2
   
-  nuget NUnit ~> 2
-  nuget NUnit.Runners ~> 2
   nuget Npgsql
   nuget MySql.Data
   nuget System.Data.SQLite
+
+  nuget NUnit ~> 3
+  nuget NUnit.ConsoleRunner ~> 3
+  nuget Microsoft.NET.Test.Sdk
+  nuget NUnit3TestAdapter
