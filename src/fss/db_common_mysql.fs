@@ -31,7 +31,12 @@ module Common_mysql =
       static member (?) (dr:DynamicSqlDataReader<'Reader>, name:string) : 'R = 
         match dr.Reader.[name] with
             | :? DBNull -> unbox null // support for nullable types
-            | _ -> unbox (dr.Reader.[name])
+            | _ -> 
+                try
+                    unbox (dr.Reader.[name])
+                with x ->
+                    printfn "ERROR: unboxing field %s (%s) " name x.Message
+                    raise x
 
       interface IDisposable with
         member x.Dispose() = reader.Dispose()
@@ -160,7 +165,7 @@ module Common_mysql =
                             
 
 
-                            let cpos:int16 = Convert.ToInt16(r?ordinal_position:uint64);
+                            let cpos:int16 = Convert.ToInt16(r?ordinal_position:uint32);
                             let cIsNullable: string = r?is_nullable;
                             yield { 
                             ctype = r?data_type; 
@@ -339,17 +344,20 @@ module Common_mysql =
                                     | :? DBNull ->box None
                                     | :? string as x -> box (Some(x))
                                     | :? int64 as x -> box (Some(x))
+                                    | :? uint32 as x -> box (Some(x))
+                                    | :? uint64 as x -> box (Some(x))
                                     | :? float as x -> box (Some(x))
-                                    | :? single as x -> box (Some(x))// flag_LiangMi
+                                    | :? single as x -> box (Some(x))
                                     | :? bool as x -> box (Some(x))
                                     | :? int32 as x -> box (Some(x))
                                     | :? decimal as x -> box (Some(x))
                                     | :? DateTime as x -> box (Some(x))
-                                    | _ as x -> failwithf "ERROR: unsupported nullable dbtype %s" (x.GetType().Name)
+                                    | x -> failwithf "ERROR: unsupported nullable dbtype %s" (x.GetType().Name)
                                 else
                                     reader.Reader.GetValue(i) 
                                 )
-                        yield cons.Invoke(args) :?> 'T
+                            // printf "XXX About to convert field %s" (reader.Reader.GetName(i))
+                            yield cons.Invoke(args) :?> 'T
                 finally
                     // Don't dispose till the sequence is finally used. (within sequence generator)
                     (command :> IDisposable).Dispose()

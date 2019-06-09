@@ -24,7 +24,7 @@ run() {
   then
     mono "$@"
   else
-    "$@"
+      "$@"
   fi
 }
 

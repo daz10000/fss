@@ -6,6 +6,7 @@
     <AutoGenerateBindingRedirects>true</AutoGenerateBindingRedirects>
   </PropertyGroup>
   <ItemGroup>
+    <Compile Include="shared.fs" />
     <Compile Include="testJSON.fs" />
     <Compile Include="testTemplate.fs" />
     <Compile Include="testPool.fs" />
@@ -17,6 +18,10 @@
     <Content Include="App.config" />
   </ItemGroup>
   <ItemGroup>
+    <ProjectReference Include="..\..\src\fss_mysql\fss_mysql.fsproj"/>
+    <ProjectReference Include="..\..\src\fss_sqlite\fss_sqlite.fsproj"/>
+    <ProjectReference Include="..\..\src\fss\fss.fsproj"/>
+    <ProjectReference Include="..\..\src\fss_postgres\fss_postgres.fsproj"/>
     <ProjectReference Include="..\..\src\fss\fss.fsproj" />
   </ItemGroup>
   <Import Project="..\..\.paket\Paket.Restore.targets" />

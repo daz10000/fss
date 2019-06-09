@@ -7,6 +7,7 @@ open System.Reflection
 [<assembly: AssemblyDescriptionAttribute("F# Server")>]
 [<assembly: AssemblyVersionAttribute("1.6.1")>]
 [<assembly: AssemblyFileVersionAttribute("1.6.1")>]
+[<assembly: AssemblyConfigurationAttribute("Release")>]
 do ()
 
 module internal AssemblyVersionInformation =
@@ -15,3 +16,4 @@ module internal AssemblyVersionInformation =
     let [<Literal>] AssemblyDescription = "F# Server"
     let [<Literal>] AssemblyVersion = "1.6.1"
     let [<Literal>] AssemblyFileVersion = "1.6.1"
+    let [<Literal>] AssemblyConfiguration = "Release"

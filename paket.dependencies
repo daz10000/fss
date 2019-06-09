@@ -1,35 +1,28 @@
-source https://nuget.org/api/v2
-
-nuget FSharp.Core >= 4.6.0 redirects: force
-nuget Newtonsoft.Json
-nuget NuGet.CommandLine
-nuget System.Data.SQLite
+version 5.206.0
 
 // [ FAKE GROUP ]
-group NetcoreBuild
-    source https://api.nuget.org/v3/index.json
-
-    nuget Fake.Core.Target prerelease
-
 group Build
-  source https://nuget.org/api/v2
-  
+  storage none
+  source https://api.nuget.org/v3/index.json
+  nuget Fake.DotNet.Cli
+  nuget Fake.IO.FileSystem
+  nuget Fake.Core.Target
+
   nuget Fake.DotNet.AssemblyInfoFile
   nuget Fake.DotNet.MSBuild
-  nuget Fake.Core.Target
   nuget FAKE prerelease
   nuget FSharp.Formatting
+  nuget Newtonsoft.Json
+  nuget System.Data.SQLite
 
   github fsharp/FAKE modules/Octokit/Octokit.fsx
 
-  nuget Mono.Security
+  #nuget Mono.Security
   nuget MySql.Data
-  nuget System.Data.SQLite
-  nuget Newtonsoft.Json
   nuget Npgsql
 
 group Test
-  source https://nuget.org/api/v2
+  source https://api.nuget.org/v3/index.json
   
   nuget Npgsql
   nuget MySql.Data

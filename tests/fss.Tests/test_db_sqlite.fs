@@ -1,5 +1,6 @@
 ﻿module test_db_sqlite
 open NUnit.Framework
+open Shared
 
 open Fss.Data.SQLite
 open System.IO
@@ -72,12 +73,8 @@ type Test10 = { lower : int64 ; Upper : int64 ; aMixed : int64}
 
 let t10a = { lower = 9L ; Upper = 900L ; aMixed = 90L}
 
-let confFile = "connection_sqlite.txt"
-let getConnString() =
-    if not (File.Exists(confFile)) then
-        failwithf "ERROR: expected %s file with connstring" confFile
-    else 
-        System.IO.File.ReadAllText(confFile)
+let connFile = "connection_sqlite.txt"
+let getConnString() = Shared.getConnStringGeneral connFile
 
 // reusable primitives for testing
 let gc() = new DynamicSqlConnection(getConnString())
@@ -102,9 +99,11 @@ let setupT10 (conn:DynamicSqlConnection) = drop "test10" conn ; createT10 conn
 type TestSQLiteBasic() = class     
     
 
-    [<Test>]
-    member x.Test001ConnectionDotTxtPresent() =
-        Assert.IsTrue(File.Exists(confFile))        
+    // We have code for finding the conn string and opening it, so directky
+    // opening the base path is not so useful
+    // [<Test>]
+    // member x.Test001ConnectionDotTxtPresent() =
+    //     Assert.IsTrue(File.Exists(connFile))        
 
     [<Test>]
     member x.Test002GetConnString() =

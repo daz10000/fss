@@ -1,4 +1,6 @@
+group Build
 FSharp.Core
-Mono.Security
+group Build
+#Mono.Security
 MySql.Data
 Newtonsoft.Json
