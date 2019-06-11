@@ -38,11 +38,11 @@ Target.create "Pack" (fun _ ->
                     printfn "Packing %s" proj
                     Fake.DotNet.Paket.pack (fun p ->
                         { p with
+                            ToolPath = ".tool/paket.exe"
                             WorkingDir = folder
                             BuildConfig = configuration
                             Version = release.NugetVersion
                             ReleaseNotes = System.String.Join("\n",release.Notes) // Fake.Core.String release.Notes
-                            // ReleaseNotes = Fake.Core.String release.Notes
                             OutputPath = "."
                         }) 
     ) // end iteration over projects

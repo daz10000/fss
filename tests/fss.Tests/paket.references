@@ -1,5 +1,5 @@
-group Build
 FSharp.Core
+group Build
 System.Data.SQLite
 group Test
 Npgsql
