@@ -8,7 +8,7 @@
     <Compile Include="..\fss\pool.fs" />
     <Content Include="app.config" />
     <Compile Include="../fss/version.fs" />
-    <Compile Include="AssemblyInfo.fs" />
+    <Compile Include="../Common/AssemblyInfo.fs" />
     <Compile Include="..\fss\db_common_mysql.fs" />
     <Compile Include="db_mysql.fs" />
   </ItemGroup>
