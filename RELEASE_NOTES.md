@@ -1,3 +1,6 @@
+### v1.7.0 -- Jun 11th 2019
+* MNT: ported to netcore and fake5
+
 ### v1.6.1 -- Sep 13th 2018
 * ENH: improvements to error handler
 
