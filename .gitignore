@@ -28,11 +28,16 @@ src/fss_mysql/obj
 *.suo
 *.user
 *.sln.docstates
+*.ionide
+tests/fss.Tests/connection_postgres.txt
 
 # Xamarin Studio / monodevelop user-specific
 *.userprefs
 *.dll.mdb
 *.exe.mdb
+
+# rider
+.idea
 
 # Build results
 

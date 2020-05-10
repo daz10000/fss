@@ -1,3 +1,6 @@
+### v1.7.0 -- May 7th 2020
+* MNT: ported to netcore
+
 ### v1.6.1 -- Sep 13th 2018
 * ENH: improvements to error handler
 

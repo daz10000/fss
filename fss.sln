@@ -14,7 +14,7 @@ Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "fss", "src\fss\fss.fsproj",
 EndProject
 Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "fss_postgres", "src\fss_postgres\fss_postgres.fsproj", "{02149E9B-BCE3-4989-A21B-299DC8C7586F}"
 EndProject
-Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "fss_mysql", "src\fss_mysql\fss_mysql.fsproj", "{EDD107F0-29C8-4558-8A3F-C41BE1CDAB83}"
+
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "project", "project", "{BF60BC93-E09B-4E5F-9D85-95A519479D54}"
 	ProjectSection(SolutionItems) = preProject
@@ -41,8 +41,7 @@ Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "fss.Tests", "tests\fss.Test
 EndProject
 Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "fss_sqlite", "src\fss_sqlite\fss_sqlite.fsproj", "{F742C381-F7C2-4AAE-ACFA-B6D600EB817A}"
 EndProject
-Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "Playground", "src\Playground\Playground.fsproj", "{5B6065EE-990D-45FC-A68B-41D18F613438}"
-EndProject
+
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU

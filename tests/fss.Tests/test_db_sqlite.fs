@@ -16,10 +16,10 @@ create table test1 (
 
 type test1 = { id : int ; age : int ; first : string ; last : string ; rate : float}
 
-let t1a = { id = 1 ; age = 30 ; first = "fred" ; last = "flintstone" ; rate = 1.2}
-let t1b = { id = 2 ; age = 245 ; first = "wilma" ; last = "flintstone" ; rate = 1.0}
-let t1c = { id = 100 ; age = 32 ; first = "Barney" ; last = "rubble" ; rate = 0.6}
-let t1d = { id = 1000 ; age = 3 ; first = "pebbles" ; last = "flintstone" ; rate = 1.9}
+let getT1a() = { id = 1 ; age = 30 ; first = "fred" ; last = "flintstone" ; rate = 1.2}
+let getT1b() = { id = 2 ; age = 245 ; first = "wilma" ; last = "flintstone" ; rate = 1.0}
+let getT1c() = { id = 100 ; age = 32 ; first = "Barney" ; last = "rubble" ; rate = 0.6}
+let getT1d() = { id = 1000 ; age = 3 ; first = "pebbles" ; last = "flintstone" ; rate = 1.9}
 
 let createT2SQL = """
 create table test2 (
@@ -42,8 +42,8 @@ create table test3 (
 
 type Test3 = { id : int64 option ; age : int64 ; first : string ; last : string option ; rate : float}
 
-let t3a = { id = Some 1L ; age = 30L ; first = "fred" ; last = Some "flintstone" ; rate = 1.2}
-let t3b = { id = Some 2L ; age = 4L ; first = "dino" ; last = None ; rate = 1.2}
+let getT3a() = { id = Some 1L ; age = 30L ; first = "fred" ; last = Some "flintstone" ; rate = 1.2}
+let getT3b() = { id = Some 2L ; age = 4L ; first = "dino" ; last = None ; rate = 1.2}
 
 let createT4SQL = """
 create table test4 (
@@ -58,8 +58,8 @@ create table test4 (
 
 type Test4 = { id : int64 option ; age : int64 option ; first : string option ; last : string option; rate : double option ; happy : bool option}
 
-let t4a = { id = Some 1L ; age = Some(40L) ; first = Some "wilma" ; last = Some "flintstone" ; rate = Some 1.256 ; happy = Some true}
-let t4b = { id = Some 2L ; age = None ; first = None ; last = None ; rate = None ; happy = None}
+let getT4a() = { id = Some 1L ; age = Some(40L) ; first = Some "wilma" ; last = Some "flintstone" ; rate = Some 1.256 ; happy = Some true}
+let getT4b() = { id = Some 2L ; age = None ; first = None ; last = None ; rate = None ; happy = None}
 
 let createT10SQL = """
 create table test10 (
@@ -70,7 +70,7 @@ create table test10 (
 
 type Test10 = { lower : int64 ; Upper : int64 ; aMixed : int64}
 
-let t10a = { lower = 9L ; Upper = 900L ; aMixed = 90L}
+let getT10a() = { lower = 9L ; Upper = 900L ; aMixed = 90L}
 
 let confFile = "connection_sqlite.txt"
 let getConnString() =
@@ -132,6 +132,7 @@ type TestSQLiteBasic() = class
         use conn = gc()
         setupT1 conn
         conn.Reload()
+        let t1a = getT1a()
         conn.InsertOne(t1a) |> ignore
         ()
 
@@ -139,6 +140,7 @@ type TestSQLiteBasic() = class
     member x.Test007SingleSimpleInsertWithCheck() =
         use conn = gc()
         setupT1 conn
+        let t1a = getT1a()
         conn.InsertOne(t1a) |> ignore
         Assert.IsTrue(conn.ExecuteScalar "select count(*) from test1" :?> int64 = 1L) |> ignore
         ()
@@ -148,6 +150,7 @@ type TestSQLiteBasic() = class
     member x.Test010SingleSerialInsertWithCheck() =
         use conn = gc()
         setupT2 conn
+        let t1a = getT1a()
         conn.InsertOne(t1a,"test2",ignoredColumns=["id" ; "rate"]) |> ignore
         Assert.GreaterOrEqual(conn.ExecuteScalar "select rate from test2 where first = 'fred'" :?> float,998.9)
 
@@ -156,6 +159,7 @@ type TestSQLiteBasic() = class
     member x.Test030InsertNullableSimple() =
         use conn = gc()
         setupT3 conn
+        let t3a = getT3a()
         conn.InsertOne(t3a,ignoredColumns=["id"]) |> ignore
 
     /// Insert Test3 example with nulled field last
@@ -163,18 +167,23 @@ type TestSQLiteBasic() = class
     member x.Test031InsertNullableNull() =
         use conn = gc()
         setupT3 conn
+        let t3b = getT3b()
         conn.InsertOne(t3b) |> ignore
 
     [<Test>]
     member x.Test032InsertManySomeNull() =
         use conn = gc()
         setupT3 conn
+        let t3a = getT3a()
+        let t3b = getT3b()
         conn.InsertMany([ t3a; t3b]) |>  ignore
 
     [<Test>]
     member x.Test033QuerySomeNull() =
         use conn = gc()
         setupT3 conn
+        let t3a = getT3a()
+        let t3b = getT3b()
         conn.InsertMany([ t3a; t3b]) |> ignore
         let results : Test3 [] = conn.Query "select * from test3"  |> Array.ofSeq
 
@@ -186,6 +195,8 @@ type TestSQLiteBasic() = class
     member x.Test034InsertQueryAllNull() =
         use conn = gc()
         setupT4 conn
+        let t4a = getT4a()
+        let t4b = getT4b()
         conn.InsertMany ([ t4a ; t4b ],ignoredColumns=["id"]) |> ignore
         let results = conn.Query "select * from test4 order by id asc"  |> Array.ofSeq
         let wilma = results.[0]
@@ -221,7 +232,7 @@ type TestCase() = class
     [<Test>]
     member x.Test200UpperCaseCols() =
         cleanTable()
-        conn.InsertOne(t10a) |> ignore
+        conn.InsertOne(getT10a()) |> ignore
 end
 
 
@@ -241,6 +252,7 @@ type TestTransactions() = class
         // Clean up table
         cleanTable()
         use trans = conn.StartTrans()
+        let t1a = getT1a()
         conn.InsertOne(t1a,transProvided=trans) |> ignore
 
         trans.Commit()
@@ -254,6 +266,7 @@ type TestTransactions() = class
         // Clean up table
         cleanTable()
         use trans = conn.StartTrans()
+        let t1a = getT1a()
         conn.InsertOne(t1a,transProvided=trans) |> ignore
 
         trans.Rollback()
@@ -267,6 +280,10 @@ type TestTransactions() = class
         // Clean up table
         cleanTable()
         use trans = conn.StartTrans()
+        let t1a = getT1a()
+        let t1b = getT1b()
+        let t1c = getT1c()
+        let t1d = getT1d()
         conn.InsertMany([| t1a ; t1b; t1c; t1d |],transProvided=trans) |> ignore
 
         trans.Commit()
@@ -280,6 +297,10 @@ type TestTransactions() = class
         // Clean up table
         cleanTable()
         use trans = conn.StartTrans()
+        let t1a = getT1a()
+        let t1b = getT1b()
+        let t1c = getT1c()
+        let t1d = getT1d()
         conn.InsertMany([| t1a ; t1b; t1c; t1d |],transProvided=trans) |> ignore
 
         trans.Rollback()
@@ -293,6 +314,10 @@ type TestTransactions() = class
         // Clean up table
         cleanTable()
         use trans = conn.StartTrans()
+        let t1a = getT1a()
+        let t1b = getT1b()
+        let t1c = getT1c()
+        let t1d = getT1d()
         conn.InsertMany([| t1a ; t1b |],transProvided=trans) |> ignore
         conn.InsertMany([| t1c ; t1d |],transProvided=trans) |> ignore
 
@@ -307,6 +332,10 @@ type TestTransactions() = class
         // Clean up table
         cleanTable()
         use trans = conn.StartTrans()
+        let t1a = getT1a()
+        let t1b = getT1b()
+        let t1c = getT1c()
+        let t1d = getT1d()
         conn.InsertMany([| t1a ; t1b |],transProvided=trans) |> ignore
         conn.InsertMany([| t1c ; t1d |],transProvided=trans) |> ignore
 
@@ -321,6 +350,7 @@ type TestTransactions() = class
         // Clean up table
         cleanTable()
         use trans = conn.StartTrans()
+        let t1a = getT1a()
         trans.InsertOne(t1a) |> ignore
         trans.Commit()
 
@@ -333,6 +363,7 @@ type TestTransactions() = class
         // Clean up table
         cleanTable()
         use trans = conn.StartTrans()
+        let t1a = getT1a()
         trans.InsertOne(t1a) |> ignore
 
         trans.Rollback()
@@ -346,6 +377,7 @@ type TestTransactions() = class
         // Clean up table
         cleanTable()
         use trans = conn.StartTrans()
+        let t1a = getT1a()
         trans.InsertOne(t1a) |> ignore
 
         trans.Rollback()
@@ -360,8 +392,12 @@ type TestTransactions() = class
     member x.Test010InsertManyViaTrans() =
         cleanTable()
         // insert one bit outside the transaction
+        let t1a = getT1a()
         conn.InsertOne(t1a) |> ignore
         use trans = conn.StartTrans()
+        let t1b = getT1b()
+        let t1c = getT1c()
+        let t1d = getT1d()
         trans.InsertMany([| t1b ; t1c; t1d |]) |> ignore
         // confirm that the transaction is isolated
         Assert.IsTrue(conn.ExecuteScalar "SELECT COUNT(*) FROM test1" :?> int64 = 1L)

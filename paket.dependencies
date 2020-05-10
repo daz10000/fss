@@ -1,11 +1,37 @@
+framework: auto-detect
 source https://nuget.org/api/v2
 
-nuget FSharp.Core >= 4.1.0 redirects: force
-nuget Mono.Security 3.2.3 framework: >= net452
-nuget MySql.Data framework: >= net40
-nuget Newtonsoft.Json 8.0.3 framework: >= net40
+nuget FSharp.Core >= 4.7.0 redirects: force
+nuget Mono.Security
+nuget MySql.Data
+nuget Newtonsoft.Json
 nuget NuGet.CommandLine
 nuget System.Data.SQLite
+
+nuget Argu
+clitool dotnet-fake
+
+group Formatting
+source https://nuget.org/api/v2
+nuget FSharp.Formatting
+nuget FSharp.Formatting.CommandTool
+
+group FakeBuild
+source https://api.nuget.org/v3/index.json
+
+storage: none
+
+nuget Fake.Core.Target
+nuget Fake.IO.FileSystem
+nuget Fake.DotNet.Cli
+nuget Fake.Tools.Git
+nuget Fake.DotNet.MSBuild
+nuget Fake.Core.ReleaseNotes 
+nuget Fake.DotNet.AssemblyInfoFile
+nuget Fake.DotNet.Paket
+nuget Fake.DotNet.Testing.Expecto 
+nuget Fake.DotNet.FSFormatting 
+nuget Fake.Api.GitHub
 
 group Build
   source https://nuget.org/api/v2
@@ -14,8 +40,8 @@ group Build
   nuget FAKE
   nuget FSharp.Formatting
 
-  nuget Mono.Security
-  nuget MySql.Data
+  #nuget Mono.Security
+  #nuget MySql.Data
   nuget System.Data.SQLite
   nuget Newtonsoft.Json
   nuget Npgsql

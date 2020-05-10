@@ -1,0 +1,26 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>netstandard2.0</TargetFramework>
+    <AutoGenerateBindingRedirects>true</AutoGenerateBindingRedirects>
+  </PropertyGroup>
+  <ItemGroup>
+    <Compile Include="..\fss\pool.fs">
+      <Link>pool.fs</Link>
+    </Compile>
+    <Content Include="app.config" />
+    <Content Include="paket.references" />
+    <Compile Include="..\fss\version.fs">
+      <Link>version.fs</Link>
+    </Compile>
+    <Compile Include="AssemblyInfo.fs" />
+    <Compile Include="..\fss\db_common_mysql.fs">
+      <Link>db_common_mysql.fs</Link>
+    </Compile>
+    <Compile Include="db_mysql.fs" />
+    <None Include="paket.references" />
+    <None Include="paket.template" />
+    <Content Include="App.config" />
+  </ItemGroup>
+  <Import Project="..\..\.paket\Paket.Restore.targets" />
+</Project>

@@ -5,13 +5,15 @@ open System.Reflection
 [<assembly: AssemblyTitleAttribute("fss")>]
 [<assembly: AssemblyProductAttribute("fss")>]
 [<assembly: AssemblyDescriptionAttribute("F# Server")>]
-[<assembly: AssemblyVersionAttribute("1.6.1")>]
-[<assembly: AssemblyFileVersionAttribute("1.6.1")>]
+[<assembly: AssemblyVersionAttribute("1.7.0")>]
+[<assembly: AssemblyFileVersionAttribute("1.7.0")>]
+[<assembly: AssemblyConfigurationAttribute("Release")>]
 do ()
 
 module internal AssemblyVersionInformation =
     let [<Literal>] AssemblyTitle = "fss"
     let [<Literal>] AssemblyProduct = "fss"
     let [<Literal>] AssemblyDescription = "F# Server"
-    let [<Literal>] AssemblyVersion = "1.6.1"
-    let [<Literal>] AssemblyFileVersion = "1.6.1"
+    let [<Literal>] AssemblyVersion = "1.7.0"
+    let [<Literal>] AssemblyFileVersion = "1.7.0"
+    let [<Literal>] AssemblyConfiguration = "Release"
