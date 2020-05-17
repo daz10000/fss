@@ -18,6 +18,9 @@
     <Compile Include="testServer.fs" />
     <Compile Include="test_db_postgres.fs" />
     <Compile Include="test_db_sqlite.fs" />
+    <None Include="connection_postgres.txt" CopyToOutputDirectory="PreserveNewest" />
+    <None Include="connection_sqlite.txt" CopyToOutputDirectory="PreserveNewest" />
+    
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\..\src\fss_sqlite\fss_sqlite.fsproj" />

@@ -1,91 +1,100 @@
-### v1.7.0 -- May 7th 2020
+# Changelog
+All notable changes to this project will be documented in this file.
+
+The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
+and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
+
+## [1.8.1] - 2020-05-17
+* MIN: bumping system.data.sqlite version back to 1.0.112 to avoid packaging issues with 1.0.112.2
+
+## [1.8.0] - 2020-05-07
 * MNT: ported to netcore
 
-### v1.6.1 -- Sep 13th 2018
+## [1.6.1] - 2018-09-13
 * ENH: improvements to error handler
 
-### v1.6.0 -- Sep 12th 2018
+## [1.6.0] - 2018-09-12
 * FEA: optional error handler for server 
 
-### v1.5.8 -- Jul 3rd 2017
+## [1.5.8] - 2017-07-03
 * FEA: added secure UD implementation
 
-### v1.5.7 -- Jun 28 2017
+## [1.5.7] - 2017-06-28
 * BUG: post requests did not handle ? style arguments gracefully
 * BUG: rare race condition between dispose and keep alive could throw exception
 * MNT: updated project files to build under VS2017 on command line cleanly
 
-### v1.5.6 -- Mar 13th 2017
+## [1.5.6] - 2017-03-13
 * MNT: updated to FSharp.Core 4.4.1.0
 
-### v1.5.5 -- Feb 5th 2017
+## [1.5.5] - 2017-02-15
 * BUG: postgres db reopening could throw error and die previously
 * LNT: cleaned up fslint recommendations for template.fs
 * FEA: moved exposed calculation routines in template to make them useful for external applications
 
-### v1.5.4 -- Jan 08 2017
+## [1.5.4] - 2017-01-08
 * MNT: update to 3.1.9.0 Npgsl
 
-### v1.5.3 -- Nov 16 2016
+## [1.5.3] - 2016-11-16
 * ORM: fss_postgres reconnect stability improvements
 
-### v1.5.2 -- Sep 05 2016
+## [1.5.2] - 2016-09-05
 * ORM: mapping metadata to lowercase as sqlite does not match postgres behavior
 
-### v1.5.1 -- Aug 30 2016
+## v1.5.1 -- Aug 30 2016
 * ORM: specified explicit schema now for insertMany
 
-### v1.5.0 -- Aug 17 2016
+## v1.5.0 -- Aug 17 2016
 * ORM: support for sqlite solid
 * ORM: support for postgres enums solid
 * ORM: support for postgres schemas / search_path
 
-### v1.4.1 -- Aug 7 2016
+## v1.4.1 -- Aug 7 2016
 * ORM: support for sqlite added
 * ORM: small cleanup issue in keepalive thread fixed
 
-### v1.4.0 -- July 17 2016
+## v1.4.0 -- July 17 2016
 * ORM: caching schema information at first load for postgres
 * ORM: better NULL/ Nullable support
 
-### v1.3.1
+## v1.3.1
 * ORM: int16,decimal support
 * templates: expression legal in for loop iter RHS value
 * templates: elseif implementation
 
-### v1.3.0
+## v1.3.0
 * ORM: fss-mysql implementation
 * ORM: decimal null support
 
-### v1.2.9
+## v1.2.9
 * templates: BUG: includes with internal variables mixed with extends werenot expanded properly
 
-### v1.2.8
+## v1.2.8
 * server: BUG empty multipart form parts where triggering assertions incorrectly
 
-### v1.2.7
+## v1.2.7
 * server: BUG: rewrote multipart header parser to be tail recursive
 
-### v1.2.6
+## v1.2.6
 * Freql:  methods added directly to transaction object to make it behave more like a connection
 
-### v1.2.5
+## v1.2.5
 * Freql: premature release of transaction connection fixed
 * Server: reexposed Fss.Server.version string
 * templates:  if x.y case fixed and tested
 
-### v1.2
+## v1.2
 * Freql:  bug in Query led to delayed connection pool release for incomplete seq  consumption
 * templates: ENH - range expressions for for loops implemented
 * templates: ENH - expressions allowed within double parenthesis substitution blocks
 * templates: ENH - array indices implemented for expressions
 * templates: ENH - <= and >= implemented
 
-### v1.1.5
+## v1.1.5
 * templates: overhaul of operator precedence to implement boolean expressions correctly
 * Freql:  handling nullable date fields implemented.
 
-### v1.0.6
+## v1.0.6
 * templates: bug in double quoted string parsing fixed string  hello not recognized :(
 * templates: != operator implemented for '{% if %}'
 * test:  additional unit tests for string , != operations

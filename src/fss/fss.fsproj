@@ -6,6 +6,7 @@
     <AssemblyName>fss</AssemblyName>
     <Name>fss</Name>
     <OutputType>Library</OutputType>
+    <IsPackable>true</IsPackable>
     <GenerateDocumentationFile>true</GenerateDocumentationFile>
     <!-- Optional: Declare that the Repository URL can be published to NuSpec -->
     <PublishRepositoryUrl>true</PublishRepositoryUrl>

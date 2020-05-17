@@ -4,16 +4,20 @@ open System.Reflection
 
 [<assembly: AssemblyTitleAttribute("fss")>]
 [<assembly: AssemblyProductAttribute("fss")>]
-[<assembly: AssemblyDescriptionAttribute("F# Server")>]
-[<assembly: AssemblyVersionAttribute("1.7.0")>]
-[<assembly: AssemblyFileVersionAttribute("1.7.0")>]
-[<assembly: AssemblyConfigurationAttribute("Release")>]
+[<assembly: AssemblyVersionAttribute("0.1.0")>]
+[<assembly: AssemblyMetadataAttribute("ReleaseDate","2017-03-17T00:00:00.0000000")>]
+[<assembly: AssemblyFileVersionAttribute("0.1.0")>]
+[<assembly: AssemblyInformationalVersionAttribute("0.1.0")>]
+[<assembly: AssemblyMetadataAttribute("ReleaseChannel","release")>]
+[<assembly: AssemblyMetadataAttribute("GitHash","bb8964b54bee133e9af64d316dc2cfee16df7f72")>]
 do ()
 
 module internal AssemblyVersionInformation =
     let [<Literal>] AssemblyTitle = "fss"
     let [<Literal>] AssemblyProduct = "fss"
-    let [<Literal>] AssemblyDescription = "F# Server"
-    let [<Literal>] AssemblyVersion = "1.7.0"
-    let [<Literal>] AssemblyFileVersion = "1.7.0"
-    let [<Literal>] AssemblyConfiguration = "Release"
+    let [<Literal>] AssemblyVersion = "0.1.0"
+    let [<Literal>] AssemblyMetadata_ReleaseDate = "2017-03-17T00:00:00.0000000"
+    let [<Literal>] AssemblyFileVersion = "0.1.0"
+    let [<Literal>] AssemblyInformationalVersion = "0.1.0"
+    let [<Literal>] AssemblyMetadata_ReleaseChannel = "release"
+    let [<Literal>] AssemblyMetadata_GitHash = "bb8964b54bee133e9af64d316dc2cfee16df7f72"

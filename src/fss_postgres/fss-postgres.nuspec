@@ -6,13 +6,13 @@
     <title>$title$</title>
     <authors>$author$</authors>
     <owners>$author$</owners>
-    <licenseUrl>http://www.apache.org/licenses/LICENSE-2.0</licenseUrl>
+    <license>Apache-2.0</license>
     <projectUrl>https://github.com/daz10000/fss</projectUrl>
     <requireLicenseAcceptance>false</requireLicenseAcceptance>
     <description>$description$</description>
     <releaseNotes></releaseNotes>
     <copyright>Copyright 2014</copyright>
-    <tags>Fss WebServer Postgres wrapper</tags>
+    <tags>fss Postgres ORM</tags>
   </metadata>
 </package>
 

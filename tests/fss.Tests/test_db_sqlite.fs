@@ -62,7 +62,7 @@ let getT4a() = { id = Some 1L ; age = Some(40L) ; first = Some "wilma" ; last = 
 let getT4b() = { id = Some 2L ; age = None ; first = None ; last = None ; rate = None ; happy = None}
 
 let createT10SQL = """
-create table test10 (
+create table if not exists test10 (
     lower int NOT NULL,
     Upper int NOT NULL,
     aMixed int NOT NULL
@@ -76,12 +76,12 @@ let confFile = "connection_sqlite.txt"
 let getConnString() =
     if not (File.Exists(confFile)) then
         failwithf "ERROR: expected %s file with connstring" confFile
-    else 
+    else
         System.IO.File.ReadAllText(confFile)
 
 // reusable primitives for testing
 let gc() = new DynamicSqlConnection(getConnString())
-let drop table (conn:DynamicSqlConnection)  = table |> sprintf "drop table if exists %s" 
+let drop table (conn:DynamicSqlConnection)  = table |> sprintf "drop table if exists %s"
                                                 |> conn.ExecuteScalar |> ignore
 
 let createT1 (conn:DynamicSqlConnection) = conn.ExecuteScalar(createT1SQL) |> ignore
@@ -89,22 +89,23 @@ let createT2 (conn:DynamicSqlConnection) = conn.ExecuteScalar(createT2SQL) |> ig
 let createT3 (conn:DynamicSqlConnection) = conn.ExecuteScalar(createT3SQL) |> ignore
 let createT4 (conn:DynamicSqlConnection) = conn.ExecuteScalar(createT4SQL) |> ignore
 let createT10 (conn:DynamicSqlConnection) = conn.ExecuteScalar(createT10SQL) |> ignore
-    
+
 
 let setupT1 (conn:DynamicSqlConnection) = drop "test1" conn ; createT1 conn
 let setupT2 (conn:DynamicSqlConnection) = drop "test2" conn ; createT2 conn
 let setupT3 (conn:DynamicSqlConnection) = drop "test3" conn ; createT3 conn
 let setupT4 (conn:DynamicSqlConnection) = drop "test4" conn ; createT4 conn
-let setupT10 (conn:DynamicSqlConnection) = drop "test10" conn ; createT10 conn
+// let setupT10 (conn:DynamicSqlConnection) = drop "test10" conn ; createT10 conn
+let setupT10 (conn:DynamicSqlConnection) = createT10 conn
 
 
 [<TestFixture>]
-type TestSQLiteBasic() = class     
-    
+type TestSQLiteBasic() = class
+
 
     [<Test>]
     member x.Test001ConnectionDotTxtPresent() =
-        Assert.IsTrue(File.Exists(confFile))        
+        Assert.IsTrue(File.Exists(confFile))
 
     [<Test>]
     member x.Test002GetConnString() =
@@ -150,6 +151,7 @@ type TestSQLiteBasic() = class
     member x.Test010SingleSerialInsertWithCheck() =
         use conn = gc()
         setupT2 conn
+        conn.Reload()
         let t1a = getT1a()
         conn.InsertOne(t1a,"test2",ignoredColumns=["id" ; "rate"]) |> ignore
         Assert.GreaterOrEqual(conn.ExecuteScalar "select rate from test2 where first = 'fred'" :?> float,998.9)
@@ -159,6 +161,7 @@ type TestSQLiteBasic() = class
     member x.Test030InsertNullableSimple() =
         use conn = gc()
         setupT3 conn
+        conn.Reload()
         let t3a = getT3a()
         conn.InsertOne(t3a,ignoredColumns=["id"]) |> ignore
 
@@ -195,6 +198,7 @@ type TestSQLiteBasic() = class
     member x.Test034InsertQueryAllNull() =
         use conn = gc()
         setupT4 conn
+        conn.Reload()
         let t4a = getT4a()
         let t4b = getT4b()
         conn.InsertMany ([ t4a ; t4b ],ignoredColumns=["id"]) |> ignore
@@ -216,21 +220,23 @@ type TestSQLiteBasic() = class
 //        conn.Logfile <- "dblog.txt"
 //        setupT4 conn
 //        conn.InsertOne<Test4,int>(t4a,ignoredColumns=["id"]) |> ignore
-       
+
 end
 [<TestFixture>]
 type TestCase() = class
     let conn = gc()
-    do
-        use conn = gc()
+    let setup10() =
         setupT10 conn
         conn.Reload()
+    do
+        setup10()
 
     let cleanTable() =
         conn.ExecuteScalar("delete from test10") |> ignore
 
     [<Test>]
     member x.Test200UpperCaseCols() =
+        setup10()
         cleanTable()
         conn.InsertOne(getT10a()) |> ignore
 end
@@ -240,9 +246,9 @@ end
 type TestTransactions() = class
     let conn = gc()
     do
-        use conn = gc()
+        // use conn = gc()
         setupT1 conn
-        
+
     let cleanTable() =
         conn.ExecuteScalar("delete from test1") |> ignore
 
@@ -257,9 +263,9 @@ type TestTransactions() = class
 
         trans.Commit()
 
-        Assert.IsTrue(conn.ExecuteScalar "select count(*) from test1" :?> int64 = 1L) 
+        Assert.IsTrue(conn.ExecuteScalar "select count(*) from test1" :?> int64 = 1L)
         cleanTable()
-    
+
     [<Test>]
     /// Insert a row then roll transaction back to ensure it's gone
     member x.Test002SingleInsertRollback() =
@@ -271,7 +277,7 @@ type TestTransactions() = class
 
         trans.Rollback()
 
-        Assert.IsTrue(conn.ExecuteScalar "select count(*) from test1" :?> int64 = 0L) 
+        Assert.IsTrue(conn.ExecuteScalar "select count(*) from test1" :?> int64 = 0L)
         cleanTable()
 
     [<Test>]
@@ -290,7 +296,7 @@ type TestTransactions() = class
 
         Assert.IsTrue(conn.ExecuteScalar "select count(*) from test1" :?> int64 = 4L)
         cleanTable()
-    
+
     [<Test>]
     /// Insert a row then roll transaction back to ensure it's gone
     member x.Test004InsertManyRollback() =
@@ -305,7 +311,7 @@ type TestTransactions() = class
 
         trans.Rollback()
 
-        Assert.IsTrue(conn.ExecuteScalar "select count(*) from test1" :?> int64 = 0L) 
+        Assert.IsTrue(conn.ExecuteScalar "select count(*) from test1" :?> int64 = 0L)
         cleanTable()
 
     [<Test>]
@@ -325,7 +331,7 @@ type TestTransactions() = class
 
         Assert.IsTrue(conn.ExecuteScalar "select count(*) from test1" :?> int64 = 4L)
         cleanTable()
-    
+
     [<Test>]
     /// Insert a row then roll transaction back to ensure it's gone
     member x.Test006InsertManyRollback() =
@@ -342,7 +348,7 @@ type TestTransactions() = class
 
         trans.Rollback()
 
-        Assert.IsTrue(conn.ExecuteScalar "select count(*) from test1" :?> int64 = 0L) 
+        Assert.IsTrue(conn.ExecuteScalar "select count(*) from test1" :?> int64 = 0L)
         cleanTable()
     [<Test>]
     /// Insert a row then commit and check it's in there properly
@@ -354,9 +360,9 @@ type TestTransactions() = class
         trans.InsertOne(t1a) |> ignore
         trans.Commit()
 
-        Assert.IsTrue(conn.ExecuteScalar "select count(*) from test1" :?> int64 = 1L) 
+        Assert.IsTrue(conn.ExecuteScalar "select count(*) from test1" :?> int64 = 1L)
         cleanTable()
-    
+
     [<Test>]
     /// Insert a row then roll transaction back to ensure it's gone
     member x.Test008SingleInsertViaTransRollback() =
@@ -368,7 +374,7 @@ type TestTransactions() = class
 
         trans.Rollback()
 
-        Assert.IsTrue(conn.ExecuteScalar "select count(*) from test1" :?> int64 = 0L) 
+        Assert.IsTrue(conn.ExecuteScalar "select count(*) from test1" :?> int64 = 0L)
         cleanTable()
 
     [<Test>]
@@ -382,11 +388,11 @@ type TestTransactions() = class
 
         trans.Rollback()
 
-        Assert.IsTrue(conn.ExecuteScalar "select count(*) from test1" :?> int64 = 0L) 
+        Assert.IsTrue(conn.ExecuteScalar "select count(*) from test1" :?> int64 = 0L)
         cleanTable()
 
     [<Test>]
-    // Insert several rows then roll back; 
+    // Insert several rows then roll back;
     // confirm transaction isolation
     // test trans.ExecuteScalar
     member x.Test010InsertManyViaTrans() =
@@ -410,7 +416,7 @@ type TestTransactions() = class
 
     (* // not appropriate torture for sqlite
     [<Test>]
-    // Insert several rows then roll back; 
+    // Insert several rows then roll back;
     // confirm transaction isolation
     // test trans.ExecuteScalar
     // test that trans
@@ -436,7 +442,7 @@ type TestTransactions() = class
         Assert.IsTrue(conn.ExecuteScalar "SELECT COUNT(*) FROM test1" :?> int64 = 1L)
         // trans see's 4, because READCOMMIT allows us to see the commit
         // from trans2 as well as our own.
-        
+
         trans.Commit()
         Assert.IsTrue(trans.ExecuteScalar "SELECT COUNT(*) FROM test1" :?> int64 = 4L)
         // everyone should see 4 now.

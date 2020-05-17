@@ -1,15 +1,9 @@
 #!/usr/bin/env bash
-# to properly set Travis permissions: https://stackoverflow.com/questions/33820638/travis-yml-gradlew-permission-denied
-# git update-index --chmod=+x fake.sh
-# git commit -m "permission access for travis"
 
 set -eu
 set -o pipefail
 
-dotnet restore build.proj
+echo "Restoring dotnet tools..."
+dotnet tool restore
 
-if [ ! -f build.fsx ]; then
-    fake run init.fsx
-fi
-
-fake build $@
+PAKET_SKIP_RESTORE_TARGETS=true FAKE_DETAILED_ERRORS=true dotnet fake build -t "$@"
