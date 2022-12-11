@@ -2,6 +2,7 @@
 
 open System.IO
 open System.Data
+open MySql.Data
 open MySql.Data.MySqlClient
 
 

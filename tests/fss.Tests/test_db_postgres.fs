@@ -3,6 +3,7 @@ open NUnit.Framework
 
 open Fss.Data.Postgres
 open System.IO
+open Shared
 open System
 
 let createT1SQL = """
@@ -121,13 +122,7 @@ type Test10 = { lower : int64 ; Upper : int64 ; aMixed : int64}
 
 let t10a = { lower = 9L ; Upper = 900L ; aMixed = 90L}
 
-
-
-let getConnString() =
-    if not (File.Exists("connection_postgres.txt")) then
-        failwithf "ERROR: expected connection_postgres.txt file with connstring"
-    else 
-        System.IO.File.ReadAllText("connection_postgres.txt")
+let getConnString() = getConnStringGeneral "connection_postgres.txt"
 
 // reusable primitives for testing
 let gc() = 
@@ -167,9 +162,11 @@ let setupT10 (conn:DynamicSqlConnection) = drop "test10" conn ; createT10 conn
 type TestPGDbBasic() = class     
     
 
-    [<Test>]
-    member x.Test001ConnectionDotTxtPresent() =
-        Assert.IsTrue(File.Exists("connection_postgres.txt"))        
+    // We have code for finding the conn string and opening it, so directky
+    // opening the base path is not so useful
+    // [<Test>]
+    // member x.Test001ConnectionDotTxtPresent() =
+    //     Assert.IsTrue(File.Exists("connection_postgres.txt"))        
 
     [<Test>]
     member x.Test002GetConnString() =
