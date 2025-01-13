@@ -1,12 +1,12 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
-    <TargetFramework>netstandard2.0</TargetFramework>
+    <TargetFramework>net8.0</TargetFramework>
     <AutoGenerateBindingRedirects>true</AutoGenerateBindingRedirects>
   </PropertyGroup>
   <ItemGroup>
     <Compile Include="version.fs" />
-    <Compile Include="../Common/AssemblyInfo.fs" />
+    <Compile Include="AssemblyInfo.fs" />
     <Compile Include="..\fss\pool.fs" />
     <Compile Include="..\fss\db_common.fs" />
     <Compile Include="db_sqlite.fs" />

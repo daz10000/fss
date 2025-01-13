@@ -4,16 +4,16 @@ open System.Reflection
 
 [<assembly: AssemblyTitleAttribute("fss_postgres")>]
 [<assembly: AssemblyProductAttribute("fss")>]
-[<assembly: AssemblyDescriptionAttribute("F# Server")>]
-[<assembly: AssemblyVersionAttribute("1.6.1")>]
-[<assembly: AssemblyFileVersionAttribute("1.6.1")>]
-[<assembly: AssemblyConfigurationAttribute("Release")>]
+[<assembly: AssemblyDescriptionAttribute("F# server and db wrapper")>]
+[<assembly: AssemblyVersionAttribute("2.0.0")>]
+[<assembly: AssemblyInformationalVersionAttribute("1e2f0e")>]
+[<assembly: AssemblyFileVersionAttribute("2.0.0")>]
 do ()
 
 module internal AssemblyVersionInformation =
     let [<Literal>] AssemblyTitle = "fss_postgres"
     let [<Literal>] AssemblyProduct = "fss"
-    let [<Literal>] AssemblyDescription = "F# Server"
-    let [<Literal>] AssemblyVersion = "1.6.1"
-    let [<Literal>] AssemblyFileVersion = "1.6.1"
-    let [<Literal>] AssemblyConfiguration = "Release"
+    let [<Literal>] AssemblyDescription = "F# server and db wrapper"
+    let [<Literal>] AssemblyVersion = "2.0.0"
+    let [<Literal>] AssemblyInformationalVersion = "1e2f0e"
+    let [<Literal>] AssemblyFileVersion = "2.0.0"

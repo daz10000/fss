@@ -1,3 +1,7 @@
+### v2.0.0 -- Jan 12th 2025
+* MNT: ported to net8
+* FEA: duckdb support
+
 ### v1.7.0 -- Jun 11th 2019
 * MNT: ported to netcore and fake5
 

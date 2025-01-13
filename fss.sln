@@ -43,6 +43,8 @@ Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "fss_sqlite", "src\fss_sqlit
 EndProject
 Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "Playground", "src\Playground\Playground.fsproj", "{5B6065EE-990D-45FC-A68B-41D18F613438}"
 EndProject
+Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "fss_duckdb", "src\fss_duckdb\fss_duckdb.fsproj", "{6F0FA667-A4D9-4601-92C9-1F0A320CF658}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -99,6 +101,14 @@ Global
 		{5B6065EE-990D-45FC-A68B-41D18F613438}.Release|Any CPU.Build.0 = Release|Any CPU
 		{5B6065EE-990D-45FC-A68B-41D18F613438}.Release|x86.ActiveCfg = Release|x86
 		{5B6065EE-990D-45FC-A68B-41D18F613438}.Release|x86.Build.0 = Release|x86
+		{6F0FA667-A4D9-4601-92C9-1F0A320CF658}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{6F0FA667-A4D9-4601-92C9-1F0A320CF658}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{6F0FA667-A4D9-4601-92C9-1F0A320CF658}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{6F0FA667-A4D9-4601-92C9-1F0A320CF658}.Debug|x86.Build.0 = Debug|Any CPU
+		{6F0FA667-A4D9-4601-92C9-1F0A320CF658}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{6F0FA667-A4D9-4601-92C9-1F0A320CF658}.Release|Any CPU.Build.0 = Release|Any CPU
+		{6F0FA667-A4D9-4601-92C9-1F0A320CF658}.Release|x86.ActiveCfg = Release|Any CPU
+		{6F0FA667-A4D9-4601-92C9-1F0A320CF658}.Release|x86.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
