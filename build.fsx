@@ -1,4 +1,16 @@
 
+#r "nuget: Fake.Core.Target"
+#r "nuget: Fake.DotNet.Cli"
+#r "nuget: Fake.Core.ReleaseNotes"
+#r "nuget: Fake.DotNet.AssemblyInfoFile"
+
+System.Environment.GetCommandLineArgs()
+|> Array.skip 2 // skip fsi.exe; build.fsx
+|> Array.toList
+|> Fake.Core.Context.FakeExecutionContext.Create false __SOURCE_FILE__
+|> Fake.Core.Context.RuntimeContext.Fake
+|> Fake.Core.Context.setExecutionContext
+
 open Fake.Core
 open Fake.DotNet
 open Fake.IO
@@ -31,26 +43,28 @@ Target.create "AssemblyInfo" (fun _ ->
         (AssemblyInfoFileConfig(true,false,"Fss.AssemblyInfo"))
 )
 
-Target.create "Pack" (fun _ ->
-    !! "src/**/*.*proj"
-    |> Seq.iter (fun proj ->
-                    let folder = System.IO.Path.GetDirectoryName proj
-                    printfn "Packing %s" proj
-                    Fake.DotNet.Paket.pack (fun p ->
-                        { p with
-                            ToolPath = ".tool/paket.exe"
-                            WorkingDir = folder
-                            BuildConfig = configuration
-                            Version = release.NugetVersion
-                            ReleaseNotes = System.String.Join("\n",release.Notes) // Fake.Core.String release.Notes
-                            OutputPath = "."
-                        }) 
-    ) // end iteration over projects
-) // end pack target
+// Target.create "Pack" (fun _ ->
+//     !! "src/**/*.*proj"
+//     |> Seq.iter (fun proj ->
+//                     let folder = System.IO.Path.GetDirectoryName proj
+//                     printfn "Packing %s" proj
+//                     Fake.DotNet.Paket.pack (fun p ->
+//                         { p with
+//                             ToolPath = ".tool/paket.exe"
+//                             WorkingDir = folder
+//                             BuildConfig = configuration
+//                             Version = release.NugetVersion
+//                             ReleaseNotes = System.String.Join("\n",release.Notes) // Fake.Core.String release.Notes
+//                             OutputPath = "."
+//                         }) 
+//     ) // end iteration over projects
+// ) // end pack target
 
 Target.create "Build" (fun _ ->
     !! "src/**/*.*proj"
-    |> Seq.iter (DotNet.build id)
+    |> Seq.iter (fun proj -> 
+        printfn $"building %s{proj}"
+        DotNet.build id proj)
 )
 
 // Copies binaries from default VS location to expected bin folder
@@ -83,8 +97,8 @@ Target.create "All" ignore
   ==> "AssemblyInfo"
   ==> "Build"
   ==> "RunTests"
-  ==> "Pack"
-  ==> "CopyBinaries"
+//   ==> "Pack"
+//   ==> "CopyBinaries"
   ==> "All"
 
 Target.runOrDefault "All"
