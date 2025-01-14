@@ -125,11 +125,13 @@ let t10a = { lower = 9L ; Upper = 900L ; aMixed = 90L}
 let getConnString() = getConnStringGeneral "connection_postgres.txt"
 
 // reusable primitives for testing
-let gc() = 
-    Npgsql.NpgsqlConnection.UnmapEnumGlobally<Mood>()
+let gc() =
+    failwith "TODO fix below:"
+    //Npgsql.NpgsqlConnection.UnmapEnumGlobally<Mood>()
     new DynamicSqlConnection(getConnString(),4)
-let gcWithEnumRegister() = 
-    Npgsql.NpgsqlConnection.MapEnumGlobally<Mood>()
+let gcWithEnumRegister() =
+    failwith "TODO fix below:"
+    //Npgsql.NpgsqlConnection.MapEnumGlobally<Mood>()
     new DynamicSqlConnection(getConnString(),4)
 let drop table (conn:DynamicSqlConnection)  = table |> sprintf "drop table if exists %s" 
                                                 |> conn.ExecuteScalar |> ignore
@@ -367,7 +369,8 @@ type TestEnums() = class
         setupE1 conn
         createT6 conn
         conn.Reload() // Need to reopen after mapping
-        Npgsql.NpgsqlConnection.MapEnumGlobally<Mood>()
+        // TODO fix below:
+        //Npgsql.NpgsqlConnection.MapEnumGlobally<Mood>()
 
         conn.Reload()
     /// drop enum and table
