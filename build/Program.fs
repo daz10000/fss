@@ -44,7 +44,7 @@ let authors = [ "Darren Platt"; "Chris Macklin"]
 let tags = "GSL amyris compiler demetrix"
 
 // File system information
-let solutionFile  = "GslCore.sln"
+let solutionFile  = "Fss.sln"
 
 // Pattern specifying assemblies to be tested using NUnit
 let testAssemblies = "tests/**/bin/Release/netcoreapp2.0/*Tests*.dll"
@@ -55,7 +55,7 @@ let gitOwner = "Update GitHome in build.fsx"
 let gitHome = sprintf "%s/%s" "https://github.com" gitOwner
 
 // The name of the project on GitHub
-let gitName = "GslCore"
+let gitName = "fss"
 
 let gitRaw = Environment.environVarOrDefault "gitRaw" "https://raw.githubusercontent.com/Update GitHome in build.fsx"
 
@@ -139,8 +139,8 @@ let initTargets () =
         Shell.cleanDirs
             [   "bin"
                 "temp"
-                "src/GslCore/bin"
-                "tests/GslCore.Tests/bin" ]
+                "src/*/bin"
+                "tests/fss.Tests/bin" ]
     )
 
     // --------------------------------------------------------------------------------------
@@ -166,7 +166,7 @@ let initTargets () =
         DotNet.test
             (fun parameters ->
                 { parameters with Configuration = DotNet.BuildConfiguration.Release })
-            "tests/GslCore.Tests"
+            "tests/Fss.Tests"
     )
 
     // --------------------------------------------------------------------------------------

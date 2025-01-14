@@ -126,13 +126,15 @@ let getConnString() = getConnStringGeneral "connection_postgres.txt"
 
 // reusable primitives for testing
 let gc() =
-    failwith "TODO fix below:"
-    //Npgsql.NpgsqlConnection.UnmapEnumGlobally<Mood>()
     new DynamicSqlConnection(getConnString(),4)
 let gcWithEnumRegister() =
-    failwith "TODO fix below:"
-    //Npgsql.NpgsqlConnection.MapEnumGlobally<Mood>()
-    new DynamicSqlConnection(getConnString(),4)
+    // Npgsql.NpgsqlConnection.MapEnumGlobally<Mood>()
+    task {
+        let dataSourceBuilder = new Npgsql.NpgsqlDataSourceBuilder();
+        dataSourceBuilder.MapEnum<Mood>() |> ignore
+        use dataSource = dataSourceBuilder.Build()
+        return new DynamicSqlConnection(getConnString(),4)
+    } |> Async.AwaitTask |> Async.RunSynchronously
 let drop table (conn:DynamicSqlConnection)  = table |> sprintf "drop table if exists %s" 
                                                 |> conn.ExecuteScalar |> ignore
 
