@@ -2,23 +2,6 @@
 // FAKE build script
 // --------------------------------------------------------------------------------------
 
-// #r "paket: groupref netcorebuild//"
-// #if FAKE
-// #r "paket:
-// nuget Fake.Api.GitHub
-// nuget Fake.DotNet.Cli
-// nuget Fake.DotNet.Paket
-// nuget Fake.DotNet.AssemblyInfoFile
-// nuget Fake.DotNet.Testing.Expecto
-// nuget Fake.Core.Process
-// nuget Fake.Core.String
-// nuget Fake.Core.UserInput
-// nuget Fake.Core.ReleaseNotes
-// nuget Fake.IO.FileSystem
-// nuget Fake.Tools.Git
-// nuget Fake.Core.SemVer
-// nuget Fake.Core.Target //"
-// #endif
 
 open System
 open System.IO
@@ -31,10 +14,6 @@ open Fake.Tools.Git
 open Fake.IO.Globbing.Operators
 open Fake.IO.FileSystemOperators
 open Fake.Core.TargetOperators
-//#if !FAKE
-//#load ".fake/build.fsx/intellisense.fsx"
-//#r "netstandard"
-//#endif
 
 // --------------------------------------------------------------------------------------
 // START TODO: Provide project-specific details below
@@ -174,7 +153,9 @@ let initTargets () =
         |> Array.iter (fun project ->
             project
             |> DotNet.build (fun buildOptions ->
+                
                 { buildOptions with
+                    MSBuildParams = { MSBuild.CliArguments.Create() with DisableInternalBinLog = true }                    
                     Configuration = DotNet.BuildConfiguration.Release })))
 
 
