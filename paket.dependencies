@@ -31,7 +31,12 @@ group Fake
   framework: net8.0, netstandard2.0, netstandard2.1
   storage:none
     
-  nuget Fake.Core.Target ~> 6
-  nuget Fake.DotNet.Cli ~> 6
-  nuget Fake.Core.ReleaseNotes ~> 6
-  nuget Fake.DotNet.AssemblyInfoFile ~> 6
+  nuget Fake.Core.Target
+  nuget Fake.DotNet.Cli
+  nuget Fake.Core.ReleaseNotes
+  nuget Fake.DotNet.AssemblyInfoFile
+  nuget Fake.IO.FileSystem
+  nuget Fake.Tools.Git
+  nuget Fake.DotNet.Paket
+  nuget Fake.Api.GitHub
+  nuget Fake.Core.UserInput

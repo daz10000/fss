@@ -1,17 +1,11 @@
-group netcorebuild
+group Fake
 
-Fake.Api.GitHub
-Fake.DotNet.Cli
-Fake.DotNet.Paket
-Fake.DotNet.AssemblyInfoFile
-Fake.DotNet.Testing.Expecto
-Fake.Core.Process
-Fake.Core.String
-Fake.Core.UserInput
+Fake.Core.Target
+nuget Fake.DotNet.Cli
 Fake.Core.ReleaseNotes
+Fake.DotNet.AssemblyInfoFile
 Fake.IO.FileSystem
 Fake.Tools.Git
-Fake.Core.SemVer
-Fake.Core.Target
-#Microsoft.Build
-#Microsoft.Build.Framework
+Fake.DotNet.Paket
+Fake.Api.GitHub
+Fake.Core.UserInput
