@@ -1,7 +1,0 @@
-C:\extproj\fss\Fss-MsSql\bin\Debug\Fss_MsSql.XML
-C:\extproj\fss\Fss-MsSql\bin\Debug\fss_mssql.dll
-C:\extproj\fss\Fss-MsSql\bin\Debug\fss_mssql.pdb
-C:\extproj\fss\Fss-MsSql\bin\Debug\FSharp.Core.dll
-C:\extproj\fss\Fss-MsSql\bin\Debug\FSharp.Core.xml
-C:\extproj\fss\Fss-MsSql\obj\Debug\fss_mssql.dll
-C:\extproj\fss\Fss-MsSql\obj\Debug\fss_mssql.pdb
