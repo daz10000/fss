@@ -1,0 +1,11 @@
+group Fake
+
+Fake.Core.Target
+nuget Fake.DotNet.Cli
+Fake.Core.ReleaseNotes
+Fake.DotNet.AssemblyInfoFile
+Fake.IO.FileSystem
+Fake.Tools.Git
+Fake.DotNet.Paket
+Fake.Api.GitHub
+Fake.Core.UserInput

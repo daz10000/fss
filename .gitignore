@@ -39,7 +39,6 @@ src/fss_mysql/obj
 [Dd]ebug/
 [Rr]elease/
 x64/
-build/
 [Bb]in/
 [Oo]bj/
 
@@ -213,3 +212,5 @@ docs/content/license.md
 docs/content/release-notes.md
 .fake
 docs/tools/FSharp.Formatting.svclog
+.idea
+**/AssemblyInfo.fs
