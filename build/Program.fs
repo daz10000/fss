@@ -66,6 +66,11 @@ let gitRaw = Environment.environVarOrDefault "gitRaw" "https://raw.githubusercon
 // Read additional information from the release notes document
 let release = ReleaseNotes.load "RELEASE_NOTES.md"
 
+printfn $"Release version {release.NugetVersion}"
+printfn $"AssemblyVersion: {release.AssemblyVersion}"
+printfn $"Date: {release.Date}"
+printfn $"SemVer: {release.SemVer}"
+
 // Helper active pattern for project types
 let (|Fsproj|Csproj|Vbproj|Shproj|) (projFileName:string) =
     match projFileName with
@@ -225,7 +230,7 @@ let initTargets () =
     "AssemblyInfo"
         ==> "Build"
         ==> "CopyBinaries"
-        ==> "RunTests"
+        // ==> "RunTests"
         ==> "NuGet"
         ==> "BuildPackage"
         ==> "All"

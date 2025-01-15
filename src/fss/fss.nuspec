@@ -11,8 +11,8 @@
     <requireLicenseAcceptance>false</requireLicenseAcceptance>
     <description>$description$</description>
     <releaseNotes></releaseNotes>
-    <copyright>Copyright 2014-2016</copyright>
-    <tags>Fss WebServer FSharp jinja2</tags>
+    <copyright>Copyright 2014-2025</copyright>
+    <tags>Fss WebServer FSharp jinja2 duckdb postgres sqlite</tags>
   </metadata>
 </package>
 

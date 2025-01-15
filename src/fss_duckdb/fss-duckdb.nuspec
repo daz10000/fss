@@ -11,7 +11,8 @@
     <requireLicenseAcceptance>false</requireLicenseAcceptance>
     <description>$description$</description>
     <releaseNotes></releaseNotes>
-    <copyright>Copyright 2014-2024</copyright>
+    <copyright>Copyright 2014-2025</copyright>
+    <tags>Fss FSharp duckdb </tags>
     <tags>Fss duckdb wrapper</tags>
   </metadata>
 </package>
