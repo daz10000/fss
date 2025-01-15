@@ -4,14 +4,14 @@ open System.IO
 open DuckDB.NET.Data
 open System.Data
 
-/// Postgres database wrapper.  Independent of other Fss pieces,
+/// Duckdb database wrapper.  Independent of other Fss pieces,
 /// can be omitted along with System.Data and NPgsql dependencies for a smaller compilation unit
 /// or used standalone from other Fss pieces.
 /// Credit to Thomas Petricek for the original dynamic operator concept 
 
-module Postgres = 
+module DuckDB = 
 
-    type PgCustomizations() =  class
+    type DuckDBCustomizations() =  class
         interface Fss.Data.Common.Customization<DuckDBParameter,DuckDBConnection> with
             member x.sequenceMechanism() = Fss.Data.Common.RETURNS_CLAUSE
             member x.needsKeepAlive() = true
@@ -28,6 +28,7 @@ module Postgres =
                     ()
                     //DuckDBConnection.ClearPool(conn)
             member x.getSearchPath(conn:DuckDBConnection) =
+		(*
                 use command : DuckDBCommand = conn.CreateCommand()
                 command.CommandText <- "show search_path"
                 let searchPath = command.ExecuteScalar( ) :?> string
@@ -44,6 +45,8 @@ module Postgres =
                                                 )
                                 |> List.ofArray
                 schemas
+		*)
+		[]
 
             member x.loadColDetail(conn:DuckDBConnection) =
                
@@ -123,6 +126,6 @@ module Postgres =
     end
 
     type ISqlConnection = Fss.Data.Common.ISqlConnection
-    type DynamicSqlConnection = Fss.Data.Common.DynamicSqlConnection<DuckDBConnection,DuckDBParameter,PgCustomizations>
-    type DynamicSqlTransaction = Fss.Data.Common.DynamicSqlTransaction<DuckDBParameter,DuckDBConnection,PgCustomizations>
+    type DynamicSqlConnection = Fss.Data.Common.DynamicSqlConnection<DuckDBConnection,DuckDBParameter,DuckDBCustomizations>
+    type DynamicSqlTransaction = Fss.Data.Common.DynamicSqlTransaction<DuckDBParameter,DuckDBConnection,DuckDBCustomizations>
 
