@@ -28,7 +28,7 @@ module DuckDB =
                     ()
                     //DuckDBConnection.ClearPool(conn)
             member x.getSearchPath(conn:DuckDBConnection) =
-		(*
+                (*
                 use command : DuckDBCommand = conn.CreateCommand()
                 command.CommandText <- "show search_path"
                 let searchPath = command.ExecuteScalar( ) :?> string
@@ -45,8 +45,9 @@ module DuckDB =
                                                 )
                                 |> List.ofArray
                 schemas
-		*)
-		[]
+                *)
+                // duckdb has no concept of search path apparently
+                []
 
             member x.loadColDetail(conn:DuckDBConnection) =
                
