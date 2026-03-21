@@ -7,24 +7,24 @@
 open System.IO
 open System
 open System.Data
-open System.Data.SQLite
+open Microsoft.Data.Sqlite
 
 
 module SQLite = 
 
     type SQLiteCustomizations() =  class
-        interface Fss.Data.Common.Customization<SQLiteParameter,SQLiteConnection> with
-            member x.reloadTypes (_:SQLiteConnection) =
+        interface Fss.Data.Common.Customization<SqliteParameter,SqliteConnection> with
+            member x.reloadTypes (_:SqliteConnection) =
                 ()
-            member x.reopenConnection(conn:SQLiteConnection) = 
-                SQLiteConnection.ClearPool(conn)
+            member x.reopenConnection(conn:SqliteConnection) = 
+                SqliteConnection.ClearPool(conn)
 
-            member x.getSearchPath(_:SQLiteConnection) = ["sqlite_default_schema"]
+            member x.getSearchPath(_:SqliteConnection) = ["main"]
 
             /// how does sqlite retrieve the last serial value for an insert?
             member x.sequenceMechanism() = Fss.Data.Common.SQL_STMT("select last_insert_rowid()")
             member x.needsKeepAlive() = false
-            member x.loadColDetail(conn:SQLiteConnection) =
+            member x.loadColDetail(conn:SqliteConnection) =
                 let schema = conn.GetSchema("Columns")
                 let schemaCol = schema.Columns.["TABLE_SCHEMA"].Ordinal
                 let tableCol = schema.Columns.["TABLE_NAME"].Ordinal
@@ -40,7 +40,7 @@ module SQLite =
                                             relName = (row.[tableCol] :?> string).ToLower()
                                             cname = row.[colCol] :?> string
                                             ctype = row.[dataTypeCol] :?> string
-                                            cpos =  row.[ordinalPositionCol] :?> int32 |> int16
+                                            cpos =  System.Convert.ToInt16(row.[ordinalPositionCol])
                                             cNotNull = (row.[isNullableCol] :?> bool) |> not
                                             isPK= (row.[isPK] :?> bool) 
                                             typType = 'x'
@@ -54,6 +54,6 @@ module SQLite =
     end
 
     type ISqlConnection = Fss.Data.Common.ISqlConnection
-    type DynamicSqlConnection = Fss.Data.Common.DynamicSqlConnection<SQLiteConnection,SQLiteParameter,SQLiteCustomizations>
-    type DynamicSqlTransaction = Fss.Data.Common.DynamicSqlTransaction<SQLiteParameter,SQLiteConnection,SQLiteCustomizations>
+    type DynamicSqlConnection = Fss.Data.Common.DynamicSqlConnection<SqliteConnection,SqliteParameter,SQLiteCustomizations>
+    type DynamicSqlTransaction = Fss.Data.Common.DynamicSqlTransaction<SqliteParameter,SqliteConnection,SQLiteCustomizations>
 
