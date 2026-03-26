@@ -1,6 +1,6 @@
 FSharp.Core
 group Build
-System.Data.SQLite
+Microsoft.Data.Sqlite
 group Test
 Npgsql
 MySql.Data
