@@ -1,12 +1,16 @@
 F# Records for SQL
 =============================
 
-Currently supports only Postgres
+Currently supports Postgres, SQLite, DuckDb - mysql is retired
 
 Reading from SQL to an F# record
 
 open FSharp.Data.Sql
 
+// duckdb example
+use db = new DynamicSqlConnection("Data Source=:memory:")
+
+// general case
 use db = new DynamicSqlConnection(connString)
 let teamClues = db.Query<TeamClue>  "
                 SELECT  t.name as team,a.teamid as teamid, clue,d.created as 
