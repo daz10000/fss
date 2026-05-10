@@ -214,3 +214,4 @@ docs/content/release-notes.md
 docs/tools/FSharp.Formatting.svclog
 .idea
 **/AssemblyInfo.fs
+build/Program.fs.lock
