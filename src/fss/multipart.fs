@@ -1,4 +1,4 @@
-﻿namespace Fss
+namespace Fss
 
 module Multipart =
     type FormPart = { header:Map<string,string> ; body : byte [] ; contentType : string option}
@@ -84,7 +84,7 @@ module Multipart =
                             //  BOUNDARYBOUNDARY-- (can have CRLF on end still but this marks the end)
                             //                   ^
                             //                    L
-                            if startNextBoundary<l-border.Length-2 &&
+                            if startNextBoundary<=l-border.Length-2 &&
                                 bytes.[startNextBoundary+border.Length] = 45uy && bytes.[startNextBoundary+border.Length+1] = 45uy then
                                     () // DONE - hit end
                             else 

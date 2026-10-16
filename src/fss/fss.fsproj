@@ -1,12 +1,10 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
 <Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
-    <TargetFramework>net10.0</TargetFramework>
-    <AutoGenerateBindingRedirects>true</AutoGenerateBindingRedirects>
+    <PackageId>fss</PackageId>
+    <Description>Legacy lightweight F# HTTP server with a small Jinja2-style templating engine. For new projects prefer ASP.NET Core; the fss database wrappers (fss_duckdb, fss_postgres, fss_sqlite) do not depend on this package.</Description>
+    <PackageTags>fsharp;webserver;http;jinja2;templates</PackageTags>
   </PropertyGroup>
   <ItemGroup>
-    <Compile Include="version.fs" />
-    <Compile Include="AssemblyInfo.fs" />
     <Compile Include="json.fs" />
     <Compile Include="pool.fs" />
     <Compile Include="template.fs" />
@@ -14,9 +12,5 @@
     <Compile Include="multipart.fs" />
     <Compile Include="fss.fs" />
     <Compile Include="cookie.fs" />
-    <None Include="paket.references" />
-    <None Include="paket.template" />
-    <Content Include="App.config" />
   </ItemGroup>
-  <Import Project="..\..\.paket\Paket.Restore.targets" />
 </Project>

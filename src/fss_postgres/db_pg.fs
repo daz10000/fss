@@ -1,4 +1,4 @@
-﻿namespace Fss.Data
+namespace Fss.Data
 
 /// Postgres database wrapper.  Independent of other Fss pieces,
 /// can be omitted along with System.Data and NPgsql dependencies for a smaller compilation unit
@@ -8,12 +8,37 @@ open System.IO
 open Npgsql
 open System.Data
 
-module Postgres = 
+module Postgres =
+
+    /// Data sources registered with registerDataSource, keyed by exact connection string
+    let private dataSources = System.Collections.Concurrent.ConcurrentDictionary<string, NpgsqlDataSource>()
+
+    /// Npgsql 7+ configures type mappings (Postgres enums, composite types, plugins such as
+    /// NodaTime or NetTopologySuite) on an NpgsqlDataSource rather than globally. Register a
+    /// configured data source for a connection string, *before* creating a DynamicSqlConnection with
+    /// that exact string, and its pooled connections are opened from the data source.
+    ///
+    ///     Postgres.registerDataSource connStr (fun b -> b.MapEnum<Mood>("mood") |> ignore) |> ignore
+    ///     use db = new Postgres.DynamicSqlConnection(connStr)
+    let registerDataSource (connStr:string) (configure: NpgsqlDataSourceBuilder -> unit) : NpgsqlDataSource =
+        let builder = NpgsqlDataSourceBuilder(connStr)
+        configure builder
+        let ds = builder.Build()
+        dataSources.[connStr] <- ds
+        ds
 
     type PgCustomizations() =  class
         interface Fss.Data.Common.Customization<NpgsqlParameter,NpgsqlConnection> with
             member x.sequenceMechanism() = Fss.Data.Common.RETURNS_CLAUSE
             member x.needsKeepAlive() = true
+            member x.parameterPrefix() = "@"
+            member x.openConnection(connStr, _first) =
+                match dataSources.TryGetValue connStr with
+                | true, ds -> ds.OpenConnection()
+                | _ ->
+                    let c = new NpgsqlConnection(connStr)
+                    c.Open()
+                    c
 
             member x.reloadTypes (conn:NpgsqlConnection) =
                 conn.ReloadTypes()

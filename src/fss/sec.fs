@@ -1,4 +1,4 @@
-﻿(*
+(*
    FSS - F# Web Server
    Copyright 2012 Darren Platt
 
@@ -20,17 +20,9 @@ namespace Fss
 module Sec =
     open System
     open System.Security.Cryptography
-    let rng = new System.Random()
-
-    /// Make a random string.  Might want to add other sources of noise into this to really mix things up in a robust implementation
+    /// Make a random 256-bit key as 64 lower-case hex characters, from a cryptographically secure RNG.
+    /// (Previously used System.Random, which is predictable and not thread-safe.)
     let genRandKey() =
-        use sha = new SHA256Managed()
-        sha.Initialize()
-
-        let bytes = Array.init 100 (fun _ -> 0uy)
-        rng.NextBytes(bytes)
-
-        let hash = sha.ComputeHash(bytes)
-        seq { for h in hash ->sprintf "%02x" h } |> String.concat ""
+        RandomNumberGenerator.GetBytes(32) |> Convert.ToHexString |> fun s -> s.ToLowerInvariant()
 
     let csumToString (csum:byte array) = String.Concat(csum |> Array.map (fun b -> sprintf "%02x" b))

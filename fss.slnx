@@ -1,0 +1,31 @@
+<Solution>
+  <Folder Name="/Solution Items/">
+    <File Path="Directory.Build.props" />
+    <File Path="Directory.Packages.props" />
+    <File Path="global.json" />
+    <File Path="MAINTAINERS.md" />
+    <File Path="README.md" />
+    <File Path="RELEASE_NOTES.md" />
+  </Folder>
+  <Folder Name="/src/">
+    <File Path="src/Directory.Build.props" />
+    <Project Path="src/fss/fss.fsproj" />
+    <Project Path="src/fss_duckdb/fss_duckdb.fsproj" />
+    <Project Path="src/fss_mysql/fss_mysql.fsproj" />
+    <Project Path="src/fss_postgres/fss_postgres.fsproj" />
+    <Project Path="src/fss_sqlite/fss_sqlite.fsproj" />
+  </Folder>
+  <Folder Name="/samples/">
+    <File Path="samples/README.md" />
+    <Project Path="samples/DuckDbAnalytics/DuckDbAnalytics.fsproj" />
+    <Project Path="samples/DuckDbQuickStart/DuckDbQuickStart.fsproj" />
+    <Project Path="samples/LegacyWebServer/LegacyWebServer.fsproj" />
+    <Project Path="samples/PostgresQuickStart/PostgresQuickStart.fsproj" />
+    <Project Path="samples/SqliteToDuckDb/SqliteToDuckDb.fsproj" />
+    <Project Path="samples/SqliteTodo/SqliteTodo.fsproj" />
+  </Folder>
+  <Folder Name="/tests/">
+    <File Path="tests/Directory.Build.props" />
+    <Project Path="tests/fss.Tests/fss.Tests.fsproj" />
+  </Folder>
+</Solution>

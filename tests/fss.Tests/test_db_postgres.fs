@@ -1,4 +1,4 @@
-﻿module test_db
+module test_db
 open NUnit.Framework
 
 open Fss.Data.Postgres
@@ -122,19 +122,18 @@ type Test10 = { lower : int64 ; Upper : int64 ; aMixed : int64}
 
 let t10a = { lower = 9L ; Upper = 900L ; aMixed = 90L}
 
-let getConnString() = getConnStringGeneral "connection_postgres.txt"
+let getConnString() = requireConnString "FSS_TEST_POSTGRES" "connection_postgres.txt"
 
 // reusable primitives for testing
+/// Register an Npgsql data source that maps the F# Mood enum onto the Postgres `mood` type
+/// (Npgsql 7+ no longer supports MapEnumGlobally). Done once, before any connection is made.
+let private registered =
+    lazy (registerDataSource (getConnString()) (fun b -> b.MapEnum<Mood>("mood") |> ignore) |> ignore)
+
 let gc() =
+    registered.Force()
     new DynamicSqlConnection(getConnString(),4)
-let gcWithEnumRegister() =
-    // Npgsql.NpgsqlConnection.MapEnumGlobally<Mood>()
-    task {
-        let dataSourceBuilder = new Npgsql.NpgsqlDataSourceBuilder();
-        dataSourceBuilder.MapEnum<Mood>() |> ignore
-        use dataSource = dataSourceBuilder.Build()
-        return new DynamicSqlConnection(getConnString(),4)
-    } |> Async.AwaitTask |> Async.RunSynchronously
+let gcWithEnumRegister() = gc()
 let drop table (conn:DynamicSqlConnection)  = table |> sprintf "drop table if exists %s" 
                                                 |> conn.ExecuteScalar |> ignore
 
@@ -170,7 +169,7 @@ type TestPGDbBasic() = class
     // opening the base path is not so useful
     // [<Test>]
     // member x.Test001ConnectionDotTxtPresent() =
-    //     Assert.IsTrue(File.Exists("connection_postgres.txt"))        
+    //     Assert.That(File.Exists("connection_postgres.txt"))        
 
     [<Test>]
     member x.Test002GetConnString() =
@@ -207,7 +206,7 @@ type TestPGDbBasic() = class
         setupT1 conn
         conn.Reload()
         conn.InsertOne(t1a)
-        Assert.IsTrue(conn.ExecuteScalar "select count(*) from test1" :?> int64 = 1L) |> ignore
+        Assert.That(conn.ExecuteScalar "select count(*) from test1" :?> int64 = 1L) |> ignore
         ()
 
     [<Test>]
@@ -216,7 +215,7 @@ type TestPGDbBasic() = class
         setupT5 conn
         
         conn.InsertOne(t5a)
-        Assert.IsTrue(conn.ExecuteScalar "select count(*) from test5" :?> int64 = 1L) |> ignore
+        Assert.That(conn.ExecuteScalar "select count(*) from test5" :?> int64 = 1L) |> ignore
         ()
 
 
@@ -226,7 +225,7 @@ type TestPGDbBasic() = class
         use conn = gc()
         setupT2 conn
         conn.InsertOne(t1a,"test2",ignoredColumns=["id" ; "rate"])
-        Assert.GreaterOrEqual(conn.ExecuteScalar "select rate from test2 where first = 'fred'" :?> float,998.9)
+        Assert.That((conn.ExecuteScalar "select rate from test2 where first = 'fred'" :?> float), Is.GreaterThanOrEqualTo(998.9))
 
     /// Insert a record that contains nullable fields which are defined
     [<Test>]
@@ -256,8 +255,8 @@ type TestPGDbBasic() = class
         let results : Test3 [] = conn.Query "select * from test3"  |> Array.ofSeq
 
         let (someLast,noneLast) = results |> Array.partition (fun r -> r.last.IsSome)
-        Assert.IsTrue(someLast.Length=1) |> ignore
-        Assert.IsTrue(noneLast.Length=1) |> ignore
+        Assert.That(someLast.Length=1) |> ignore
+        Assert.That(noneLast.Length=1) |> ignore
 
     [<Test>]
     member x.Test034InsertQueryAllNull() =
@@ -268,11 +267,11 @@ type TestPGDbBasic() = class
         let wilma = results.[0]
         let original = {t4a with id = wilma.id}
         let matches = wilma = original
-        Assert.IsTrue(matches)
+        Assert.That(matches)
 
         let original2 = {t4b with id = results.[1].id}
         let matches2 = original2 = results.[1]
-        Assert.IsTrue(matches2)
+        Assert.That(matches2)
 
     [<Test>]
     member x.Test050InsertOneLogged() =
@@ -290,7 +289,7 @@ type TestPGDbBasic() = class
         use comm = conn.Command "select age from test3 where last = :name"
         comm?name <- "flintstone"
         let age:int = comm.ExecuteScalar() :?> int32
-        Assert.AreEqual(age,30)
+        Assert.That((age), Is.EqualTo(30))
 
     [<Test>]
     member x.Test051QueryNullFieldWithOperator2() =
@@ -301,7 +300,7 @@ type TestPGDbBasic() = class
         use r = comm.ExecuteReader()
         r.Read() |> ignore
         let last : string option = r?last
-        Assert.AreEqual(last,Some "flintstone")
+        Assert.That((last), Is.EqualTo(Some "flintstone"))
 
     [<Test>]
     member x.Test051QueryNullFieldWithOperator3() =
@@ -312,7 +311,7 @@ type TestPGDbBasic() = class
         use r = comm.ExecuteReader()
         r.Read() |> ignore
         let last : string option = r?last
-        Assert.AreEqual(last,None)
+        Assert.That((last), Is.EqualTo(None))
        
 
     [<Test>]
@@ -327,7 +326,7 @@ type TestPGDbBasic() = class
         do
             use comm = conn.Command "select age from test7 where first = 'dino'"
             let age = comm.ExecuteScalar() :?> int32
-            Assert.AreEqual(age,4)
+            Assert.That((age), Is.EqualTo(4))
 
     [<Test>]
     member x.Test052QueryNullFieldWithNullable2() =
@@ -341,7 +340,7 @@ type TestPGDbBasic() = class
         do
             use comm = conn.Command "select first from test7 where age is null"
             let first = comm.ExecuteScalar() :?> string
-            Assert.AreEqual(first,"dino")
+            Assert.That((first), Is.EqualTo("dino"))
 
 end
 
@@ -370,11 +369,7 @@ type TestEnums() = class
         dropEnum1 conn
         setupE1 conn
         createT6 conn
-        conn.Reload() // Need to reopen after mapping
-        // TODO fix below:
-        //Npgsql.NpgsqlConnection.MapEnumGlobally<Mood>()
-
-        conn.Reload()
+        conn.Reload() // the mood type was just created: reload Npgsql's type information
     /// drop enum and table
     let dropET() =
         drop "test6" conn
@@ -418,7 +413,7 @@ type TestEnums() = class
 
         let mood :string = sprintf "select temperment::text from test6 where id = %d" (ids.[0]) |> conn.ExecuteScalar :?> string
 
-        Assert.AreEqual (mood, "happy")
+        Assert.That((mood), Is.EqualTo("happy"))
         drop "test6" conn
         dropEnum1 conn
 
@@ -447,7 +442,7 @@ type TestEnums() = class
         reader.Read()|> ignore
         let id : int = reader?id
         let y : Mood  = reader?temperment
-        Assert.AreEqual(y,Mood.happy)
+        Assert.That((y), Is.EqualTo(Mood.happy))
 
     [<Test>]
     member x.Test005EnumByOperator2() =
@@ -461,7 +456,7 @@ type TestEnums() = class
         reader.Read()|> ignore
         let id : int = reader?id
         let y : string  = reader?first
-        Assert.AreEqual(y,"wilma")
+        Assert.That((y), Is.EqualTo("wilma"))
 
     [<Test>]
     member x.Test004Query() =
@@ -472,11 +467,11 @@ type TestEnums() = class
 
         let records : Test6[] = conn.Query "select * from test6 order by id asc" |> Array.ofSeq
 
-        Assert.AreEqual(records.Length,2)
-        Assert.AreEqual("wilma",records.[0].first)
-        Assert.AreEqual("fred",records.[1].first)
-        Assert.AreEqual(Mood.happy,records.[0].temperment)
-        Assert.AreEqual(Mood.sad,records.[1].temperment)
+        Assert.That((records.Length), Is.EqualTo(2))
+        Assert.That(("wilma"), Is.EqualTo(records.[0].first))
+        Assert.That(("fred"), Is.EqualTo(records.[1].first))
+        Assert.That((Mood.happy), Is.EqualTo(records.[0].temperment))
+        Assert.That((Mood.sad), Is.EqualTo(records.[1].temperment))
 
         drop "test6" conn
         dropEnum1 conn
@@ -510,7 +505,7 @@ type TestTransactions() = class
 
         trans.Commit()
 
-        Assert.IsTrue(conn.ExecuteScalar "select count(*) from test1" :?> int64 = 1L) 
+        Assert.That(conn.ExecuteScalar "select count(*) from test1" :?> int64 = 1L) 
         cleanTable()
     
     [<Test>]
@@ -523,7 +518,7 @@ type TestTransactions() = class
 
         trans.Rollback()
 
-        Assert.IsTrue(conn.ExecuteScalar "select count(*) from test1" :?> int64 = 0L) 
+        Assert.That(conn.ExecuteScalar "select count(*) from test1" :?> int64 = 0L) 
         cleanTable()
 
     [<Test>]
@@ -536,7 +531,7 @@ type TestTransactions() = class
 
         trans.Commit()
 
-        Assert.IsTrue(conn.ExecuteScalar "select count(*) from test1" :?> int64 = 4L)
+        Assert.That(conn.ExecuteScalar "select count(*) from test1" :?> int64 = 4L)
         cleanTable()
     
     [<Test>]
@@ -549,7 +544,7 @@ type TestTransactions() = class
 
         trans.Rollback()
 
-        Assert.IsTrue(conn.ExecuteScalar "select count(*) from test1" :?> int64 = 0L) 
+        Assert.That(conn.ExecuteScalar "select count(*) from test1" :?> int64 = 0L) 
         cleanTable()
 
     [<Test>]
@@ -563,7 +558,7 @@ type TestTransactions() = class
 
         trans.Commit()
 
-        Assert.IsTrue(conn.ExecuteScalar "select count(*) from test1" :?> int64 = 4L)
+        Assert.That(conn.ExecuteScalar "select count(*) from test1" :?> int64 = 4L)
         cleanTable()
     
     [<Test>]
@@ -578,7 +573,7 @@ type TestTransactions() = class
 
         trans.Rollback()
 
-        Assert.IsTrue(conn.ExecuteScalar "select count(*) from test1" :?> int64 = 0L) 
+        Assert.That(conn.ExecuteScalar "select count(*) from test1" :?> int64 = 0L) 
         cleanTable()
     [<Test>]
     /// Insert a row then commit and check it's in there properly
@@ -589,7 +584,7 @@ type TestTransactions() = class
         trans.InsertOne(t1a)
         trans.Commit()
 
-        Assert.IsTrue(conn.ExecuteScalar "select count(*) from test1" :?> int64 = 1L) 
+        Assert.That(conn.ExecuteScalar "select count(*) from test1" :?> int64 = 1L) 
         cleanTable()
     
     [<Test>]
@@ -602,7 +597,7 @@ type TestTransactions() = class
 
         trans.Rollback()
 
-        Assert.IsTrue(conn.ExecuteScalar "select count(*) from test1" :?> int64 = 0L) 
+        Assert.That(conn.ExecuteScalar "select count(*) from test1" :?> int64 = 0L) 
         cleanTable()
 
     [<Test>]
@@ -615,7 +610,7 @@ type TestTransactions() = class
 
         trans.Rollback()
 
-        Assert.IsTrue(conn.ExecuteScalar "select count(*) from test1" :?> int64 = 0L) 
+        Assert.That(conn.ExecuteScalar "select count(*) from test1" :?> int64 = 0L) 
         cleanTable()
 
     [<Test>]
@@ -629,10 +624,10 @@ type TestTransactions() = class
         use trans = conn.StartTrans()
         trans.InsertMany([| t1b ; t1c; t1d |]) |> ignore
         // confirm that the transaction is isolated
-        Assert.IsTrue(conn.ExecuteScalar "SELECT COUNT(*) FROM test1" :?> int64 = 1L)
-        Assert.IsTrue(trans.ExecuteScalar "SELECT COUNT(*) FROM test1" :?> int64 = 4L)
+        Assert.That(conn.ExecuteScalar "SELECT COUNT(*) FROM test1" :?> int64 = 1L)
+        Assert.That(trans.ExecuteScalar "SELECT COUNT(*) FROM test1" :?> int64 = 4L)
         trans.Rollback()
-        Assert.IsTrue(conn.ExecuteScalar "SELECT COUNT(*) FROM test1" :?> int64 = 1L)
+        Assert.That(conn.ExecuteScalar "SELECT COUNT(*) FROM test1" :?> int64 = 1L)
         cleanTable()
 
     [<Test>]
@@ -647,24 +642,24 @@ type TestTransactions() = class
         trans.InsertMany([| t1b ; t1c; t1d |]) |> ignore
         trans2.InsertOne(t1a) |> ignore
         // confirm that the transaction is isolated
-        Assert.IsTrue(conn.ExecuteScalar "SELECT COUNT(*) FROM test1" :?> int64 = 0L)
+        Assert.That(conn.ExecuteScalar "SELECT COUNT(*) FROM test1" :?> int64 = 0L)
 
         let results : Test1 [] = trans.Query "select * from test1"  |> Array.ofSeq
-        Assert.IsTrue(results.Length=3)
-        Assert.IsTrue(trans.ExecuteScalar "SELECT COUNT(*) FROM test1" :?> int64 = 3L)
+        Assert.That(results.Length=3)
+        Assert.That(trans.ExecuteScalar "SELECT COUNT(*) FROM test1" :?> int64 = 3L)
 
         trans2.Commit()
 
         // the conn only sees 1 result, because only trans2 has been committed
         let results2: Test1 [] = conn.Query "select * from test1"  |> Array.ofSeq
-        Assert.IsTrue(results2.Length=1)
-        Assert.IsTrue(conn.ExecuteScalar "SELECT COUNT(*) FROM test1" :?> int64 = 1L)
+        Assert.That(results2.Length=1)
+        Assert.That(conn.ExecuteScalar "SELECT COUNT(*) FROM test1" :?> int64 = 1L)
         // trans see's 4, because READCOMMIT allows us to see the commit
         // from trans2 as well as our own.
-        Assert.IsTrue(trans.ExecuteScalar "SELECT COUNT(*) FROM test1" :?> int64 = 4L)
+        Assert.That(trans.ExecuteScalar "SELECT COUNT(*) FROM test1" :?> int64 = 4L)
         trans.Commit()
         // everyone should see 4 now.
-        Assert.IsTrue(conn.ExecuteScalar "SELECT COUNT(*) FROM test1" :?> int64 = 4L)
+        Assert.That(conn.ExecuteScalar "SELECT COUNT(*) FROM test1" :?> int64 = 4L)
         cleanTable()
 
 
@@ -673,3 +668,40 @@ type TestTransactions() = class
             drop "test1" conn
             (conn :> IDisposable).Dispose()
 end
+
+type PgPerson = { id : int ; name : string ; age : int ; email : string option }
+type PgNewPerson = { name : string ; age : int ; email : string option }
+
+/// Features added in 2.1: parameters, schema-qualified inserts, scalar/tuple queries, safe rollback
+[<TestFixture>]
+type TestPgNewFeatures() =
+    let setup (conn:DynamicSqlConnection) =
+        conn.ExecuteNonQuery """
+            drop schema if exists fss_t cascade;
+            create schema fss_t;
+            create table fss_t.person (id serial primary key, name text not null,
+                                       age integer not null check (age >= 0), email text)""" |> ignore
+    let people = [ { name = "fred" ; age = 30 ; email = Some "f@x" } ; { name = "wilma" ; age = 29 ; email = None } ]
+
+    [<Test>]
+    member _.SchemaQualifiedInsertAndParameterisedQuery() =
+        use conn = gc()
+        setup conn
+        let ids : int[] = conn.InsertMany(people, table = "fss_t.person")
+        Assert.That((ids = [| 1 ; 2 |]))
+        let r = conn.Query<PgPerson>("select * from fss_t.person where age > @a", [ "a", box 29 ]) |> List.ofSeq
+        Assert.That((r = [ { id = 1 ; name = "fred" ; age = 30 ; email = Some "f@x" } ]))
+        let counts = conn.Query<string * int64> "select name, count(*) from fss_t.person group by name order by name" |> List.ofSeq
+        Assert.That((counts = [ ("fred",1L) ; ("wilma",1L) ]))
+        Assert.That(conn.ExecuteNonQuery("update fss_t.person set age = age + 1 where name = @n", [ "@n", box "wilma" ]), Is.EqualTo 1)
+        conn.ExecuteNonQuery "drop schema fss_t cascade" |> ignore
+
+    [<Test>]
+    member _.FailedInsertManyRollsBack() =
+        use conn = new DynamicSqlConnection(getConnString(), 1)
+        setup conn
+        let bad = people @ [ { name = "bad" ; age = -1 ; email = None } ]
+        Assert.Catch(fun () -> conn.InsertMany<PgNewPerson,int>(bad, table = "fss_t.person") |> ignore) |> ignore
+        // pool of one: this would hang if the failed insert leaked its connection
+        Assert.That(conn.ExecuteScalar "select count(*) from fss_t.person", Is.EqualTo 0L)
+        conn.ExecuteNonQuery "drop schema fss_t cascade" |> ignore

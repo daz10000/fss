@@ -1,0 +1,18 @@
+version: 2
+updates:
+  - package-ecosystem: nuget
+    directory: /
+    schedule:
+      interval: monthly
+    groups:
+      test:
+        patterns: ["Microsoft.NET.Test.Sdk", "NUnit*"]
+      drivers:
+        patterns: ["DuckDB.*", "Npgsql", "Microsoft.Data.Sqlite"]
+    ignore:
+      # Deliberately pinned low so library consumers are not forced to upgrade; bump by hand.
+      - dependency-name: FSharp.Core
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: monthly

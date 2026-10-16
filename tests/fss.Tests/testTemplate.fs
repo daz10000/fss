@@ -1,4 +1,4 @@
-﻿module TestTemplate
+module TestTemplate
 
 open NUnit.Framework
 open Fss.Template
@@ -1006,3 +1006,24 @@ type Range() = class
         let page = template.Render([| ("n",box 4) |])
         sc templateExpected page
 end
+[<TestFixture>]
+type Regressions() =
+    [<Test>]
+    member __.ThreeWayAndChecksMiddleTerm() =
+        // `a and b and c` used to evaluate as `a and c`
+        let template = Template("""{% if t and f and t %}true{%else%}false{%endif%}""")
+        let page = template.Render([| ("f" , box false); ( "t",box true) |])
+        sc "false" page
+
+[<TestFixture>]
+type SecRegressions() =
+    [<Test>]
+    member __.RandKeysAreHexAndDistinct() =
+        let keys = [ for _ in 1..100 -> Fss.Sec.genRandKey() ]
+        Assert.That(keys |> List.forall (fun k -> k.Length = 64 && k |> Seq.forall System.Uri.IsHexDigit))
+        Assert.That(keys |> List.distinct |> List.length, Is.EqualTo 100)
+
+    [<Test>]
+    member __.CookieDateIsRfc1123() =
+        let d = System.DateTime(2015, 10, 21, 7, 28, 0, System.DateTimeKind.Utc)
+        Assert.That(Fss.Cookie.formatCookieDate d, Is.EqualTo "Wed, 21 Oct 2015 07:28:00 GMT")

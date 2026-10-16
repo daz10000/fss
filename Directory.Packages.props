@@ -1,0 +1,34 @@
+<Project>
+  <!--
+    NuGet Central Package Management: every PackageReference in the repo takes its version from here.
+    Project files must NOT specify Version= on PackageReference.
+    See https://learn.microsoft.com/nuget/consume-packages/central-package-management
+  -->
+  <PropertyGroup>
+    <ManagePackageVersionsCentrally>true</ManagePackageVersionsCentrally>
+    <!-- Transitive pinning lets us lift a vulnerable transitive dependency by adding a PackageVersion here. -->
+    <CentralPackageTransitivePinningEnabled>true</CentralPackageTransitivePinningEnabled>
+  </PropertyGroup>
+
+  <ItemGroup Label="Runtime">
+    <!--
+      Libraries pin a deliberately old FSharp.Core so consumers on older F# toolchains are not forced to upgrade.
+      Raising this is a (soft) breaking change for consumers.
+    -->
+    <PackageVersion Include="FSharp.Core" Version="8.0.403" />
+  </ItemGroup>
+
+  <ItemGroup Label="Database drivers">
+    <PackageVersion Include="DuckDB.NET.Data.Full" Version="1.5.6.1" />
+    <PackageVersion Include="Npgsql" Version="10.0.3" />
+    <PackageVersion Include="Microsoft.Data.Sqlite" Version="10.0.13" />
+    <!-- MySql.Data is GPL-2.0 with the Universal FOSS exception; fss_mysql is retired. -->
+    <PackageVersion Include="MySql.Data" Version="26.7.0" />
+  </ItemGroup>
+
+  <ItemGroup Label="Test">
+    <PackageVersion Include="Microsoft.NET.Test.Sdk" Version="18.11.0" />
+    <PackageVersion Include="NUnit" Version="5.0.0" />
+    <PackageVersion Include="NUnit3TestAdapter" Version="6.3.1" />
+  </ItemGroup>
+</Project>

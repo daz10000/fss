@@ -1,4 +1,4 @@
-﻿namespace Fss
+namespace Fss
 
 /// Templating library modeled loosely on jinga2
 module Template =
@@ -135,7 +135,7 @@ module Template =
     and (|ComparisonFactor|_|) = function
         | Comparison(e1,Ws(t)) ->
             let rec aux e = function
-                | 'a'::'n'::'d'::Ws(Comparison(e2,t)) -> aux (AND(e1,e2)) t
+                | 'a'::'n'::'d'::Ws(Comparison(e2,t)) -> aux (AND(e,e2)) t
                 | t -> Some(e,t)
             aux e1 t
         | _ -> None
@@ -398,7 +398,7 @@ module Template =
                 let rec aux res = function // Go till end of %} block
                                     | c::d::tl when c <> '%' || d <> '}' ->  aux (c::res) (d::tl)
                                     | '%'::'}'::tl -> Some(new string(List.rev res |> Array.ofList),tl)
-                                    | _ -> failwithf "Unexpected EOF parsing {% %} logic"   
+                                    | _ -> failwith "Unexpected EOF parsing {% %} logic"   
                 aux [] tl
             | _ -> None
         and (|Var|_|) = function

@@ -1,4 +1,67 @@
 # Release Notes
+
+## 2.1.0 - 2026-10-17
+
+Packages: fss_duckdb, fss_postgres, fss_sqlite, fss. All packages now share one version number.
+fss_mysql is retired and not published.
+
+### Bug fixes
+* BUG: fss_duckdb `InsertOne`/`InsertMany` never worked: the column metadata query returned nothing,
+  generated SQL used `:p1` parameters that DuckDB rejects, and opening a database file containing a
+  primary key threw `InvalidCastException`. Metadata now comes from `duckdb_columns()` and `duckdb_constraints()`.
+* BUG: fss_duckdb gave each pooled connection to `:memory:` its own private database. Pooled connections now share one.
+* BUG: fss_sqlite threw on every connection after the move to Microsoft.Data.Sqlite (`GetSchema("Columns")` is
+  not supported there). Metadata now comes from `pragma_table_info`.
+* BUG: `Query` took a pooled connection before the sequence was enumerated, leaking it if the sequence was never
+  read and breaking re-enumeration.
+* BUG: an exception partway through `InsertMany` left its transaction open and the connection checked out of the
+  pool. It now rolls back and releases the connection.
+* BUG: `Pool.Release` of an item that was already free looped forever while holding the pool lock (Release builds).
+  It now throws `InvalidOperationException`. The pool also no longer loses wakeups under contention.
+* BUG: the stored-procedure operator `conn?proc` returned a command that had already been disposed.
+* BUG: the keep-alive thread was a foreground thread, so a forgotten `Dispose` stopped the process from exiting.
+  It never runs for DuckDB or SQLite.
+* BUG: templates evaluated `a and b and c` as `a and c`.
+* BUG: web server: a `Response.Cookie` was sent as a `Cookie` header instead of `Set-Cookie`; error responses
+  never terminated their headers, so keep-alive clients hung; `halt()` threw on .NET 5+ (`Thread.Abort`); and the
+  accept loop grew the stack by one frame per connection.
+* BUG: `Cookie.formatCookieDate` printed the month in the minutes field.
+* BUG: multipart parsing failed when the closing boundary had no trailing CRLF.
+* BUG: fss_mysql `Query` built a record after every field instead of once per row.
+
+### Security
+* SEC: `Sec.genRandKey` used `System.Random` (predictable, not thread-safe). It now uses `RandomNumberGenerator`.
+* SEC: the web server rejects CR/LF in response headers (response splitting), and the default error page
+  HTML-encodes exception text.
+* SEC: documented that `Cookie.checkCookie` is not safe for authentication and that templates don't escape output.
+
+### Features
+* FEA: parameterised queries: `Query`, `ExecuteScalar` and the new `ExecuteNonQuery` take `[ "name", box value ]`.
+* FEA: `Query<'T>` maps to tuples (by position) and single values (`Query<int64> "select count(*) ..."`), not
+  only records. Option fields missing from the result become `None`.
+* FEA: values are converted between compatible types (e.g. int64 → int, 0/1 → bool, HUGEINT → int64,
+  DATE ↔ DateOnly, text → Guid / F# enum, BLOB stream → byte[]), with clear errors naming the column.
+* FEA: inserts accept schema-qualified table names (`table = "sales.orders"`), and a table created after the
+  connection opened is found without calling `Reload()`.
+* FEA: fss_postgres `registerDataSource` configures Npgsql type mappings (enums, plugins), replacing the
+  `MapEnumGlobally` that Npgsql removed.
+
+### Breaking changes (source compatible for typical use)
+* `Query`'s optional arguments are now `(sql, ?parameters, ?transProvided)`. Code passing `transProvided` by name
+  is unaffected.
+* `ISqlConnection.Query`/`ExecuteScalar` gained an optional `parameters` argument, and `ISqlConnection` gained
+  `ExecuteNonQuery`. Only custom implementations of `ISqlConnection` need changes.
+* `Customization` (the dialect interface) gained `openConnection` and `parameterPrefix`.
+* Reading NULL into a non-option value-type field now throws a descriptive error instead of an `ArgumentException`.
+
+### Maintenance
+* MNT: .NET 10 only, NuGet Central Package Management; Paket and FAKE removed; `fss.slnx` solution.
+* MNT: updated dependencies: DuckDB.NET 1.5.6.1, Npgsql 10, Microsoft.Data.Sqlite 10, NUnit 5. Removed the unused
+  Newtonsoft.Json dependency.
+* MNT: SourceLink, deterministic builds, symbol packages, package readmes, and the license as an SPDX expression.
+* MNT: GitHub Actions CI (Linux with Postgres, Windows, macOS) and NuGet Trusted Publishing for releases.
+* TST: DuckDB test suite; Postgres/MySQL tests skip unless `FSS_TEST_POSTGRES` / `FSS_TEST_MYSQL` are set.
+* DOC: new documentation in `docs/`, samples in `samples/`, `MAINTAINERS.md`.
 ## 2.0.0 - 2025-01-13
 * MNT: ported to net8
 * FEA: duckdb support

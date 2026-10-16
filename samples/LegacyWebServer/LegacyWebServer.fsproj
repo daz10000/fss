@@ -1,0 +1,13 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+  </PropertyGroup>
+  <ItemGroup>
+    <Compile Include="Program.fs" />
+    <None Include="templates/**" CopyToOutputDirectory="PreserveNewest" />
+  </ItemGroup>
+  <ItemGroup>
+    <!-- In your own project: <PackageReference Include="fss" Version="2.1.0" /> -->
+    <ProjectReference Include="../../src/fss/fss.fsproj" />
+  </ItemGroup>
+</Project>

@@ -1,0 +1,28 @@
+<Project>
+  <!-- Settings for the published libraries. Imports the repo-wide props first. -->
+  <Import Project="$([MSBuild]::GetPathOfFileAbove('Directory.Build.props', '$(MSBuildThisFileDirectory)../'))" />
+
+  <PropertyGroup>
+    <IsPackable>true</IsPackable>
+    <GenerateDocumentationFile>true</GenerateDocumentationFile>
+    <!-- Missing XML doc comments are not errors; we document the public surface incrementally. -->
+    <NoWarn>$(NoWarn);FS3390</NoWarn>
+
+    <PackageLicenseExpression>Apache-2.0</PackageLicenseExpression>
+    <PackageProjectUrl>https://github.com/daz10000/fss</PackageProjectUrl>
+    <RepositoryUrl>https://github.com/daz10000/fss</RepositoryUrl>
+    <RepositoryType>git</RepositoryType>
+    <PackageIcon>fss_logo.png</PackageIcon>
+    <PackageReadmeFile>README.md</PackageReadmeFile>
+    <PackageReleaseNotes>https://github.com/daz10000/fss/blob/master/RELEASE_NOTES.md</PackageReleaseNotes>
+
+    <IncludeSymbols>true</IncludeSymbols>
+    <SymbolPackageFormat>snupkg</SymbolPackageFormat>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <None Include="$(MSBuildThisFileDirectory)../docs/content/fss_logo.png" Pack="true" PackagePath="\" Visible="false" />
+    <!-- Each library folder has its own README.md which becomes the NuGet package readme. -->
+    <None Include="README.md" Pack="true" PackagePath="\" />
+  </ItemGroup>
+</Project>

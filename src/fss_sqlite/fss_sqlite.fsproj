@@ -1,17 +1,15 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
 <Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
-    <TargetFramework>net10.0</TargetFramework>
-    <AutoGenerateBindingRedirects>true</AutoGenerateBindingRedirects>
+    <PackageId>fss_sqlite</PackageId>
+    <Description>Map SQLite query results straight onto F# records, and insert F# records into SQLite tables, with no mapping code. Built on Microsoft.Data.Sqlite.</Description>
+    <PackageTags>fsharp;sqlite;sql;orm;micro-orm;records</PackageTags>
   </PropertyGroup>
   <ItemGroup>
-    <Compile Include="version.fs" />
-    <Compile Include="AssemblyInfo.fs" />
-    <Compile Include="..\fss\pool.fs" />
-    <Compile Include="..\fss\db_common.fs" />
+    <Compile Include="..\fss\pool.fs" Link="pool.fs" />
+    <Compile Include="..\fss\db_common.fs" Link="db_common.fs" />
     <Compile Include="db_sqlite.fs" />
-    <None Include="paket.references" />
-    <None Include="paket.template" />
   </ItemGroup>
-  <Import Project="..\..\.paket\Paket.Restore.targets" />
+  <ItemGroup>
+    <PackageReference Include="Microsoft.Data.Sqlite" />
+  </ItemGroup>
 </Project>

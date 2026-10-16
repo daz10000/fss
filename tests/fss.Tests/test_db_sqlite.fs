@@ -1,4 +1,4 @@
-﻿module test_db_sqlite
+module test_db_sqlite
 open NUnit.Framework
 open Shared
 
@@ -74,7 +74,15 @@ type Test10 = { lower : int64 ; Upper : int64 ; aMixed : int64}
 let t10a = { lower = 9L ; Upper = 900L ; aMixed = 90L}
 
 let connFile = "connection_sqlite.txt"
-let getConnString() = Shared.getConnStringGeneral connFile
+/// SQLite needs no server: use FSS_TEST_SQLITE / connection_sqlite.txt if present, otherwise a
+/// throwaway database file in the temp folder. (Not ":memory:" - every pooled connection would
+/// get its own private in-memory database.)
+let defaultSqliteConn =
+    lazy (sprintf "Data Source=%s" (Path.Combine(Path.GetTempPath(), sprintf "fss_test_%s.db" (Guid.NewGuid().ToString("N")))))
+let getConnString() =
+    match Shared.tryConnString "FSS_TEST_SQLITE" connFile with
+    | Some s -> s
+    | None -> defaultSqliteConn.Value
 
 // reusable primitives for testing
 let gc() = new DynamicSqlConnection(getConnString())
@@ -103,7 +111,7 @@ type TestSQLiteBasic() = class
     // opening the base path is not so useful
     // [<Test>]
     // member x.Test001ConnectionDotTxtPresent() =
-    //     Assert.IsTrue(File.Exists(connFile))        
+    //     Assert.That(File.Exists(connFile))        
 
     [<Test>]
     member x.Test002GetConnString() =
@@ -139,7 +147,7 @@ type TestSQLiteBasic() = class
         use conn = gc()
         setupT1 conn
         conn.InsertOne(t1a) |> ignore
-        Assert.IsTrue(conn.ExecuteScalar "select count(*) from test1" :?> int64 = 1L) |> ignore
+        Assert.That(conn.ExecuteScalar "select count(*) from test1" :?> int64 = 1L) |> ignore
         ()
 
     /// Test serial and default fields are provided by db
@@ -148,7 +156,7 @@ type TestSQLiteBasic() = class
         use conn = gc()
         setupT2 conn
         conn.InsertOne(t1a,"test2",ignoredColumns=["id" ; "rate"]) |> ignore
-        Assert.GreaterOrEqual(conn.ExecuteScalar "select rate from test2 where first = 'fred'" :?> float,998.9)
+        Assert.That((conn.ExecuteScalar "select rate from test2 where first = 'fred'" :?> float), Is.GreaterThanOrEqualTo(998.9))
 
     /// Insert a record that contains nullable fields which are defined
     [<Test>]
@@ -178,8 +186,8 @@ type TestSQLiteBasic() = class
         let results : Test3 [] = conn.Query "select * from test3"  |> Array.ofSeq
 
         let (someLast,noneLast) = results |> Array.partition (fun r -> r.last.IsSome)
-        Assert.IsTrue(someLast.Length=1) |> ignore
-        Assert.IsTrue(noneLast.Length=1) |> ignore
+        Assert.That(someLast.Length=1) |> ignore
+        Assert.That(noneLast.Length=1) |> ignore
 
     [<Test>]
     member x.Test034InsertQueryAllNull() =
@@ -190,11 +198,11 @@ type TestSQLiteBasic() = class
         let wilma = results.[0]
         let original = {t4a with id = wilma.id}
         let matches = wilma = original
-        Assert.IsTrue(matches)
+        Assert.That(matches)
 
         let original2 = {t4b with id = results.[1].id}
         let matches2 = original2 = results.[1]
-        Assert.IsTrue(matches2)
+        Assert.That(matches2)
 
 // test not passing :(  not sure why
 //    [<Test>]
@@ -244,7 +252,7 @@ type TestTransactions() = class
 
         trans.Commit()
 
-        Assert.IsTrue(conn.ExecuteScalar "select count(*) from test1" :?> int64 = 1L) 
+        Assert.That(conn.ExecuteScalar "select count(*) from test1" :?> int64 = 1L) 
         cleanTable()
     
     [<Test>]
@@ -257,7 +265,7 @@ type TestTransactions() = class
 
         trans.Rollback()
 
-        Assert.IsTrue(conn.ExecuteScalar "select count(*) from test1" :?> int64 = 0L) 
+        Assert.That(conn.ExecuteScalar "select count(*) from test1" :?> int64 = 0L) 
         cleanTable()
 
     [<Test>]
@@ -270,7 +278,7 @@ type TestTransactions() = class
 
         trans.Commit()
 
-        Assert.IsTrue(conn.ExecuteScalar "select count(*) from test1" :?> int64 = 4L)
+        Assert.That(conn.ExecuteScalar "select count(*) from test1" :?> int64 = 4L)
         cleanTable()
     
     [<Test>]
@@ -283,7 +291,7 @@ type TestTransactions() = class
 
         trans.Rollback()
 
-        Assert.IsTrue(conn.ExecuteScalar "select count(*) from test1" :?> int64 = 0L) 
+        Assert.That(conn.ExecuteScalar "select count(*) from test1" :?> int64 = 0L) 
         cleanTable()
 
     [<Test>]
@@ -297,7 +305,7 @@ type TestTransactions() = class
 
         trans.Commit()
 
-        Assert.IsTrue(conn.ExecuteScalar "select count(*) from test1" :?> int64 = 4L)
+        Assert.That(conn.ExecuteScalar "select count(*) from test1" :?> int64 = 4L)
         cleanTable()
     
     [<Test>]
@@ -312,7 +320,7 @@ type TestTransactions() = class
 
         trans.Rollback()
 
-        Assert.IsTrue(conn.ExecuteScalar "select count(*) from test1" :?> int64 = 0L) 
+        Assert.That(conn.ExecuteScalar "select count(*) from test1" :?> int64 = 0L) 
         cleanTable()
     [<Test>]
     /// Insert a row then commit and check it's in there properly
@@ -323,7 +331,7 @@ type TestTransactions() = class
         trans.InsertOne(t1a) |> ignore
         trans.Commit()
 
-        Assert.IsTrue(conn.ExecuteScalar "select count(*) from test1" :?> int64 = 1L) 
+        Assert.That(conn.ExecuteScalar "select count(*) from test1" :?> int64 = 1L) 
         cleanTable()
     
     [<Test>]
@@ -336,7 +344,7 @@ type TestTransactions() = class
 
         trans.Rollback()
 
-        Assert.IsTrue(conn.ExecuteScalar "select count(*) from test1" :?> int64 = 0L) 
+        Assert.That(conn.ExecuteScalar "select count(*) from test1" :?> int64 = 0L) 
         cleanTable()
 
     [<Test>]
@@ -349,7 +357,7 @@ type TestTransactions() = class
 
         trans.Rollback()
 
-        Assert.IsTrue(conn.ExecuteScalar "select count(*) from test1" :?> int64 = 0L) 
+        Assert.That(conn.ExecuteScalar "select count(*) from test1" :?> int64 = 0L) 
         cleanTable()
 
     [<Test>]
@@ -363,10 +371,10 @@ type TestTransactions() = class
         use trans = conn.StartTrans()
         trans.InsertMany([| t1b ; t1c; t1d |]) |> ignore
         // confirm that the transaction is isolated
-        Assert.IsTrue(conn.ExecuteScalar "SELECT COUNT(*) FROM test1" :?> int64 = 1L)
-        Assert.IsTrue(trans.ExecuteScalar "SELECT COUNT(*) FROM test1" :?> int64 = 4L)
+        Assert.That(conn.ExecuteScalar "SELECT COUNT(*) FROM test1" :?> int64 = 1L)
+        Assert.That(trans.ExecuteScalar "SELECT COUNT(*) FROM test1" :?> int64 = 4L)
         trans.Rollback()
-        Assert.IsTrue(conn.ExecuteScalar "SELECT COUNT(*) FROM test1" :?> int64 = 1L)
+        Assert.That(conn.ExecuteScalar "SELECT COUNT(*) FROM test1" :?> int64 = 1L)
         cleanTable()
 
 
@@ -384,26 +392,26 @@ type TestTransactions() = class
         trans.InsertMany([| t1b ; t1c; t1d |]) |> ignore
         trans2.InsertOne(t1a) |> ignore
         // confirm that the transaction is isolated
-        Assert.IsTrue(conn.ExecuteScalar "SELECT COUNT(*) FROM test1" :?> int64 = 0L)
+        Assert.That(conn.ExecuteScalar "SELECT COUNT(*) FROM test1" :?> int64 = 0L)
 
 
         let results : test1 [] = trans.Query "select * from test1"  |> Array.ofSeq
-        Assert.IsTrue(results.Length=3)
-        Assert.IsTrue(trans.ExecuteScalar "SELECT COUNT(*) FROM test1" :?> int64 = 3L)
+        Assert.That(results.Length=3)
+        Assert.That(trans.ExecuteScalar "SELECT COUNT(*) FROM test1" :?> int64 = 3L)
 
         trans2.Commit()
 
         // the conn only sees 1 result, because only trans2 has been committed
         let results2: test1 [] = conn.Query "select * from test1"  |> Array.ofSeq
-        Assert.IsTrue(results2.Length=1)
-        Assert.IsTrue(conn.ExecuteScalar "SELECT COUNT(*) FROM test1" :?> int64 = 1L)
+        Assert.That(results2.Length=1)
+        Assert.That(conn.ExecuteScalar "SELECT COUNT(*) FROM test1" :?> int64 = 1L)
         // trans see's 4, because READCOMMIT allows us to see the commit
         // from trans2 as well as our own.
         
         trans.Commit()
-        Assert.IsTrue(trans.ExecuteScalar "SELECT COUNT(*) FROM test1" :?> int64 = 4L)
+        Assert.That(trans.ExecuteScalar "SELECT COUNT(*) FROM test1" :?> int64 = 4L)
         // everyone should see 4 now.
-        Assert.IsTrue(conn.ExecuteScalar "SELECT COUNT(*) FROM test1" :?> int64 = 4L)
+        Assert.That(conn.ExecuteScalar "SELECT COUNT(*) FROM test1" :?> int64 = 4L)
         cleanTable()
 
         *)
@@ -413,3 +421,17 @@ type TestTransactions() = class
             (conn :> IDisposable).Dispose()
 end
 
+
+[<TestFixture>]
+type TestSQLiteNewFeatures() =
+    [<Test>]
+    member _.ParametersScalarsAndTuplesAndBoolCoercion() =
+        use conn = gc()
+        conn.ExecuteNonQuery "drop table if exists np; create table np(id integer primary key, name text not null, active integer not null)" |> ignore
+        for (n, a) in [ "a", true ; "b", false ; "c", true ] do
+            conn.ExecuteNonQuery("insert into np(name, active) values (@n, @a)", [ "n", box n ; "a", box a ]) |> ignore
+        let active = conn.Query<string>("select name from np where active = @a order by name", [ "a", box true ]) |> List.ofSeq
+        Assert.That((active = [ "a" ; "c" ]))
+        let rows = conn.Query<string * bool> "select name, active from np order by name" |> List.ofSeq
+        Assert.That((rows = [ ("a",true) ; ("b",false) ; ("c",true) ]))
+        Assert.That(conn.Query<int> "select count(*) from np" |> Seq.exactlyOne, Is.EqualTo 3)

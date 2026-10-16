@@ -110,7 +110,7 @@ module Common_mysql =
           let log (msg:string) =
             match opts.logfile with
                 | None -> ()
-                | Some(f) -> lock opts.logfile ( fun _ -> f.Write(System.DateTime.Now.ToString("yyyyddMM HH:mm:ss.FFF")); f.Write("\t") ; f.WriteLine(msg) ; f.Flush())
+                | Some(f) -> lock opts.logfile ( fun _ -> f.Write(System.DateTime.Now.ToString("yyyyMMdd HH:mm:ss.FFF")); f.Write("\t") ; f.WriteLine(msg) ; f.Flush())
           
           let takeInternal() = 
             let c = pool.Take()
@@ -356,8 +356,8 @@ module Common_mysql =
                                 else
                                     reader.Reader.GetValue(i) 
                                 )
-                            // printf "XXX About to convert field %s" (reader.Reader.GetName(i))
-                            yield cons.Invoke(args) :?> 'T
+                        // Build the record once every field is filled (this used to sit inside the field loop)
+                        yield cons.Invoke(args) :?> 'T
                 finally
                     // Don't dispose till the sequence is finally used. (within sequence generator)
                     (command :> IDisposable).Dispose()
@@ -372,7 +372,7 @@ module Common_mysql =
           /// Creates command that calls the specified stored procedure
           static member (?) (conn:DynamicSqlConnection<'Conn,'Parameter>, name) = 
             let connection = conn.Take() 
-            use command =  connection.CreateCommand() 
+            let command =  connection.CreateCommand() // not `use`: the returned wrapper owns it
             command.CommandText <- name 
             command.CommandType <- CommandType.StoredProcedure
             new DynamicSqlCommand<'Parameter>(command,(fun () -> conn.Release(connection)),conn.Opts,conn.Log)

@@ -1,0 +1,81 @@
+name: CI
+
+on:
+  push:
+    branches: [master]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+env:
+  DOTNET_NOLOGO: true
+  DOTNET_CLI_TELEMETRY_OPTOUT: true
+
+jobs:
+  linux:
+    name: Linux (DuckDB, SQLite, Postgres) + samples + pack
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:17
+        env:
+          POSTGRES_USER: fss
+          POSTGRES_PASSWORD: fss
+          POSTGRES_DB: fsstest
+        ports: ["5432:5432"]
+        options: >-
+          --health-cmd "pg_isready -U fss"
+          --health-interval 5s --health-timeout 5s --health-retries 10
+    env:
+      FSS_TEST_POSTGRES: Host=localhost;Port=5432;Username=fss;Password=fss;Database=fsstest
+      FSS_PG: Host=localhost;Port=5432;Username=fss;Password=fss;Database=fsstest
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-dotnet@v5
+        with:
+          global-json-file: global.json
+
+      - run: dotnet restore fss.slnx
+      - run: dotnet build fss.slnx -c Release --no-restore
+      - run: dotnet test fss.slnx -c Release --no-build --logger trx --results-directory TestResults
+
+      - name: Run samples (smoke tests)
+        run: |
+          set -e
+          for s in DuckDbQuickStart DuckDbAnalytics SqliteTodo SqliteToDuckDb PostgresQuickStart; do
+            echo "::group::$s"
+            dotnet run --project samples/$s -c Release --no-build
+            echo "::endgroup::"
+          done
+          dotnet run --project samples/LegacyWebServer -c Release --no-build -- --smoke
+
+      - name: Pack
+        run: dotnet pack fss.slnx -c Release --no-build -o artifacts --version-suffix "ci.${{ github.run_number }}"
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: packages
+          path: artifacts/*
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: test-results-linux
+          path: TestResults
+
+  cross-platform:
+    name: ${{ matrix.os }} (DuckDB, SQLite)
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [windows-latest, macos-latest]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-dotnet@v5
+        with:
+          global-json-file: global.json
+      - run: dotnet build fss.slnx -c Release
+      - run: dotnet test fss.slnx -c Release --no-build
+      - run: dotnet run --project samples/DuckDbQuickStart -c Release --no-build

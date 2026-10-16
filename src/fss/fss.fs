@@ -1,4 +1,4 @@
-﻿(*
+(*
    FSS - F# Web Server
    Copyright 2012 Darren Platt
 
@@ -27,7 +27,11 @@ module Server =
     open System.Collections.Generic
 
     /// Fss release version
-    let version = version.version
+    let version =
+        let asm = System.Reflection.Assembly.GetExecutingAssembly()
+        match asm.GetCustomAttributes(typeof<System.Reflection.AssemblyInformationalVersionAttribute>, false) with
+        | [| :? System.Reflection.AssemblyInformationalVersionAttribute as a |] -> a.InformationalVersion.Split('+').[0]
+        | _ -> string (asm.GetName().Version)
 
     // TODO - http/1.1  can reuse connection for extra speed.
     ///
@@ -143,7 +147,8 @@ module Server =
         /// By default, dump any exception into the response.
         let defaultErrorHandler _ _ (err:System.Exception) =
             let resp = Response(500,"text/html")
-            resp.Text <- sprintf "<PRE>\n%s\n%s\n</PRE>" err.Message err.StackTrace
+            // Encoded: exception messages often echo request input (XSS otherwise)
+            resp.Text <- sprintf "<PRE>\n%s\n%s\n</PRE>" (WebUtility.HtmlEncode err.Message) (WebUtility.HtmlEncode err.StackTrace)
             resp
 
         /// Use this function to handle an exception raised during handling of a request.
@@ -162,11 +167,8 @@ module Server =
             this.Log 2 (sprintf "Closing %d threads...\n" (threadTracker.Count))
             this.Log 2 "    Closing listener\n"
             tcpListener.Stop()
-            lockThreadTracker()
-            for thread in threadTracker do
-                this.Log 2 (sprintf "    Closing thread : %s...\n" thread.Name)
-                thread.Abort()
-            unlockThreadTracker()
+            // Thread.Abort is not supported on .NET 5+ (it throws). Worker threads are background
+            // threads, so they end with the process; stopping the listener ends the accept loop.
             this.Log 2 "done closing threads\n"
 
         /// Main entry point to run web server    
@@ -182,7 +184,7 @@ module Server =
             /// each connection
             let rec waitConnections n =
                 sprintf "fssmain: top pre accept socket n=%d\n" n |> log 1
-                use s = tcpListener.AcceptSocket()
+                let s = tcpListener.AcceptSocket() // not `use`: that made the accept loop non-tail-recursive; runner2 closes it
                 sprintf "fssmain: top post accept socket %d\n" n |> log 1
 
                 let runner2(s:Socket) (id:int) =
@@ -198,7 +200,7 @@ module Server =
                     unlockThreadTracker()
 
                 let x = fun () -> runner2 s n
-                let t = new Thread(x)
+                let t = new Thread(x, IsBackground = true)
                 t.Name <- sprintf "runner2 %s" (DateTime.Now.ToLongTimeString())
                 lockThreadTracker()
                 threadTracker.Add(t) |> ignore
@@ -240,14 +242,17 @@ module Server =
             let bs = new BufferedStream(ns)
             sprintf "fss%d: made BufferedStream\n" id |> log 1
 
-            let sendHeader k v = 
+            let sendHeader (k:string) (v:string) =
+                // Reject CR/LF in headers (HTTP response splitting)
+                if k.IndexOfAny([|'\r';'\n'|]) >= 0 || v.IndexOfAny([|'\r';'\n'|]) >= 0 then
+                    failwithf "Illegal CR/LF in response header %s" k
                 sprintf "fss%d: ResponseHeader-->%s: %s\n" id k v |> log 1
                 sw.Write(sprintf "%s: %s\r\n" k v)
 
             /// Send response header including the HTTP code and message associated
             let sendResp code message =
                 sw.Write(sprintf "%s %d %s\r\n" protocolVersion code message)
-                sendHeader "Date" (DateTime.Now |> string)
+                sendHeader "Date" (DateTime.UtcNow.ToString("R"))
                 sendHeader "Server" (sprintf "Fss %s" version)
                 
 
@@ -255,6 +260,10 @@ module Server =
             let sendErr code msg =
                 sendResp code msg
                 sendHeader "Content-Type" "text/html"
+                // Terminate the headers, otherwise keep-alive clients wait forever
+                sendHeader "Content-Length" "0"
+                endHeaders()
+                sw.Flush()
         
             /// Handle a get or post request for a particular path with headers    
             let runCmd keepAlive cmd path headers =
@@ -291,7 +300,7 @@ module Server =
 
                 // Optionally set a cookie if the response requested it
                 match resp.Cookie with
-                    | Some(c) -> sendHeader "Cookie" c
+                    | Some(c) -> sendHeader "Set-Cookie" c // browsers ignore a "Cookie" response header
                     | None -> ()
                 // Tell them we are ok with keeping connection alive if they requested it
                 if keepAlive then sendHeader "Connection" "Keep-Alive"
@@ -346,8 +355,8 @@ module Server =
 
                         if true then
                             let l = min (resp.Bytes.Length-1) 255
-                            let row1 = [for i in {0..l} ->  (resp.Bytes.[i]|> b2s)]
-                            let row2 = [for i in {0..l} -> sprintf "%3x" (resp.Bytes.[i])]
+                            let row1 = [for i in 0..l ->  (resp.Bytes.[i]|> b2s)]
+                            let row2 = [for i in 0..l -> sprintf "%3x" (resp.Bytes.[i])]
                             printfn "row1= %s" (String.Join("",row1))
                             printfn "row2= %s" (String.Join("",row2))
                         *)
