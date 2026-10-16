@@ -1,4 +1,4 @@
-﻿module testServer
+module testServer
 
 open NUnit.Framework
 open Fss.Server
@@ -44,8 +44,8 @@ type TestServerBasic() = class
         stream.Position <- 0L
         Assert.That stream.CanWrite
 
-        Assert.False(handled)
+        Assert.That(not (handled))
         ud.handle stream 0
 
-        Assert.True(handled)
+        Assert.That(handled)
 end

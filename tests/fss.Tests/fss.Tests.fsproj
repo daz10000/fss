@@ -1,10 +1,4 @@
-<?xml version="1.0" encoding="utf-8"?>
 <Project Sdk="Microsoft.NET.Sdk">
-  <PropertyGroup>
-    <TargetFramework>net10.0</TargetFramework>
-    <IsPackable>false</IsPackable>
-    <AutoGenerateBindingRedirects>true</AutoGenerateBindingRedirects>
-  </PropertyGroup>
   <ItemGroup>
     <Compile Include="shared.fs" />
     <Compile Include="testJSON.fs" />
@@ -13,16 +7,14 @@
     <Compile Include="testServer.fs" />
     <Compile Include="test_db_postgres.fs" />
     <Compile Include="test_db_sqlite.fs" />
+    <Compile Include="test_db_duckdb.fs" />
     <Compile Include="test_db_mysql.fs" />
-    <None Include="paket.references" />
-    <Content Include="App.config" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\..\src\fss_mysql\fss_mysql.fsproj"/>
-    <ProjectReference Include="..\..\src\fss_sqlite\fss_sqlite.fsproj"/>
-    <ProjectReference Include="..\..\src\fss\fss.fsproj"/>
-    <ProjectReference Include="..\..\src\fss_postgres\fss_postgres.fsproj"/>
     <ProjectReference Include="..\..\src\fss\fss.fsproj" />
+    <ProjectReference Include="..\..\src\fss_mysql\fss_mysql.fsproj" />
+    <ProjectReference Include="..\..\src\fss_sqlite\fss_sqlite.fsproj" />
+    <ProjectReference Include="..\..\src\fss_postgres\fss_postgres.fsproj" />
+    <ProjectReference Include="..\..\src\fss_duckdb\fss_duckdb.fsproj" />
   </ItemGroup>
-  <Import Project="..\..\.paket\Paket.Restore.targets" />
 </Project>

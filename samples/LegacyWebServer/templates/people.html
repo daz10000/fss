@@ -1,0 +1,16 @@
+<html>
+<head><title>{{ title }}</title></head>
+<body>
+  <h1>{{ title }}</h1>
+  {% if showTable %}
+  <table>
+    <tr><th>Name</th><th>City</th><th>Phone</th></tr>
+    {% for p in people %}
+    <tr><td>{{ p.name }}</td><td>{{ p.city }}</td><td>{{ p.telephone }}</td></tr>
+    {% endfor %}
+  </table>
+  {% else %}
+  <p>No table today.</p>
+  {% endif %}
+</body>
+</html>

@@ -1,4 +1,4 @@
-﻿module testJSON
+module testJSON
 open NUnit.Framework
 
 open Fss.JSON
@@ -13,26 +13,26 @@ type TestJSONBasic() = class
         ()
     [<Test>]
     member x.TestInt1() =
-        Assert.IsTrue(parse "12345" = JINT(12345)) 
+        Assert.That(parse "12345" = JINT(12345)) 
     
     [<Test>]
     member x.TestInt2() =
-        Assert.IsFalse(parse "12345" = JINT(12346)) 
+        Assert.That(not (parse "12345" = JINT(12346))) 
 
     [<Test>]
     member x.TestNegInt1() =
-        Assert.IsFalse(parse "-12345" = JINT(-12346)) 
+        Assert.That(not (parse "-12345" = JINT(-12346))) 
 
     [<Test>]
     member x.TestInt0() =
-        Assert.IsTrue(parse "0" = JINT(0)) 
+        Assert.That(parse "0" = JINT(0)) 
 
     [<Test>]
     member x.TestNegInt0() =
         let p = parse "-0"
         if not(p = JINT(0))  then
             Assert.Fail(sprintf "Testing -0 gave %A" p)
-        //Assert.IsTrue(parse "-0" = JINT(0)) 
+        //Assert.That(parse "-0" = JINT(0)) 
 
     [<Test>]
     member x.TestFloat1() =
@@ -169,18 +169,18 @@ type TestJSONArray() = class
         ()
     [<Test>]
     member x.Test2ElementIntArray() =
-        Assert.IsTrue(parse "[1234,5678]" = JARRAY([|JINT(1234)  ; JINT(5678)|]))
+        Assert.That(parse "[1234,5678]" = JARRAY([|JINT(1234)  ; JINT(5678)|]))
     
     [<Test>]
     member x.Test3ElementIntArray() =
-        Assert.IsTrue(parse "[1234,5678,91011]" = JARRAY([|JINT(1234)  ; JINT(5678) ; JINT(91011)|]))
+        Assert.That(parse "[1234,5678,91011]" = JARRAY([|JINT(1234)  ; JINT(5678) ; JINT(91011)|]))
 
     [<Test>]
     member x.Test3ElementStringArray() =
-        Assert.IsTrue(parse "[\"cat\",\"cow\",\"dog\"]" = JARRAY([|JSTRING("cat")  ; JSTRING("cow") ; JSTRING("dog")|]))
+        Assert.That(parse "[\"cat\",\"cow\",\"dog\"]" = JARRAY([|JSTRING("cat")  ; JSTRING("cow") ; JSTRING("dog")|]))
 
     [<Test>]
     member x.TestHetArray() =
-        Assert.IsTrue(parse "[\"cat\",-1234E-23,0]" = JARRAY([|JSTRING("cat")  ; JFLOAT(-1234E-23) ; JINT(0)|]))
+        Assert.That(parse "[\"cat\",-1234E-23,0]" = JARRAY([|JSTRING("cat")  ; JFLOAT(-1234E-23) ; JINT(0)|]))
 
 end

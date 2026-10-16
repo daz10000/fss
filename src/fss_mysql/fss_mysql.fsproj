@@ -1,22 +1,17 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
 <Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
-    <TargetFramework>net10.0</TargetFramework>
-    <AutoGenerateBindingRedirects>true</AutoGenerateBindingRedirects>
+    <PackageId>fss_mysql</PackageId>
+    <Description>RETIRED. MySQL flavour of the fss F# record wrapper, built on MySql.Data. Maintained for existing users only; it lags behind fss_postgres / fss_duckdb / fss_sqlite.</Description>
+    <PackageTags>fsharp;mysql;sql;orm;records</PackageTags>
+    <!-- Retired: still builds, but no new versions are published (it is untested in CI). See docs/mysql.md. -->
+    <IsPackable>false</IsPackable>
   </PropertyGroup>
   <ItemGroup>
-    <Compile Include="..\fss\pool.fs" />
-    <Content Include="app.config" />
-    <Compile Include="../fss/version.fs" />
-    <Compile Include="AssemblyInfo.fs" />
-    <Compile Include="..\fss\db_common_mysql.fs" />
+    <Compile Include="..\fss\pool.fs" Link="pool.fs" />
+    <Compile Include="..\fss\db_common_mysql.fs" Link="db_common_mysql.fs" />
     <Compile Include="db_mysql.fs" />
   </ItemGroup>
   <ItemGroup>
-    <!--
-    <PackageReference Include="MySql.Data" Version="8.0.16" />
-    -->
-
+    <PackageReference Include="MySql.Data" />
   </ItemGroup>
-  <Import Project="..\..\.paket\Paket.Restore.targets" />
 </Project>

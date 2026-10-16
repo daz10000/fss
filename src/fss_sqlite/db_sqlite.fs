@@ -1,4 +1,4 @@
-﻿namespace Fss.Data
+namespace Fss.Data
 
 /// SQLite database wrapper.  Independent of other Fss pieces,
 /// can be omitted along with System.Data and SQLite dependencies for a smaller compilation unit
@@ -24,33 +24,41 @@ module SQLite =
             /// how does sqlite retrieve the last serial value for an insert?
             member x.sequenceMechanism() = Fss.Data.Common.SQL_STMT("select last_insert_rowid()")
             member x.needsKeepAlive() = false
+            member x.parameterPrefix() = "@"
+            member x.openConnection(connStr, _first) =
+                let c = new SqliteConnection(connStr)
+                c.Open()
+                c
             member x.loadColDetail(conn:SqliteConnection) =
-                let schema = conn.GetSchema("Columns")
-                let schemaCol = schema.Columns.["TABLE_SCHEMA"].Ordinal
-                let tableCol = schema.Columns.["TABLE_NAME"].Ordinal
-                let colCol = schema.Columns.["COLUMN_NAME"].Ordinal
-                let dataTypeCol = schema.Columns.["DATA_TYPE"].Ordinal
-                let ordinalPositionCol = schema.Columns.["ORDINAL_POSITION"].Ordinal
-                let isNullableCol = schema.Columns.["IS_NULLABLE"].Ordinal
-                let isPK = schema.Columns.["PRIMARY_KEY"].Ordinal
-                let cols = [|
-                                    for row in schema.Rows ->
-                                        {   schema = (row.[schemaCol] :?> string).ToLower()
-                                            isEnum = false
-                                            relName = (row.[tableCol] :?> string).ToLower()
-                                            cname = row.[colCol] :?> string
-                                            ctype = row.[dataTypeCol] :?> string
-                                            cpos =  System.Convert.ToInt16(row.[ordinalPositionCol])
-                                            cNotNull = (row.[isNullableCol] :?> bool) |> not
-                                            isPK= (row.[isPK] :?> bool) 
-                                            typType = 'x'
-                                        } : Fss.Data.Common.ColDetail
-                                    |] |> Array.groupBy (fun cd -> (cd.schema,cd.relName))
-                                    |> Array.map (fun ((schema,name),cols) -> ({schema = schema ; table = name}:Fss.Data.Common.SchematizedTable),Array.ofSeq cols)
-                                    |> Map.ofArray
+                // Microsoft.Data.Sqlite does not implement GetSchema("Columns") (System.Data.SQLite did),
+                // so read column metadata with the table_info pragma for every table and view.
+                use command = conn.CreateCommand()
+                command.CommandText <- """
+                    select m.name as table_name, p.cid, p.name as column_name, p.type, p."notnull", p.pk
+                    from sqlite_master m join pragma_table_info(m.name) p
+                    where m.type in ('table','view') and m.name not like 'sqlite_%'
+                    order by m.name, p.cid"""
+                use r = command.ExecuteReader()
+                let cols =
+                    [|
+                        while r.Read() do
+                            yield
+                                {   schema = "main"
+                                    isEnum = false
+                                    relName = r.GetString(0).ToLower()
+                                    cpos = int16 (r.GetInt64(1) + 1L)
+                                    cname = r.GetString(2)
+                                    ctype = r.GetString(3)
+                                    cNotNull = r.GetInt64(4) <> 0L
+                                    isPK = r.GetInt64(5) > 0L
+                                    typType = 'x'
+                                } : Fss.Data.Common.ColDetail
+                    |]
                 cols
-               
-                
+                |> Array.groupBy (fun cd -> cd.schema, cd.relName)
+                |> Array.map (fun ((schema,name),cols) -> ({schema = schema ; table = name}:Fss.Data.Common.SchematizedTable), cols)
+                |> Map.ofArray
+
     end
 
     type ISqlConnection = Fss.Data.Common.ISqlConnection

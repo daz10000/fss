@@ -1,0 +1,14 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+  </PropertyGroup>
+  <ItemGroup>
+    <Compile Include="Program.fs" />
+  </ItemGroup>
+  <ItemGroup>
+    <!-- In your own project: <PackageReference Include="fss_sqlite" Version="2.1.0" /> -->
+    <ProjectReference Include="../../src/fss_sqlite/fss_sqlite.fsproj" />
+    <!-- In your own project: <PackageReference Include="fss_duckdb" Version="2.1.0" /> -->
+    <ProjectReference Include="../../src/fss_duckdb/fss_duckdb.fsproj" />
+  </ItemGroup>
+</Project>

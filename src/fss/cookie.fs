@@ -1,20 +1,16 @@
-﻿namespace Fss
+namespace Fss
 module Cookie =
     open System
     open System.Text
     open Fss.Server
     open System.Security.Cryptography
-    let formatCookieDate(x:DateTime) =
-                        // Wdy, DD Mon YYYY HH:MM:SS GMT
-                        sprintf "%s, %02d %s %04d %02d:%02d:%02d GMT" 
-                            (x.DayOfWeek.ToString())
-                            x.Day
-                            ([| "Jan" ; "Feb" ; "Mar" ; "Apr" ; "May" ; "Jun" ; "Jul" ; "Aug" ; "Sep" ; "Oct" ; "Nov" ; "Dec" |].[x.Month-1])
-                            x.Year
-                            x.Hour
-                            x.Month
-                            x.Second
+    /// RFC 1123 date for a cookie Expires attribute, e.g. "Wed, 21 Oct 2015 07:28:00 GMT".
+    /// (Previously printed the month where the minutes belong, a full day name, and local time.)
+    let formatCookieDate(x:DateTime) = x.ToUniversalTime().ToString("R")
 
+    /// WARNING: not suitable for authentication. The checksum is an unkeyed SHA256 of the cookie
+    /// contents, so anyone can forge a valid cookie for any user; the session key is not checked
+    /// against server state and `created` is never checked for expiry. See docs/web-server.md.
     let checkCookie(ur:UR) =
         let headers = ur.headers |> Seq.map (fun k -> k.Key.ToLower(),k.Value) |> Map.ofSeq
 

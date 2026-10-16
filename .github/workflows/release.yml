@@ -1,0 +1,70 @@
+# Publishes packages to nuget.org when a version tag (v2.1.0, v2.2.0-beta1, ...) is pushed.
+#
+# Uses NuGet Trusted Publishing: GitHub's OIDC token is exchanged for a short-lived (1 hour)
+# nuget.org API key, so no long-lived API key is stored in the repo. One-time setup is in
+# docs/releasing.md (a trusted publishing policy on nuget.org, the NUGET_USER secret, and the
+# `nuget` environment).
+
+name: Release
+
+on:
+  push:
+    tags: ["v*"]
+
+permissions:
+  contents: read
+
+env:
+  DOTNET_NOLOGO: true
+  DOTNET_CLI_TELEMETRY_OPTOUT: true
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    environment: nuget          # must match the environment in the nuget.org trusted publishing policy
+    permissions:
+      contents: write           # create the GitHub release
+      id-token: write           # OIDC token for NuGet trusted publishing
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-dotnet@v5
+        with:
+          global-json-file: global.json
+
+      - name: Check tag matches version
+        run: |
+          TAG="${GITHUB_REF_NAME#v}"
+          VERSION=$(dotnet msbuild src/fss_duckdb/fss_duckdb.fsproj -getProperty:Version)
+          echo "tag=$TAG version=$VERSION"
+          if [ "$TAG" != "$VERSION" ]; then
+            echo "::error::Tag v$TAG does not match <VersionPrefix> $VERSION in Directory.Build.props"
+            exit 1
+          fi
+
+      - run: dotnet build fss.slnx -c Release
+      - run: dotnet test fss.slnx -c Release --no-build
+      - run: dotnet pack fss.slnx -c Release --no-build -o artifacts
+
+      - name: NuGet login (OIDC -> short-lived API key)
+        id: login
+        uses: NuGet/login@v1
+        with:
+          user: ${{ secrets.NUGET_USER }}
+
+      - name: Push to nuget.org
+        run: >
+          dotnet nuget push "artifacts/*.nupkg"
+          --api-key "${{ steps.login.outputs.NUGET_API_KEY }}"
+          --source https://api.nuget.org/v3/index.json
+          --skip-duplicate
+
+      - name: GitHub release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          VERSION="${GITHUB_REF_NAME#v}"
+          # Release notes: the RELEASE_NOTES.md section for this version
+          awk -v v="$VERSION" '$0 ~ "^## "v" " {f=1; next} /^## / {f=0} f' RELEASE_NOTES.md > notes.md
+          PRERELEASE=""
+          case "$VERSION" in *-*) PRERELEASE="--prerelease" ;; esac
+          gh release create "$GITHUB_REF_NAME" artifacts/* --title "$GITHUB_REF_NAME" --notes-file notes.md $PRERELEASE

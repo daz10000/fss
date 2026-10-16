@@ -1,0 +1,46 @@
+<Project>
+  <!--
+    Shared settings for every project in the repo.
+    Package versions live in Directory.Packages.props (NuGet Central Package Management).
+    The release version lives here, in <VersionPrefix>, and is shared by all published packages.
+  -->
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <LangVersion>latest</LangVersion>
+    <Nullable>disable</Nullable>
+    <SatelliteResourceLanguages>en</SatelliteResourceLanguages>
+
+    <!-- FSharp.Core is referenced explicitly (below) so its version is pinned centrally. -->
+    <DisableImplicitFSharpCoreReference>true</DisableImplicitFSharpCoreReference>
+
+    <!-- Fail restore on known-vulnerable packages, including transitive ones. -->
+    <NuGetAudit>true</NuGetAudit>
+    <NuGetAuditMode>all</NuGetAuditMode>
+    <NuGetAuditLevel>low</NuGetAuditLevel>
+
+    <!-- Only projects under src/ are packable; they opt in via src/Directory.Build.props. -->
+    <IsPackable>false</IsPackable>
+  </PropertyGroup>
+
+  <!-- Versioning: bump VersionPrefix for a release. CI may append a suffix (e.g. -ci.123) via VersionSuffix. -->
+  <PropertyGroup>
+    <VersionPrefix>2.1.0</VersionPrefix>
+    <Authors>Darren Platt</Authors>
+    <Company>Darren Platt</Company>
+    <Product>fss</Product>
+    <Copyright>Copyright 2012-2026 Darren Platt and contributors</Copyright>
+  </PropertyGroup>
+
+  <!-- Reproducible, debuggable builds. SourceLink for GitHub is built into the .NET 8+ SDK. -->
+  <PropertyGroup>
+    <Deterministic>true</Deterministic>
+    <ContinuousIntegrationBuild Condition="'$(GITHUB_ACTIONS)' == 'true'">true</ContinuousIntegrationBuild>
+    <PublishRepositoryUrl>true</PublishRepositoryUrl>
+    <EmbedUntrackedSources>true</EmbedUntrackedSources>
+    <DebugType>portable</DebugType>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="FSharp.Core" />
+  </ItemGroup>
+</Project>

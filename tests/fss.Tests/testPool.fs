@@ -1,4 +1,4 @@
-﻿module testPool
+module testPool
 
 open NUnit.Framework
 open Fss.Pool
@@ -42,7 +42,7 @@ type TestPoolBasic() = class
         let active = ref nThreads
         let exitSema = "exitsema"
         let beater n =
-            for i in {0..20} do
+            for i in 0..20 do
                 //printfn "%-5d: taking" n
                 let h = p.Take()
                 h.Take()
@@ -64,7 +64,7 @@ type TestPoolBasic() = class
             if test1Verbose then printfn "%-5d: exitting! active=%d" n !active
 
 
-        for i in {1..nThreads} do
+        for i in 1..nThreads do
             let t = new Thread( fun () -> beater i)
             t.Start()
 
@@ -76,3 +76,37 @@ type TestPoolBasic() = class
         if test1Verbose then printf "done active=%d" !active
 
 end 
+[<TestFixture>]
+type TestPoolSafety() =
+
+    [<Test>]
+    member x.DoubleReleaseThrowsInsteadOfHanging() =
+        use p = new Pool<Token>(2, fun i -> new Token(string i))
+        let t = p.Take()
+        p.Release t
+        Assert.Throws<InvalidOperationException>(fun () -> p.Release t) |> ignore
+        // pool still usable afterwards
+        let t2 = p.Take()
+        p.Release t2
+        Assert.That(p.FreeCount, Is.EqualTo 2)
+
+    [<Test>]
+    member x.ReleaseWakesBlockedTaker() =
+        use p = new Pool<Token>(1, fun i -> new Token(string i))
+        let held = p.Take()
+        let got = new ManualResetEventSlim(false)
+        let t = Thread(fun () -> let h = p.Take() in got.Set(); p.Release h)
+        t.Start()
+        Assert.That(got.Wait(200), Is.False, "taker should block while pool is empty")
+        p.Release held
+        Assert.That(got.Wait(5000), Is.True, "taker should wake when an item is released")
+        t.Join()
+
+    [<Test>]
+    member x.FailedConstructionDisposesCreatedItems() =
+        let disposed = ref 0
+        let make i =
+            if i = 2 then failwith "boom"
+            { new IDisposable with member _.Dispose() = disposed.Value <- disposed.Value + 1 }
+        Assert.Throws<Exception>(fun () -> new Pool<IDisposable>(4, make) |> ignore) |> ignore
+        Assert.That(disposed.Value, Is.EqualTo 2)
