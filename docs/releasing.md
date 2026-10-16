@@ -23,9 +23,9 @@ You must do these steps yourself on nuget.org and GitHub; nothing in the repo ca
 2. **GitHub environment.** In repo **Settings**, then **Environments**, create `nuget`. Recommended:
    restrict deployments to tags matching `v*`, and add yourself as a required reviewer. Every publish
    then waits for one click of approval.
-3. **`NUGET_USER`.** In the `nuget` environment (or at repo level), add **`NUGET_USER`** as either a
-   secret or a variable. Its value is your nuget.org *username* (profile name), not your email address.
-   The workflow fails early with a clear message if it's missing.
+3. Optional: if the nuget.org trusted publishing policy was created by a different account than the
+   repository owner, set **`NUGET_POLICY_CREATOR`** as a repository/environment variable to that account's
+   nuget.org username. By default the workflow uses `${{ github.repository_owner }}`.
 4. **Retire old keys.** If a long-lived nuget.org API key was ever used for these packages (for
    example by the old FAKE/Paket `PublishNuget` target), revoke it at nuget.org, under
    **API Keys**.
@@ -66,8 +66,8 @@ dotnet add package fss_duckdb --version 2.1.0-ci.42
 
 - **`NuGet/login` fails with 401/403.** The policy doesn't match the run. Check the repository owner
   and name, that the workflow file name is exactly `release.yml`, that the environment name is exactly
-  `nuget`, and that `NUGET_USER` is the username, not the email address. A newly created policy may
-  show as pending on nuget.org until its first successful use.
+  `nuget`, and that `NUGET_POLICY_CREATOR` (if set) is the policy creator's username, not the email
+  address. A newly created policy may show as pending on nuget.org until its first successful use.
 - **The push fails with 403 for one package.** The policy's package owner doesn't own that package ID.
   Add the account as an owner of the package on nuget.org.
 - **The tag doesn't match the version.** Fix `VersionPrefix`, delete the tag
