@@ -32,7 +32,7 @@ jobs:
       FSS_TEST_POSTGRES: Host=localhost;Port=5432;Username=fss;Password=fss;Database=fsstest
       FSS_PG: Host=localhost;Port=5432;Username=fss;Password=fss;Database=fsstest
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v7
       - uses: actions/setup-dotnet@v5
         with:
           global-json-file: global.json
@@ -72,7 +72,7 @@ jobs:
         os: [windows-latest, macos-latest]
     runs-on: ${{ matrix.os }}
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v7
       - uses: actions/setup-dotnet@v5
         with:
           global-json-file: global.json
