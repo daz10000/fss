@@ -23,8 +23,9 @@ You must do these steps yourself on nuget.org and GitHub; nothing in the repo ca
 2. **GitHub environment.** In repo **Settings**, then **Environments**, create `nuget`. Recommended:
    restrict deployments to tags matching `v*`, and add yourself as a required reviewer. Every publish
    then waits for one click of approval.
-3. **Secret.** In the `nuget` environment (or the repo), add the secret **`NUGET_USER`**. Its value is
-   your nuget.org *username* (profile name), not your email address.
+3. **`NUGET_USER`.** In the `nuget` environment (or at repo level), add **`NUGET_USER`** as either a
+   secret or a variable. Its value is your nuget.org *username* (profile name), not your email address.
+   The workflow fails early with a clear message if it's missing.
 4. **Retire old keys.** If a long-lived nuget.org API key was ever used for these packages (for
    example by the old FAKE/Paket `PublishNuget` target), revoke it at nuget.org, under
    **API Keys**.

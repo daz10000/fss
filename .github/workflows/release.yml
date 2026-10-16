@@ -45,11 +45,22 @@ jobs:
       - run: dotnet test fss.slnx -c Release --no-build
       - run: dotnet pack fss.slnx -c Release --no-build -o artifacts
 
+      # NUGET_USER is the nuget.org username (not email). It may be defined as a secret or a
+      # variable, at repo level or in the `nuget` environment.
+      - name: Check NUGET_USER is set
+        env:
+          NUGET_USER: ${{ secrets.NUGET_USER || vars.NUGET_USER }}
+        run: |
+          if [ -z "$NUGET_USER" ]; then
+            echo "::error::NUGET_USER is not set. Add it (your nuget.org username) as a secret or variable in the 'nuget' environment or at repo level. See docs/releasing.md."
+            exit 1
+          fi
+
       - name: NuGet login (OIDC -> short-lived API key)
         id: login
         uses: NuGet/login@v1
         with:
-          user: ${{ secrets.NUGET_USER }}
+          user: ${{ secrets.NUGET_USER || vars.NUGET_USER }}
 
       - name: Push to nuget.org
         run: >
