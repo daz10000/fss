@@ -202,9 +202,14 @@ module Common =
     /// Work out, once per query, how to turn reader rows into values of type t:
     ///  - F# tuples: columns by position
     ///  - records / classes with a constructor: columns by (case-insensitive) name
-    ///  - anything else (int, string, option, ...): the first column
+    ///  - anything else (int, decimal, DateTime, Guid, string, option, ...): the first column
     let internal makeRowBuilder (t:Type) (reader:DbDataReader) : RowBuilder =
         let colName i = reader.GetName(i)
+        /// Map columns by name only for records and classes. Structs such as decimal, DateTime and
+        /// Guid have parameterised constructors too, but are single values (issue #1).
+        let mapsByName =
+            FSharpType.IsRecord(t, BindingFlags.Public ||| BindingFlags.NonPublic)
+            || (t.IsClass && t <> typeof<string> && not t.IsArray && not (isOptionType t))
         if FSharpType.IsTuple t then
             let elems = FSharpType.GetTupleElements t
             if reader.FieldCount <> elems.Length then
@@ -218,7 +223,7 @@ module Common =
                 |> Array.sortByDescending (fun c -> c.GetParameters().Length)
                 |> Array.tryHead
             match cons with
-            | Some cons when cons.GetParameters().Length > 0 && t <> typeof<string> && not (isOptionType t) ->
+            | Some cons when mapsByName && cons.GetParameters().Length > 0 ->
                 let ps = cons.GetParameters()
                 /// Maps argument name onto position
                 let argMap = ps |> Array.mapi (fun i p -> (p.Name.ToLower(),i)) |> Map.ofSeq

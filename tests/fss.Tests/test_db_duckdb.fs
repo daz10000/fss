@@ -127,6 +127,21 @@ type TestDuckDbBasic() =
         Assert.That(w.mood, Is.EqualTo Mood.Sad)
 
     [<Test>]
+    member _.QueryIntoSingleValuesOfAnyType() =
+        // Issue #1: querying a single column into a primitive/struct type gave
+        // "SQL name 'customer_id' not found in target Record"
+        use conn = new DynamicSqlConnection("Data Source=:memory:")
+        let ids : int[] = conn.Query "select 42 as customer_id union all select 7" |> Array.ofSeq
+        Assert.That((Array.sort ids = [| 7 ; 42 |]))
+        Assert.That(conn.Query<decimal> "select 1.50::decimal(5,2) as x" |> Seq.exactlyOne, Is.EqualTo 1.50m)
+        Assert.That(conn.Query<DateTime> "select timestamp '2024-01-02' as x" |> Seq.exactlyOne, Is.EqualTo(DateTime(2024,1,2)))
+        Assert.That(conn.Query<DateOnly> "select date '2024-01-02' as x" |> Seq.exactlyOne, Is.EqualTo(DateOnly(2024,1,2)))
+        Assert.That(conn.Query<Guid> "select '00000000-0000-0000-0000-000000000001'::uuid as x" |> Seq.exactlyOne,
+                    Is.EqualTo(Guid("00000000-0000-0000-0000-000000000001")))
+        Assert.That(conn.Query<decimal option> "select null::decimal as x" |> Seq.exactlyOne, Is.EqualTo None)
+        Assert.That(conn.Query<Nullable<int>> "select 5 as x" |> Seq.exactlyOne, Is.EqualTo(Nullable 5))
+
+    [<Test>]
     member _.TimeAndBlobColumns() =
         use conn = new DynamicSqlConnection("Data Source=:memory:")
         let r = conn.Query<{| t : TimeOnly ; ts : TimeSpan ; bytes : byte[] |}>

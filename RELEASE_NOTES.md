@@ -37,8 +37,9 @@ fss_mysql is retired and not published.
 
 ### Features
 * FEA: parameterised queries: `Query`, `ExecuteScalar` and the new `ExecuteNonQuery` take `[ "name", box value ]`.
-* FEA: `Query<'T>` maps to tuples (by position) and single values (`Query<int64> "select count(*) ..."`), not
-  only records. Option fields missing from the result become `None`.
+* FEA: `Query<'T>` maps to tuples (by position) and single values (`Query<int64> "select count(*) ..."`,
+  also `decimal`, `DateTime`, `Guid`, options, ...), not only records (fixes #1). Option fields missing from the
+  result become `None`.
 * FEA: values are converted between compatible types (e.g. int64 → int, 0/1 → bool, HUGEINT → int64,
   DATE ↔ DateOnly, text → Guid / F# enum, BLOB stream → byte[]), with clear errors naming the column.
 * FEA: inserts accept schema-qualified table names (`table = "sales.orders"`), and a table created after the
