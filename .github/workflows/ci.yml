@@ -33,7 +33,7 @@ jobs:
       FSS_PG: Host=localhost;Port=5432;Username=fss;Password=fss;Database=fsstest
     steps:
       - uses: actions/checkout@v7
-      - uses: actions/setup-dotnet@v5
+      - uses: actions/setup-dotnet@v6
         with:
           global-json-file: global.json
 
@@ -73,7 +73,7 @@ jobs:
     runs-on: ${{ matrix.os }}
     steps:
       - uses: actions/checkout@v7
-      - uses: actions/setup-dotnet@v5
+      - uses: actions/setup-dotnet@v6
         with:
           global-json-file: global.json
       - run: dotnet build fss.slnx -c Release
