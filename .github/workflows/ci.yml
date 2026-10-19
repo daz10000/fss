@@ -54,11 +54,11 @@ jobs:
       - name: Pack
         run: dotnet pack fss.slnx -c Release --no-build -o artifacts --version-suffix "ci.${{ github.run_number }}"
 
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v7
         with:
           name: packages
           path: artifacts/*
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v7
         if: always()
         with:
           name: test-results-linux
