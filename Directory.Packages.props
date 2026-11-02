@@ -21,7 +21,7 @@
   <ItemGroup Label="Database drivers">
     <PackageVersion Include="DuckDB.NET.Data.Full" Version="1.5.6.1" />
     <PackageVersion Include="Npgsql" Version="10.0.3" />
-    <PackageVersion Include="Microsoft.Data.Sqlite" Version="10.0.13" />
+    <PackageVersion Include="Microsoft.Data.Sqlite" Version="10.0.14" />
     <!-- MySql.Data is GPL-2.0 with the Universal FOSS exception; fss_mysql is retired. -->
     <PackageVersion Include="MySql.Data" Version="26.10.0" />
   </ItemGroup>
