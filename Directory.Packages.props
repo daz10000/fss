@@ -23,7 +23,7 @@
     <PackageVersion Include="Npgsql" Version="10.0.3" />
     <PackageVersion Include="Microsoft.Data.Sqlite" Version="10.0.13" />
     <!-- MySql.Data is GPL-2.0 with the Universal FOSS exception; fss_mysql is retired. -->
-    <PackageVersion Include="MySql.Data" Version="26.7.0" />
+    <PackageVersion Include="MySql.Data" Version="26.10.0" />
   </ItemGroup>
 
   <ItemGroup Label="Test">
